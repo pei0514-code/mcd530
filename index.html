@@ -60,6 +60,11 @@
         .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--gradient-red); color: white; padding: 18px 25px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
         .line-float { position: fixed; bottom: 85px; right: 20px; width: 54px; height: 54px; background: var(--line-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 26px; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.3); z-index: 1001; text-decoration: none; border: 2px solid white; }
 
+        /* Success Modal Button Styles */
+        .btn-line-custom { background-color: var(--line-green) !important; color: white !important; border: none !important; }
+        .btn-copy-custom { background-color: #4a4a4a !important; color: white !important; border: none !important; }
+        .btn-line-custom:hover, .btn-copy-custom:hover { opacity: 0.9; }
+
         [v-cloak] { display: none; }
     </style>
 <script type="importmap">
@@ -168,10 +173,10 @@
                     <div class="p-3 bg-light rounded-4 text-start mb-4 small">
                         <pre class="m-0" style="white-space: pre-wrap; font-family: inherit; font-weight: 600; line-height: 1.5;">{{ finalMsg }}</pre>
                     </div>
-                    <button class="btn btn-success w-100 rounded-pill py-3 fw-bold mb-2" @click="sendToLine(finalMsg)">
+                    <button class="btn btn-line-custom w-100 rounded-pill py-3 fw-bold mb-2 shadow-sm" @click="sendToLine(finalMsg)">
                         <i class="fab fa-line me-2"></i>直接傳送到 LINE
                     </button>
-                    <button class="btn btn-outline-secondary w-100 rounded-pill py-3 fw-bold mb-2" @click="copyMsg(finalMsg)">
+                    <button class="btn btn-copy-custom w-100 rounded-pill py-3 fw-bold mb-2 shadow-sm" @click="copyMsg(finalMsg)">
                         <i class="fas fa-copy me-2"></i>複製訂單文字
                     </button>
                     <button class="btn btn-link text-muted" data-bs-dismiss="modal" @click="cart = {}">回商城首頁</button>
@@ -255,6 +260,7 @@
                         .replace("【匯款資訊】", "")
                         .replace("確認有貨轉帳後請告知，謝謝。", "")
                         .replace("※ 匯款後請提供【帳號末五碼】，以便快速對帳，謝謝！", "")
+                        .replace(/\n\s*\n/g, '\n') // 將多個換行縮減為單個
                         .trim();
                     
                     let msg = `🛒【麥麥小舖電子票券】\n`;
