@@ -149,7 +149,7 @@
                 <div class="me-3" style="background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 10px; font-size: 13px; font-weight: 800;">{{ totalQty }} 件</div>
                 <div class="fw-bold fs-4">${{ totalPrice }}</div>
             </div>
-            <div class="fw-bold fs-6">結帳確認 <i class="fas fa-arrow-right ms-2"></i></div>
+            <div class="fw-bold fs-6"><i class="fas fa-shopping-cart me-2"></i>🛒 購物車 <i class="fas fa-arrow-right ms-2"></i></div>
         </div>
 
         <a class="line-float" href="https://lin.ee/ejXmXDl" target="_blank"><i class="fab fa-line"></i></a>
@@ -178,7 +178,7 @@
                                 style="background: var(--gradient-red); border: none;" 
                                 @click="handleCheckout" 
                                 :disabled="isSubmitting || totalPrice < 50">
-                            {{ totalPrice < 50 ? '未滿 $50' : '確認訂單並送出' }}
+                            <i class="fas fa-paper-plane me-2"></i>{{ totalPrice < 50 ? '金額未滿 $50' : '確認訂單並送出' }}
                         </button>
                     </div>
                 </div>
@@ -194,10 +194,10 @@
                         <pre class="m-0" style="white-space: pre-wrap; font-family: inherit; font-weight: 600; line-height: 1.5; color: #444;">{{ finalMsg }}</pre>
                     </div>
                     <button class="btn btn-line-custom w-100 rounded-pill py-3 fw-bold mb-2 shadow-sm" @click="sendToLine(finalMsg)">
-                        <i class="fab fa-line me-2"></i>傳送到 LINE
+                        <i class="fab fa-line me-2"></i>直接傳送訂單到 LINE
                     </button>
                     <button class="btn btn-copy-custom w-100 rounded-pill py-3 fw-bold mb-2 shadow-sm" @click="copyMsg(finalMsg)">
-                        <i class="fas fa-copy me-2"></i>複製訂單詳情
+                        <i class="fas fa-copy me-2"></i>複製訂單文字
                     </button>
                     <button class="btn btn-link text-muted" data-bs-dismiss="modal" @click="cart = {}">回商城首頁</button>
                 </div>
@@ -213,7 +213,7 @@
         const { createApp, ref, computed, onMounted } = Vue;
         const API_URL = 'https://script.google.com/macros/s/AKfycbx2xdqkRoBGFibvgKRo05QtVcIWZlUjBq-rr_NRJ-8nK1BsFPSorQqnsNa89IPlG45aeA/exec';
 
-        // 極速優化：在解析腳本時就啟動網路請求
+        // 啟動網路請求
         const globalDataPromise = fetch(`${API_URL}?action=getInitData`).then(r => r.json()).catch(() => ({products:[]}));
         const globalSettingsPromise = fetch(`${API_URL}?action=getSettings`).then(r => r.json()).catch(() => ({}));
 
@@ -236,21 +236,14 @@
                 });
 
                 const initApp = async () => {
-                    // 並行執行數據加載與 LIFF 初始化
                     const [pRes, sRes] = await Promise.all([globalDataPromise, globalSettingsPromise]);
-                    
                     if (pRes.products) products.value = pRes.products;
                     if (sRes) settings.value = sRes;
-
                     if (sRes.liffId) {
                         liff.init({ liffId: sRes.liffId }).then(async () => {
-                            if (liff.isLoggedIn()) {
-                                userProfile.value = await liff.getProfile();
-                            }
+                            if (liff.isLoggedIn()) userProfile.value = await liff.getProfile();
                         }).catch(err => console.error("LIFF Error", err));
                     }
-
-                    // 數據到達後立即關閉 Loader
                     const loader = document.getElementById('static-loader');
                     if (loader) {
                         loader.style.opacity = '0';
@@ -264,7 +257,6 @@
                     const p = products.value.find(x => x.id === id);
                     return p ? { ...p, qty: cart.value[id] } : null;
                 }).filter(x => x));
-                
                 const totalQty = computed(() => cartItems.value.reduce((a, b) => a + b.qty, 0));
                 const totalPrice = computed(() => cartItems.value.reduce((a, b) => a + (b.price * b.qty), 0));
 
@@ -276,7 +268,6 @@
 
                 const handleCheckout = async () => {
                     if (totalPrice.value < 50) return;
-                    
                     isSubmitting.value = true;
                     const now = new Date();
                     const pad = (n) => String(n).padStart(2, '0');
@@ -288,7 +279,6 @@
                         return `${num} ${i.name}\n   🔹數量：${i.qty}\n   🔹小計：$${i.price * i.qty}\n   🔹效期：${i.expiryDate || '依門市說明'}`;
                     }).join('\n');
 
-                    // 優化處理匯款資訊排版
                     let cleanBankInfo = (settings.value.bankInfo || "")
                         .replace("【匯款資訊】", "")
                         .replace("確認有貨轉帳後請告知，謝謝。", "")
@@ -309,7 +299,6 @@
                     
                     finalMsg.value = msg;
                     
-                    // 背景送出，不阻塞 UI
                     fetch(API_URL, {
                         method: 'POST', mode: 'no-cors',
                         body: JSON.stringify({
@@ -322,10 +311,23 @@
                     successModal.show();
                 };
 
-                const sendToLine = (txt) => {
+                const sendToLine = async (txt) => {
+                    // 若在 LINE 環境內且支援 sendMessages (直接發送)
                     if (liff.isInClient()) {
-                        liff.sendMessages([{ type: 'text', text: txt }]).then(() => liff.closeWindow());
+                        try {
+                            await liff.sendMessages([{ type: 'text', text: txt }]);
+                            alert('訂單已直接傳送到對話視窗！');
+                            liff.closeWindow();
+                        } catch (err) {
+                            // 若權限不足或環境不支援直接發送，改用分享器
+                            if (liff.isApiAvailable('shareTargetPicker')) {
+                                liff.shareTargetPicker([{ type: 'text', text: txt }]);
+                            } else {
+                                window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
+                            }
+                        }
                     } else {
+                        // 外部瀏覽器：使用通用分享連結
                         window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
                     }
                 };
