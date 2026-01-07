@@ -15,7 +15,7 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* Header */
-        .sticky-header { position: sticky; top: 0; z-index: 1000; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); border-bottom: 1px solid #eee; }
+        .sticky-header { position: sticky; top: 0; z-index: 1000; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #eee; }
         
         /* Category Tabs */
         .category-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 10px 15px; scrollbar-width: none; }
@@ -43,25 +43,29 @@
         .qty-ctrl { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; border-radius: 50px; padding: 4px; border: 1px solid #eee; margin-top: auto; }
         .qty-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-        /* Floating Cart Bar */
+        /* Floating UI */
         .cart-bar { position: fixed; bottom: 25px; left: 15px; right: 85px; background: var(--brand-red); color: white; padding: 15px 25px; border-radius: 60px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 12px 30px rgba(218, 41, 28, 0.4); z-index: 1000; cursor: pointer; transition: 0.3s; }
-        .cart-bar:active { transform: scale(0.95); }
-        .cart-qty-badge { background: white; color: var(--brand-red); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; margin-right: 12px; }
-
-        /* Right Floating LINE Icon */
-        .line-float { position: fixed; bottom: 25px; right: 15px; width: 56px; height: 56px; background: var(--line-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.4); z-index: 1001; cursor: pointer; transition: 0.3s; text-decoration: none; animation: float 3s ease-in-out infinite; }
+        .line-float { position: fixed; bottom: 25px; right: 15px; width: 56px; height: 56px; background: var(--line-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.4); z-index: 1001; cursor: pointer; transition: 0.3s; text-decoration: none; }
         .line-float:active { transform: scale(0.9); }
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
 
         /* Modals */
-        .modal-content { border: none; border-radius: 30px; overflow: hidden; }
-        .gift-box { background: #fff4f4; border: 1px dashed var(--brand-red); border-radius: 15px; padding: 10px; margin-top: 15px; display: flex; align-items: center; gap: 10px; }
-        
-        .btn-action-group { display: flex; flex-direction: column; gap: 12px; width: 100%; }
-        .btn-action { border: none; border-radius: 18px; padding: 15px; font-weight: bold; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; color: white; transition: 0.2s; }
+        .modal-content { border: none; border-radius: 25px; overflow: hidden; }
+        .gift-box { background: #fff4f4; border: 1px dashed var(--brand-red); border-radius: 15px; padding: 12px; margin-top: 15px; display: flex; align-items: center; gap: 12px; }
+        .btn-action-group { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+        .btn-action { border: none; border-radius: 15px; padding: 14px; font-weight: bold; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; color: white; transition: 0.2s; }
         .btn-line { background: var(--line-green); }
         .btn-copy { background: var(--brand-dark); }
         
+        /* History Item */
+        .history-item { background: #f8f9fa; border-radius: 18px; padding: 15px; margin-bottom: 15px; border: 1px solid #eee; }
+        .history-meta { display: flex; justify-content: space-between; font-size: 12px; color: #999; margin-bottom: 10px; font-family: monospace; }
+        .history-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 6px; }
+        .history-summary { font-size: 13px; color: #666; margin-bottom: 12px; line-height: 1.5; }
+        
+        /* Input Styling */
+        .guest-input { background: #f0f2f5; border: 2px solid #e1e4e8; border-radius: 12px; padding: 10px 15px; font-size: 14px; font-weight: 500; width: 100%; outline: none; transition: 0.2s; }
+        .guest-input:focus { border-color: var(--brand-red); background: #fff; }
+
         [v-cloak] { display: none; }
     </style>
 <script type="importmap">
@@ -76,11 +80,9 @@
 </head>
 <body>
 
-    <!-- 載入層 -->
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-3 text-secondary small fw-bold">麥麥商城 V122 加速版</div>
-        <div id="timeout-msg" class="text-muted mt-2 small" style="display:none">資料同步中，請稍候...</div>
+        <div class="mt-3 text-secondary small fw-bold">麥麥商城 V125 優化版</div>
     </div>
 
     <div id="app" v-cloak>
@@ -91,10 +93,10 @@
                     <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px; font-style: italic; font-size: 20px;">M</div>
                     <div>
                         <div class="fw-bold text-dark" style="font-size: 14px;">麥麥商城 <span class="badge bg-light text-muted border fw-normal" style="font-size: 9px;">{{ settings.version }}</span></div>
-                        <div class="text-muted" style="font-size: 11px;">Hi, {{ userProfile.displayName || '訪客' }}</div>
+                        <div class="text-muted" style="font-size: 11px;">Hi, {{ userProfile.displayName || guestName || '訪客' }}</div>
                     </div>
                 </div>
-                <div class="text-muted" @click="showHistory"><i class="fas fa-history"></i></div>
+                <div class="text-muted p-2" @click="openHistory"><i class="fas fa-history fa-lg"></i></div>
             </div>
             
             <div class="category-scroll">
@@ -155,56 +157,90 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content shadow-lg">
                     <div class="modal-header border-0 pb-0">
-                        <h5 class="fw-bold">確認訂單</h5>
+                        <h5 class="fw-bold">確認訂單內容</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <div v-for="item in cartItems" :key="item.id" class="d-flex justify-content-between py-2 border-bottom border-light">
-                                <div class="small">{{ item.name }} x {{ item.qty }}</div>
-                                <div class="fw-bold text-danger">${{ item.price * item.qty }}</div>
-                            </div>
+                    <div class="modal-body pt-3">
+                        <!-- 身份輸入區 (僅在非 LINE 登入時顯示) -->
+                        <div v-if="!userProfile.displayName" class="mb-3">
+                            <label class="form-label small fw-bold text-muted">您的姓名/暱稱 (選填)</label>
+                            <input type="text" class="guest-input" v-model="guestName" placeholder="請輸入稱呼，以便對帳">
+                        </div>
+
+                        <div v-for="item in cartItems" :key="item.id" class="d-flex justify-content-between py-2 border-bottom border-light">
+                            <div style="font-size: 15px; font-weight: 500;">{{ item.name }} x {{ item.qty }}</div>
+                            <div class="fw-bold text-danger" style="font-size: 16px;">${{ item.price * item.qty }}</div>
                         </div>
                         <div v-if="activeGift" class="gift-box">
                             <i class="fas fa-gift text-danger fs-4"></i>
-                            <div class="text-danger small fw-bold">滿額贈: {{ activeGift }}</div>
+                            <div class="text-danger fw-bold" style="font-size: 14px;">滿額贈: {{ activeGift }}</div>
                         </div>
-                        <div class="d-flex justify-content-between fw-bold fs-5 p-3 bg-light rounded-4 mt-3">
-                            <span>合計</span><span class="text-danger">${{ totalPrice }}</span>
+                        <div class="d-flex justify-content-between fw-bold fs-4 p-3 bg-light rounded-4 mt-3">
+                            <span>應付總計</span><span class="text-danger">${{ totalPrice }}</span>
                         </div>
                     </div>
                     <div class="modal-footer border-0">
-                        <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold" @click="handleCheckout" :disabled="isSubmitting">
-                            {{ isSubmitting ? '正在紀錄...' : '確認並送出訂單' }}
+                        <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold fs-5 shadow-sm" @click="handleCheckout" :disabled="isSubmitting">
+                            {{ isSubmitting ? '處理中...' : '確認下單' }}
                         </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 成功 Modal -->
+        <!-- 成功與分享 Modal -->
         <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content text-center p-4">
                     <div class="mb-3 text-success"><i class="fas fa-check-circle fa-4x"></i></div>
                     <h4 class="fw-bold">訂單已成立</h4>
-                    <p class="text-muted small mb-4">請點擊下方按鈕將訂單傳送給客服人員</p>
-                    
-                    <div class="p-3 bg-light rounded-4 text-start mb-4 border" style="font-size: 10px; max-height: 120px; overflow-y: auto;">
-                        <pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">{{ finalMsg }}</pre>
+                    <p class="text-muted small mb-4">請點擊按鈕傳送或複製訊息給客服</p>
+                    <div class="p-3 bg-light rounded-4 text-start mb-4 border" style="max-height: 180px; overflow-y: auto;">
+                        <pre style="white-space: pre-wrap; margin: 0; font-size: 14px; line-height: 1.6; color: #333; font-family: -apple-system, sans-serif;">{{ finalMsg }}</pre>
                     </div>
-                    
                     <div class="btn-action-group">
-                        <button class="btn-action btn-line" @click="directSendToLine">
-                            <i class="fab fa-line fa-lg"></i>
-                            <span>直接傳送訂單</span>
+                        <button class="btn-action btn-line" @click="sendToLine(finalMsg)">
+                            <i class="fab fa-line fa-lg"></i><span>直接傳送給客服</span>
                         </button>
-                        <button class="btn-action btn-copy" @click="copyOrder">
-                            <i class="fas fa-copy"></i>
-                            <span>{{ hasCopied ? '已複製' : '複製訂單文字' }}</span>
+                        <button class="btn-action btn-copy" @click="copyText(finalMsg)">
+                            <i class="fas fa-copy"></i><span>{{ hasCopied ? '已成功複製' : '複製訂單文字' }}</span>
                         </button>
                     </div>
-                    <button class="btn btn-link text-muted mt-3 small text-decoration-none" @click="closeSuccess">返回商城</button>
+                    <button class="btn btn-link text-muted mt-3 small text-decoration-none" @click="closeSuccess">回商城首頁</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 歷史紀錄 Modal -->
+        <div class="modal fade" id="historyModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header border-0 bg-light">
+                        <h5 class="fw-bold mb-0">歷史下單紀錄</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-3">
+                        <div v-if="orderHistory.length === 0" class="text-center py-5 text-muted">
+                            <i class="fas fa-receipt fa-3x mb-3 opacity-25"></i>
+                            <p>尚無歷史紀錄</p>
+                        </div>
+                        <div v-for="h in orderHistory" :key="h.id" class="history-item">
+                            <div class="history-meta">
+                                <span>{{ h.timestamp }}</span>
+                                <span>#{{ h.id }}</span>
+                            </div>
+                            <div class="history-title">總計 ${{ h.totalAmount }}</div>
+                            <div class="history-summary">{{ h.itemsSummary }}</div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-success flex-grow-1 py-2 rounded-3 fw-bold" @click="sendToLine(h.fullMsg)">
+                                    <i class="fab fa-line me-1"></i> 重傳客服
+                                </button>
+                                <button class="btn btn-outline-dark px-3 py-2 rounded-3" @click="copyText(h.fullMsg)">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -221,30 +257,29 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v122', bankInfo: '' });
+                const settings = ref({ version: 'v125', bankInfo: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({ displayName: '', userId: '' });
+                const guestName = ref(localStorage.getItem('mm_guest_name') || '');
+                const orderHistory = ref([]);
                 const isSubmitting = ref(false);
                 const hasCopied = ref(false);
                 const finalMsg = ref('');
-                let cartModal, successModal;
+                let cartModal, successModal, historyModal;
 
-                // 🚀 快取加速邏輯：優先從 LocalStorage 讀取
-                const initFromCache = () => {
-                    const cProd = localStorage.getItem('mm_products');
-                    const cSett = localStorage.getItem('mm_settings');
+                // 初始化加速載入
+                const loadCache = () => {
+                    const cProd = localStorage.getItem('mm_products_v123');
+                    const cSett = localStorage.getItem('mm_settings_v123');
+                    const cHist = localStorage.getItem('mm_history_v123');
                     if (cProd) products.value = JSON.parse(cProd);
                     if (cSett) settings.value = JSON.parse(cSett);
-                    
-                    // 如果有快取，就先移除 Loading 畫面
-                    if (cProd) {
-                        const loader = document.getElementById('static-loader');
-                        if (loader) loader.style.display = 'none';
-                    }
+                    if (cHist) orderHistory.value = JSON.parse(cHist);
+                    if (cProd) document.getElementById('static-loader').style.display = 'none';
                 };
 
-                const fetchFreshData = async () => {
+                const fetchData = async () => {
                     try {
                         const [pRes, sRes] = await Promise.all([
                             fetch(`${API_URL}?action=getInitData`).then(r => r.json()),
@@ -252,34 +287,34 @@
                         ]);
                         if (pRes.products) {
                             products.value = pRes.products;
-                            localStorage.setItem('mm_products', JSON.stringify(pRes.products));
+                            localStorage.setItem('mm_products_v123', JSON.stringify(pRes.products));
                         }
                         if (sRes) {
                             settings.value = sRes;
-                            localStorage.setItem('mm_settings', JSON.stringify(sRes));
+                            localStorage.setItem('mm_settings_v123', JSON.stringify(sRes));
                         }
-                        // 初始化 LIFF
                         if (sRes.liffId) {
                             await liff.init({ liffId: sRes.liffId });
-                            if (liff.isLoggedIn()) userProfile.value = await liff.getProfile();
+                            if (liff.isLoggedIn()) {
+                                userProfile.value = await liff.getProfile();
+                            }
                         }
-                    } catch (e) { console.error("Update Error", e); }
+                    } catch (e) { console.error(e); }
                     finally {
                         const loader = document.getElementById('static-loader');
-                        if (loader) {
-                            loader.style.opacity = '0';
-                            setTimeout(() => loader.style.display = 'none', 500);
-                        }
+                        if (loader) loader.style.display = 'none';
                     }
                 };
 
                 onMounted(() => {
-                    initFromCache();
-                    fetchFreshData();
+                    loadCache();
+                    fetchData();
                     cartModal = new bootstrap.Modal(document.getElementById('cartModal'));
                     successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                    historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
                 });
 
+                // 購物邏輯
                 const categories = computed(() => [...new Set(products.value.map(p => p.category).filter(Boolean))]);
                 const filteredProducts = computed(() => currentCat.value === 'ALL' ? products.value : products.value.filter(p => p.category === currentCat.value));
                 const cartItems = computed(() => Object.keys(cart.value).map(id => {
@@ -296,28 +331,47 @@
                     else if (next <= (p.stock || 99)) cart.value[p.id] = next;
                 };
 
+                // 下單處理
                 const handleCheckout = async () => {
                     isSubmitting.value = true;
+                    
+                    // 訪客名稱保存
+                    if (guestName.value) localStorage.setItem('mm_guest_name', guestName.value);
+                    
                     const orderId = 'M' + Date.now().toString().slice(-6);
                     const itemsStr = cartItems.value.map((i, idx) => `${idx + 1}. ${i.name} X${i.qty}`).join('\n');
                     const timeStr = new Date().toLocaleString('zh-TW');
 
-                    let msg = `🛒 【麥麥訂單 ${orderId}】\n----------------\n${itemsStr}\n----------------\n💰 總金額: $${totalPrice.value}`;
+                    // 身份識別處理
+                    const finalName = userProfile.value.displayName || (guestName.value ? '訪客 - ' + guestName.value : '匿名訪客');
+                    const finalId = userProfile.value.userId || 'WEB_' + Math.random().toString(36).substr(2, 9);
+
+                    let msg = `🛒 【麥麥訂單 ${orderId}】\n----------------\n訂購人: ${finalName}\n----------------\n${itemsStr}\n----------------\n💰 總金額: $${totalPrice.value}`;
                     if (activeGift.value) msg += `\n🎁 滿額贈: ${activeGift.value}`;
                     msg += `\n\n${settings.value.bankInfo}`;
                     finalMsg.value = msg;
 
-                    // 背景傳送到 GAS 紀錄
+                    // 保存歷史
+                    const newRecord = {
+                        id: orderId,
+                        timestamp: timeStr,
+                        totalAmount: totalPrice.value,
+                        itemsSummary: itemsStr.split('\n').slice(0, 3).join('\n') + (itemsStr.split('\n').length > 3 ? '\n...' : ''),
+                        fullMsg: msg
+                    };
+                    orderHistory.value = [newRecord, ...orderHistory.value].slice(0, 20);
+                    localStorage.setItem('mm_history_v123', JSON.stringify(orderHistory.value));
+
+                    // 遠端存儲 (GAS)
                     fetch(API_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
+                        method: 'POST', mode: 'no-cors',
                         body: JSON.stringify({
                             timestamp: timeStr, id: orderId,
                             itemsText: itemsStr.replace(/\n/g, ', '),
                             totalAmount: totalPrice.value,
                             giftText: activeGift.value || '無',
-                            userId: userProfile.value.userId,
-                            userName: userProfile.value.displayName
+                            userId: finalId,
+                            userName: finalName
                         })
                     }).catch(() => {});
 
@@ -326,42 +380,37 @@
                     successModal.show();
                 };
 
-                // 🚀 直接傳送訂單：優先使用 liff.sendMessages
-                const directSendToLine = async () => {
+                const sendToLine = async (txt) => {
                     if (liff.isInClient()) {
                         try {
-                            await liff.sendMessages([{ type: 'text', text: finalMsg.value }]);
-                            alert("訂單已直接傳送到對話視窗！");
-                            closeSuccess();
+                            await liff.sendMessages([{ type: 'text', text: txt }]);
+                            alert("訊息已直接發送！");
                         } catch (e) {
-                            window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(finalMsg.value)}`;
+                            window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
                         }
                     } else {
-                        window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(finalMsg.value)}`;
+                        window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
                     }
                 };
 
-                const copyOrder = () => {
+                const copyText = (txt) => {
                     const el = document.createElement('textarea');
-                    el.value = finalMsg.value;
-                    document.body.appendChild(el);
-                    el.select();
+                    el.value = txt;
+                    document.body.appendChild(el); el.select();
                     document.execCommand('copy');
                     document.body.removeChild(el);
                     hasCopied.value = true;
                     setTimeout(() => hasCopied.value = false, 2000);
                 };
 
-                const closeSuccess = () => {
-                    successModal.hide();
-                    cart.value = {};
-                };
+                const closeSuccess = () => { successModal.hide(); cart.value = {}; };
+                const openHistory = () => historyModal.show();
 
                 return {
                     products, settings, cart, currentCat, categories, filteredProducts,
-                    updateCart, totalQty, totalPrice, cartItems, activeGift, userProfile,
-                    handleCheckout, isSubmitting, finalMsg, directSendToLine, copyOrder, hasCopied,
-                    openCart: () => cartModal.show(), closeSuccess, showHistory: () => alert("即將開放歷史紀錄功能")
+                    updateCart, totalQty, totalPrice, cartItems, activeGift, userProfile, guestName,
+                    handleCheckout, isSubmitting, finalMsg, sendToLine, copyText, hasCopied,
+                    openCart: () => cartModal.show(), closeSuccess, openHistory, orderHistory
                 };
             }
         }).mount('#app');
