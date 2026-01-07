@@ -44,21 +44,23 @@
         .qty-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
         /* Floating Cart Bar */
-        .cart-bar { position: fixed; bottom: 25px; left: 15px; right: 80px; background: var(--brand-red); color: white; padding: 15px 25px; border-radius: 60px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 12px 30px rgba(218, 41, 28, 0.4); z-index: 1000; cursor: pointer; transition: 0.3s; }
+        .cart-bar { position: fixed; bottom: 25px; left: 15px; right: 85px; background: var(--brand-red); color: white; padding: 15px 25px; border-radius: 60px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 12px 30px rgba(218, 41, 28, 0.4); z-index: 1000; cursor: pointer; transition: 0.3s; }
         .cart-bar:active { transform: scale(0.95); }
         .cart-qty-badge { background: white; color: var(--brand-red); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; margin-right: 12px; }
 
-        /* Floating LINE Icon */
-        .line-float { position: fixed; bottom: 25px; right: 15px; width: 56px; height: 56px; background: var(--line-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.4); z-index: 1001; cursor: pointer; transition: 0.3s; text-decoration: none; }
+        /* Right Floating LINE Icon */
+        .line-float { position: fixed; bottom: 25px; right: 15px; width: 56px; height: 56px; background: var(--line-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.4); z-index: 1001; cursor: pointer; transition: 0.3s; text-decoration: none; animation: float 3s ease-in-out infinite; }
         .line-float:active { transform: scale(0.9); }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
 
         /* Modals */
         .modal-content { border: none; border-radius: 30px; overflow: hidden; }
         .gift-box { background: #fff4f4; border: 1px dashed var(--brand-red); border-radius: 15px; padding: 10px; margin-top: 15px; display: flex; align-items: center; gap: 10px; }
-        .btn-action-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
-        .btn-action { border: none; border-radius: 18px; padding: 16px 8px; font-weight: bold; font-size: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; color: white; transition: 0.2s; }
+        
+        .btn-action-group { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+        .btn-action { border: none; border-radius: 18px; padding: 15px; font-weight: bold; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; color: white; transition: 0.2s; }
         .btn-line { background: var(--line-green); }
-        .btn-send-picker { background: var(--brand-dark); }
+        .btn-copy { background: var(--brand-dark); }
         
         [v-cloak] { display: none; }
     </style>
@@ -77,7 +79,7 @@
     <!-- 載入層 -->
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-3 text-secondary small fw-bold">麥麥商城 V122 優化版載入中</div>
+        <div class="mt-3 text-secondary small fw-bold">麥麥商城 V122 加速版</div>
         <div id="timeout-msg" class="text-muted mt-2 small" style="display:none">資料同步中，請稍候...</div>
     </div>
 
@@ -92,20 +94,12 @@
                         <div class="text-muted" style="font-size: 11px;">Hi, {{ userProfile.displayName || '訪客' }}</div>
                     </div>
                 </div>
-                <div class="text-muted" @click="showHistoryAlert"><i class="fas fa-history"></i></div>
+                <div class="text-muted" @click="showHistory"><i class="fas fa-history"></i></div>
             </div>
             
             <div class="category-scroll">
-                <button 
-                    class="cat-btn" 
-                    :class="{ active: currentCat === 'ALL' }" 
-                    @click="currentCat = 'ALL'">全部</button>
-                <button 
-                    v-for="cat in categories" 
-                    :key="cat"
-                    class="cat-btn" 
-                    :class="{ active: currentCat === cat }" 
-                    @click="currentCat = cat">{{ cat }}</button>
+                <button class="cat-btn" :class="{ active: currentCat === 'ALL' }" @click="currentCat = 'ALL'">全部</button>
+                <button v-for="cat in categories" :key="cat" class="cat-btn" :class="{ active: currentCat === cat }" @click="currentCat = cat">{{ cat }}</button>
             </div>
         </div>
 
@@ -148,11 +142,11 @@
                 <div class="cart-qty-badge">{{ totalQty }}</div>
                 <div class="fw-bold fs-5">${{ totalPrice }}</div>
             </div>
-            <div class="fw-bold">去結帳 <i class="fas fa-chevron-right ms-2"></i></div>
+            <div class="fw-bold">結帳下單 <i class="fas fa-chevron-right ms-2"></i></div>
         </div>
 
-        <!-- 右側 LINE 浮動圖標 -->
-        <a class="line-float" :href="lineContactLink" target="_blank">
+        <!-- LINE 浮動圖標 -->
+        <a class="line-float" href="https://lin.ee/ejXmXDl" target="_blank">
             <i class="fab fa-line"></i>
         </a>
 
@@ -161,7 +155,7 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content shadow-lg">
                     <div class="modal-header border-0 pb-0">
-                        <h5 class="fw-bold">確認訂單內容</h5>
+                        <h5 class="fw-bold">確認訂單</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
@@ -171,23 +165,17 @@
                                 <div class="fw-bold text-danger">${{ item.price * item.qty }}</div>
                             </div>
                         </div>
-
                         <div v-if="activeGift" class="gift-box">
                             <i class="fas fa-gift text-danger fs-4"></i>
-                            <div>
-                                <div class="fw-bold text-danger small">滿額贈禮</div>
-                                <div class="text-muted" style="font-size: 11px;">{{ activeGift }}</div>
-                            </div>
+                            <div class="text-danger small fw-bold">滿額贈: {{ activeGift }}</div>
                         </div>
-
                         <div class="d-flex justify-content-between fw-bold fs-5 p-3 bg-light rounded-4 mt-3">
-                            <span>應付總額</span>
-                            <span class="text-danger">${{ totalPrice }}</span>
+                            <span>合計</span><span class="text-danger">${{ totalPrice }}</span>
                         </div>
                     </div>
                     <div class="modal-footer border-0">
-                        <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold shadow-sm" @click="handleCheckout" :disabled="isSubmitting">
-                            {{ isSubmitting ? '處理中...' : '確認並送出訂單' }}
+                        <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold" @click="handleCheckout" :disabled="isSubmitting">
+                            {{ isSubmitting ? '正在紀錄...' : '確認並送出訂單' }}
                         </button>
                     </div>
                 </div>
@@ -199,24 +187,24 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content text-center p-4">
                     <div class="mb-3 text-success"><i class="fas fa-check-circle fa-4x"></i></div>
-                    <h4 class="fw-bold">訂單已就緒</h4>
-                    <p class="text-muted small mb-4">請選取「傳送給客服」將文字傳送給客服。</p>
+                    <h4 class="fw-bold">訂單已成立</h4>
+                    <p class="text-muted small mb-4">請點擊下方按鈕將訂單傳送給客服人員</p>
                     
-                    <div class="p-3 bg-light rounded-4 text-start mb-4 border" style="font-size: 10px; max-height: 150px; overflow-y: auto;">
+                    <div class="p-3 bg-light rounded-4 text-start mb-4 border" style="font-size: 10px; max-height: 120px; overflow-y: auto;">
                         <pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">{{ finalMsg }}</pre>
                     </div>
                     
                     <div class="btn-action-group">
-                        <button class="btn-action btn-line" @click="shareToLine">
-                            <i class="fab fa-line fa-2x"></i>
-                            <span>傳送給客服</span>
+                        <button class="btn-action btn-line" @click="directSendToLine">
+                            <i class="fab fa-line fa-lg"></i>
+                            <span>直接傳送訂單</span>
                         </button>
-                        <button class="btn-action btn-send-picker" @click="sendWithPicker">
-                            <i class="fas fa-paper-plane fa-2x"></i>
-                            <span>選擇傳送對象</span>
+                        <button class="btn-action btn-copy" @click="copyOrder">
+                            <i class="fas fa-copy"></i>
+                            <span>{{ hasCopied ? '已複製' : '複製訂單文字' }}</span>
                         </button>
                     </div>
-                    <button class="btn btn-link text-muted mt-3 small text-decoration-none" @click="closeSuccess">回商城</button>
+                    <button class="btn btn-link text-muted mt-3 small text-decoration-none" @click="closeSuccess">返回商城</button>
                 </div>
             </div>
         </div>
@@ -228,10 +216,7 @@
 
     <script>
         const { createApp, ref, computed, onMounted } = Vue;
-        
-        // 核心設定：您的 GAS API 網址
         const API_URL = 'https://script.google.com/macros/s/AKfycbx2xdqkRoBGFibvgKRo05QtVcIWZlUjBq-rr_NRJ-8nK1BsFPSorQqnsNa89IPlG45aeA/exec';
-        const CONTACT_LINE_ID = 'your_line_id'; // 您的客服 LINE ID 或官網連結
 
         createApp({
             setup() {
@@ -241,60 +226,45 @@
                 const currentCat = ref('ALL');
                 const userProfile = ref({ displayName: '', userId: '' });
                 const isSubmitting = ref(false);
+                const hasCopied = ref(false);
                 const finalMsg = ref('');
-                
-                let cartModal = null;
-                let successModal = null;
+                let cartModal, successModal;
 
-                const lineContactLink = computed(() => `https://line.me/R/ti/p/@${CONTACT_LINE_ID}`);
-
-                // 快取讀取
-                const loadCache = () => {
-                    const cachedProd = localStorage.getItem('mm_products_cache');
-                    const cachedSett = localStorage.getItem('mm_settings_cache');
-                    if (cachedProd) products.value = JSON.parse(cachedProd);
-                    if (cachedSett) settings.value = JSON.parse(cachedSett);
+                // 🚀 快取加速邏輯：優先從 LocalStorage 讀取
+                const initFromCache = () => {
+                    const cProd = localStorage.getItem('mm_products');
+                    const cSett = localStorage.getItem('mm_settings');
+                    if (cProd) products.value = JSON.parse(cProd);
+                    if (cSett) settings.value = JSON.parse(cSett);
                     
-                    // 如果有快取，就先隱藏 Loader 讓用戶秒看
-                    if (cachedProd) {
+                    // 如果有快取，就先移除 Loading 畫面
+                    if (cProd) {
                         const loader = document.getElementById('static-loader');
                         if (loader) loader.style.display = 'none';
                     }
                 };
 
-                const loadData = async () => {
-                    // 超時提示
-                    const timer = setTimeout(() => {
-                        const el = document.getElementById('timeout-msg');
-                        if (el) el.style.display = 'block';
-                    }, 4000);
-
+                const fetchFreshData = async () => {
                     try {
-                        const [prodRes, settRes] = await Promise.all([
+                        const [pRes, sRes] = await Promise.all([
                             fetch(`${API_URL}?action=getInitData`).then(r => r.json()),
                             fetch(`${API_URL}?action=getSettings`).then(r => r.json())
                         ]);
-
-                        if (prodRes.products) {
-                            products.value = prodRes.products;
-                            localStorage.setItem('mm_products_cache', JSON.stringify(prodRes.products));
+                        if (pRes.products) {
+                            products.value = pRes.products;
+                            localStorage.setItem('mm_products', JSON.stringify(pRes.products));
                         }
-                        if (settRes) {
-                            settings.value = settRes;
-                            localStorage.setItem('mm_settings_cache', JSON.stringify(settRes));
+                        if (sRes) {
+                            settings.value = sRes;
+                            localStorage.setItem('mm_settings', JSON.stringify(sRes));
                         }
-
                         // 初始化 LIFF
-                        if (settRes.liffId) {
-                            await liff.init({ liffId: settRes.liffId });
-                            if (liff.isLoggedIn()) {
-                                userProfile.value = await liff.getProfile();
-                            }
+                        if (sRes.liffId) {
+                            await liff.init({ liffId: sRes.liffId });
+                            if (liff.isLoggedIn()) userProfile.value = await liff.getProfile();
                         }
-                    } catch (e) {
-                        console.error("API Error", e);
-                    } finally {
-                        clearTimeout(timer);
+                    } catch (e) { console.error("Update Error", e); }
+                    finally {
                         const loader = document.getElementById('static-loader');
                         if (loader) {
                             loader.style.opacity = '0';
@@ -304,22 +274,11 @@
                 };
 
                 onMounted(() => {
-                    loadCache();
-                    loadData();
+                    initFromCache();
+                    fetchFreshData();
                     cartModal = new bootstrap.Modal(document.getElementById('cartModal'));
                     successModal = new bootstrap.Modal(document.getElementById('successModal'));
                 });
-
-                // 購物邏輯
-                const updateCart = (p, d) => {
-                    const current = cart.value[p.id] || 0;
-                    const next = current + d;
-                    if (next <= 0) {
-                        delete cart.value[p.id];
-                    } else if (next <= (p.stock || 999)) {
-                        cart.value[p.id] = next;
-                    }
-                };
 
                 const categories = computed(() => [...new Set(products.value.map(p => p.category).filter(Boolean))]);
                 const filteredProducts = computed(() => currentCat.value === 'ALL' ? products.value : products.value.filter(p => p.category === currentCat.value));
@@ -327,76 +286,70 @@
                     const p = products.value.find(x => x.id === id);
                     return p ? { ...p, qty: cart.value[id] } : null;
                 }).filter(x => x));
-                
                 const totalQty = computed(() => cartItems.value.reduce((a, b) => a + b.qty, 0));
                 const totalPrice = computed(() => cartItems.value.reduce((a, b) => a + (b.price * b.qty), 0));
-                const activeGift = computed(() => {
-                    if (totalPrice.value >= 999) return "C.3 豬肉滿福堡加蛋加中冰美式 (一組)";
-                    if (totalPrice.value >= 500) return "A.3 大蛋捲冰淇淋 或 A.7 漢堡 (二選一)";
-                    return null;
-                });
+                const activeGift = computed(() => totalPrice.value >= 999 ? "C.3 豬肉滿福堡套餐" : (totalPrice.value >= 500 ? "A.3 大蛋捲冰淇淋" : null));
+
+                const updateCart = (p, d) => {
+                    const next = (cart.value[p.id] || 0) + d;
+                    if (next <= 0) delete cart.value[p.id];
+                    else if (next <= (p.stock || 99)) cart.value[p.id] = next;
+                };
 
                 const handleCheckout = async () => {
-                    if (isSubmitting.value) return;
                     isSubmitting.value = true;
-                    
                     const orderId = 'M' + Date.now().toString().slice(-6);
-                    const itemsStr = cartItems.value.map((i, idx) => `${idx + 1}、${i.name} X${i.qty}`).join('\n');
+                    const itemsStr = cartItems.value.map((i, idx) => `${idx + 1}. ${i.name} X${i.qty}`).join('\n');
                     const timeStr = new Date().toLocaleString('zh-TW');
 
                     let msg = `🛒 【麥麥訂單 ${orderId}】\n----------------\n${itemsStr}\n----------------\n💰 總金額: $${totalPrice.value}`;
                     if (activeGift.value) msg += `\n🎁 滿額贈: ${activeGift.value}`;
-                    msg += `\n\n${settings.value.bankInfo || ''}`;
-                    
+                    msg += `\n\n${settings.value.bankInfo}`;
                     finalMsg.value = msg;
 
-                    try {
-                        fetch(API_URL, {
-                            method: 'POST',
-                            mode: 'no-cors',
-                            body: JSON.stringify({
-                                timestamp: timeStr,
-                                id: orderId,
-                                itemsText: itemsStr.replace(/\n/g, ', '),
-                                totalAmount: totalPrice.value,
-                                giftText: activeGift.value || '無',
-                                userId: userProfile.value.userId,
-                                userName: userProfile.value.displayName
-                            })
-                        });
-                    } catch (e) {}
+                    // 背景傳送到 GAS 紀錄
+                    fetch(API_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        body: JSON.stringify({
+                            timestamp: timeStr, id: orderId,
+                            itemsText: itemsStr.replace(/\n/g, ', '),
+                            totalAmount: totalPrice.value,
+                            giftText: activeGift.value || '無',
+                            userId: userProfile.value.userId,
+                            userName: userProfile.value.displayName
+                        })
+                    }).catch(() => {});
 
                     isSubmitting.value = false;
                     cartModal.hide();
                     successModal.show();
                 };
 
-                // 改進的傳送功能
-                const shareToLine = () => {
-                    // 優先使用 LINE 協議跳轉到指定客服聊天室
-                    const url = `https://line.me/R/msg/text/?${encodeURIComponent(finalMsg.value)}`;
+                // 🚀 直接傳送訂單：優先使用 liff.sendMessages
+                const directSendToLine = async () => {
                     if (liff.isInClient()) {
-                        liff.openWindow({ url, external: true });
+                        try {
+                            await liff.sendMessages([{ type: 'text', text: finalMsg.value }]);
+                            alert("訂單已直接傳送到對話視窗！");
+                            closeSuccess();
+                        } catch (e) {
+                            window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(finalMsg.value)}`;
+                        }
                     } else {
-                        window.location.href = url;
+                        window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(finalMsg.value)}`;
                     }
                 };
 
-                const sendWithPicker = async () => {
-                    if (liff.isApiAvailable('shareTargetPicker')) {
-                        try {
-                            const res = await liff.shareTargetPicker([{
-                                type: "text",
-                                text: finalMsg.value
-                            }]);
-                            if (res) alert("訂單已成功傳送！");
-                        } catch (error) {
-                            console.error("Picker failed", error);
-                            shareToLine();
-                        }
-                    } else {
-                        shareToLine();
-                    }
+                const copyOrder = () => {
+                    const el = document.createElement('textarea');
+                    el.value = finalMsg.value;
+                    document.body.appendChild(el);
+                    el.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(el);
+                    hasCopied.value = true;
+                    setTimeout(() => hasCopied.value = false, 2000);
                 };
 
                 const closeSuccess = () => {
@@ -407,9 +360,8 @@
                 return {
                     products, settings, cart, currentCat, categories, filteredProducts,
                     updateCart, totalQty, totalPrice, cartItems, activeGift, userProfile,
-                    handleCheckout, isSubmitting, finalMsg, shareToLine, sendWithPicker,
-                    lineContactLink, openCart: () => cartModal.show(), closeSuccess,
-                    showHistoryAlert: () => alert('歷史功能開發中，目前僅保存最近一筆。')
+                    handleCheckout, isSubmitting, finalMsg, directSendToLine, copyOrder, hasCopied,
+                    openCart: () => cartModal.show(), closeSuccess, showHistory: () => alert("即將開放歷史紀錄功能")
                 };
             }
         }).mount('#app');
