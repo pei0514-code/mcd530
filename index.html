@@ -7,64 +7,61 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        :root { --brand-red: #DA291C; --brand-dark: #27251F; --brand-yellow: #FFC72C; --line-green: #06C755; }
-        body { background-color: #f7f8fa; padding-bottom: 120px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-tap-highlight-color: transparent; }
+        :root { --brand-red: #DA291C; --brand-dark: #27251F; --brand-yellow: #FFC72C; --line-green: #06C755; --gradient-red: linear-gradient(135deg, #DA291C 0%, #FF5E52 100%); }
+        body { background-color: #f7f8fa; padding-bottom: 120px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", sans-serif; -webkit-tap-highlight-color: transparent; }
         
         #static-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s; }
         .spinner { width: 45px; height: 45px; border: 4px solid #f3f3f3; border-top-color: var(--brand-red); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Header */
-        .sticky-header { position: sticky; top: 0; z-index: 1000; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #eee; }
-        
-        /* Category Tabs */
-        .category-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 10px 15px; scrollbar-width: none; }
+        /* Header & Category */
+        .sticky-header { position: sticky; top: 0; z-index: 1000; background: rgba(255,255,255,0.98); backdrop-filter: blur(15px); border-bottom: 1px solid #f0f0f0; }
+        .category-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 12px 15px; scrollbar-width: none; background: #fff; }
         .category-scroll::-webkit-scrollbar { display: none; }
-        .cat-btn { padding: 6px 18px; border-radius: 50px; font-size: 13px; font-weight: bold; white-space: nowrap; border: 1px solid #eee; background: #fff; color: #999; transition: 0.3s; }
-        .cat-btn.active { background: var(--brand-dark); color: #fff; border-color: var(--brand-dark); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .cat-btn { padding: 8px 18px; border-radius: 50px; font-size: 13px; font-weight: bold; white-space: nowrap; border: 1px solid #f0f0f0; background: #f8f9fa; color: #777; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .cat-btn.active { background: var(--gradient-red); color: #fff; border-color: transparent; box-shadow: 0 4px 12px rgba(218, 41, 28, 0.25); transform: translateY(-1px); }
 
         /* Product Cards */
-        .product-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); height: 100%; display: flex; flex-direction: column; border: 1px solid #f0f0f0; position: relative; transition: transform 0.2s; }
-        .product-card:active { transform: scale(0.98); }
+        .product-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03); height: 100%; display: flex; flex-direction: column; border: 1px solid #f0f0f0; position: relative; transition: all 0.2s; }
+        .product-card:active { transform: scale(0.97); }
         .product-card.sold-out { filter: grayscale(100%); opacity: 0.6; }
         .product-card.sold-out::after { content: "SOLD OUT"; position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: 900; z-index: 10; }
         
-        .p-img-box { position: relative; width: 100%; padding-top: 100%; background: #f0f0f0; }
+        .p-img-box { position: relative; width: 100%; padding-top: 100%; background: #f8f9fa; }
         .p-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
-        .p-body { padding: 12px; flex: 1; display: flex; flex-direction: column; }
-        .p-title { font-weight: 700; font-size: 14px; margin-bottom: 6px; color: #222; line-height: 1.4; height: 40px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .p-body { padding: 14px; flex: 1; display: flex; flex-direction: column; }
+        .p-title { font-weight: 700; font-size: 14px; margin-bottom: 8px; color: #222; line-height: 1.4; height: 40px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .p-info { font-size: 10px; color: #999; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .stock-tag { background: #fdf2f2; color: #d32f2f; padding: 1px 6px; border-radius: 4px; font-weight: bold; }
         
-        .p-price { color: var(--brand-red); font-weight: 800; font-size: 19px; }
+        .p-price { color: var(--brand-red); font-weight: 800; font-size: 20px; }
         .p-price-old { font-size: 11px; text-decoration: line-through; color: #ccc; margin-left: 4px; }
         
-        .btn-buy { background: var(--brand-dark); color: white; border: none; padding: 10px 0; border-radius: 50px; font-size: 13px; font-weight: bold; width: 100%; margin-top: auto; }
+        .btn-buy { background: var(--brand-dark); color: white; border: none; padding: 11px 0; border-radius: 50px; font-size: 13px; font-weight: bold; width: 100%; margin-top: auto; transition: 0.2s; }
+        .btn-buy:active { background: #000; }
         .qty-ctrl { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; border-radius: 50px; padding: 4px; border: 1px solid #eee; margin-top: auto; }
-        .qty-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .qty-btn { width: 34px; height: 34px; border-radius: 50%; border: none; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); color: var(--brand-dark); font-weight: bold; }
 
         /* Floating UI */
-        .cart-bar { position: fixed; bottom: 25px; left: 15px; right: 85px; background: var(--brand-red); color: white; padding: 15px 25px; border-radius: 60px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 12px 30px rgba(218, 41, 28, 0.4); z-index: 1000; cursor: pointer; transition: 0.3s; }
-        .line-float { position: fixed; bottom: 25px; right: 15px; width: 56px; height: 56px; background: var(--line-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.4); z-index: 1001; cursor: pointer; transition: 0.3s; text-decoration: none; }
-        .line-float:active { transform: scale(0.9); }
+        .cart-bar { position: fixed; bottom: 25px; left: 15px; right: 85px; background: var(--gradient-red); color: white; padding: 15px 25px; border-radius: 60px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 12px 30px rgba(218, 41, 28, 0.35); z-index: 1000; cursor: pointer; transition: 0.3s ease; }
+        .cart-bar:active { transform: scale(0.95); box-shadow: 0 6px 15px rgba(218, 41, 28, 0.2); }
+        .line-float { position: fixed; bottom: 25px; right: 15px; width: 56px; height: 56px; background: var(--line-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.3); z-index: 1001; cursor: pointer; transition: 0.3s; text-decoration: none; }
 
         /* Modals */
-        .modal-content { border: none; border-radius: 25px; overflow: hidden; }
-        .gift-box { background: #fff4f4; border: 1px dashed var(--brand-red); border-radius: 15px; padding: 12px; margin-top: 15px; display: flex; align-items: center; gap: 12px; }
-        .btn-action-group { display: flex; flex-direction: column; gap: 10px; width: 100%; }
-        .btn-action { border: none; border-radius: 15px; padding: 14px; font-weight: bold; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; color: white; transition: 0.2s; }
+        .modal-content { border: none; border-radius: 28px; overflow: hidden; }
+        .gift-box { background: #fff4f4; border: 1px dashed var(--brand-red); border-radius: 18px; padding: 14px; margin-top: 15px; display: flex; align-items: center; gap: 12px; }
+        .btn-action-group { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+        .btn-action { border: none; border-radius: 18px; padding: 16px; font-weight: bold; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; color: white; transition: 0.2s; }
         .btn-line { background: var(--line-green); }
         .btn-copy { background: var(--brand-dark); }
         
-        /* History Item */
-        .history-item { background: #f8f9fa; border-radius: 18px; padding: 15px; margin-bottom: 15px; border: 1px solid #eee; }
-        .history-meta { display: flex; justify-content: space-between; font-size: 12px; color: #999; margin-bottom: 10px; font-family: monospace; }
-        .history-title { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 6px; }
-        .history-summary { font-size: 13px; color: #666; margin-bottom: 12px; line-height: 1.5; }
-        
-        /* Input Styling */
-        .guest-input { background: #f0f2f5; border: 2px solid #e1e4e8; border-radius: 12px; padding: 10px 15px; font-size: 14px; font-weight: 500; width: 100%; outline: none; transition: 0.2s; }
-        .guest-input:focus { border-color: var(--brand-red); background: #fff; }
+        .guest-input { background: #f0f2f5; border: 2px solid #e1e4e8; border-radius: 14px; padding: 12px 15px; font-size: 14px; font-weight: 500; width: 100%; outline: none; transition: 0.2s; }
+        .guest-input:focus { border-color: var(--brand-red); background: #fff; box-shadow: 0 0 0 4px rgba(218, 41, 28, 0.1); }
+
+        /* History */
+        .history-item { background: #f8f9fa; border-radius: 20px; padding: 18px; margin-bottom: 15px; border: 1px solid #eee; }
+        .history-meta { display: flex; justify-content: space-between; font-size: 12px; color: #999; margin-bottom: 12px; font-family: monospace; }
+        .history-title { font-size: 17px; font-weight: bold; color: #333; margin-bottom: 8px; }
 
         [v-cloak] { display: none; }
     </style>
@@ -82,7 +79,7 @@
 
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-3 text-secondary small fw-bold">麥麥商城 V125 優化版</div>
+        <div class="mt-3 text-secondary small fw-bold" style="letter-spacing: 1px;">麥麥商城 V126 精緻版</div>
     </div>
 
     <div id="app" v-cloak>
@@ -90,10 +87,10 @@
         <div class="sticky-header">
             <div class="p-3 d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-2">
-                    <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px; font-style: italic; font-size: 20px;">M</div>
+                    <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 42px; height: 42px; font-style: italic; font-size: 22px; background: var(--gradient-red) !important;">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 14px;">麥麥商城 <span class="badge bg-light text-muted border fw-normal" style="font-size: 9px;">{{ settings.version }}</span></div>
-                        <div class="text-muted" style="font-size: 11px;">Hi, {{ userProfile.displayName || guestName || '訪客' }}</div>
+                        <div class="fw-bold text-dark" style="font-size: 15px;">麥麥商城 <span class="badge bg-light text-muted border fw-normal" style="font-size: 10px; border-radius: 4px;">{{ settings.version }}</span></div>
+                        <div class="text-muted" style="font-size: 12px;">Hi, {{ userProfile.displayName || guestName || '親愛的訪客' }}</div>
                     </div>
                 </div>
                 <div class="text-muted p-2" @click="openHistory"><i class="fas fa-history fa-lg"></i></div>
@@ -141,10 +138,10 @@
         <!-- 購物車浮動條 -->
         <div class="cart-bar" v-if="totalQty > 0" @click="openCart">
             <div class="d-flex align-items-center">
-                <div class="cart-qty-badge">{{ totalQty }}</div>
+                <div class="cart-qty-badge me-2" style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: bold;">{{ totalQty }}</div>
                 <div class="fw-bold fs-5">${{ totalPrice }}</div>
             </div>
-            <div class="fw-bold">結帳下單 <i class="fas fa-chevron-right ms-2"></i></div>
+            <div class="fw-bold">確認結帳 <i class="fas fa-chevron-right ms-2"></i></div>
         </div>
 
         <!-- LINE 浮動圖標 -->
@@ -156,57 +153,59 @@
         <div class="modal fade" id="cartModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content shadow-lg">
-                    <div class="modal-header border-0 pb-0">
-                        <h5 class="fw-bold">確認訂單內容</h5>
+                    <div class="modal-header border-0 pb-0 pt-4 px-4">
+                        <h5 class="fw-bold fs-4">確認訂單清單</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body pt-3">
-                        <!-- 身份輸入區 (僅在非 LINE 登入時顯示) -->
-                        <div v-if="!userProfile.displayName" class="mb-3">
-                            <label class="form-label small fw-bold text-muted">您的姓名/暱稱 (選填)</label>
-                            <input type="text" class="guest-input" v-model="guestName" placeholder="請輸入稱呼，以便對帳">
+                    <div class="modal-body pt-3 px-4">
+                        <div v-if="!userProfile.displayName" class="mb-4">
+                            <label class="form-label small fw-bold text-muted">您的對帳稱呼 (必填)</label>
+                            <input type="text" class="guest-input" v-model="guestName" placeholder="請輸入稱呼，以便快速對帳">
                         </div>
 
                         <div v-for="item in cartItems" :key="item.id" class="d-flex justify-content-between py-2 border-bottom border-light">
-                            <div style="font-size: 15px; font-weight: 500;">{{ item.name }} x {{ item.qty }}</div>
+                            <div style="font-size: 15px; font-weight: 500; color: #444;">{{ item.name }} x {{ item.qty }}</div>
                             <div class="fw-bold text-danger" style="font-size: 16px;">${{ item.price * item.qty }}</div>
                         </div>
                         <div v-if="activeGift" class="gift-box">
                             <i class="fas fa-gift text-danger fs-4"></i>
-                            <div class="text-danger fw-bold" style="font-size: 14px;">滿額贈: {{ activeGift }}</div>
+                            <div class="text-danger fw-bold" style="font-size: 14px;">滿額禮：{{ activeGift }}</div>
                         </div>
-                        <div class="d-flex justify-content-between fw-bold fs-4 p-3 bg-light rounded-4 mt-3">
-                            <span>應付總計</span><span class="text-danger">${{ totalPrice }}</span>
+                        <div class="d-flex justify-content-between fw-bold fs-4 p-4 bg-light rounded-4 mt-4">
+                            <span>結帳總計</span><span class="text-danger">${{ totalPrice }}</span>
+                        </div>
+                        <div v-if="totalPrice < 50" class="mt-2 text-danger small text-center fw-bold">
+                            ⚠️ 最低訂購金額需滿 50 元
                         </div>
                     </div>
-                    <div class="modal-footer border-0">
-                        <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold fs-5 shadow-sm" @click="handleCheckout" :disabled="isSubmitting">
-                            {{ isSubmitting ? '處理中...' : '確認下單' }}
+                    <div class="modal-footer border-0 p-4">
+                        <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold fs-5 shadow-sm" style="background: var(--gradient-red); border: none;" @click="handleCheckout" :disabled="isSubmitting || totalPrice < 50">
+                            {{ isSubmitting ? '處理訂單中...' : '確認下單並產生訊息' }}
                         </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 成功與分享 Modal -->
+        <!-- 成功訊息 Modal -->
         <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content text-center p-4">
                     <div class="mb-3 text-success"><i class="fas fa-check-circle fa-4x"></i></div>
-                    <h4 class="fw-bold">訂單已成立</h4>
-                    <p class="text-muted small mb-4">請點擊按鈕傳送或複製訊息給客服</p>
-                    <div class="p-3 bg-light rounded-4 text-start mb-4 border" style="max-height: 180px; overflow-y: auto;">
-                        <pre style="white-space: pre-wrap; margin: 0; font-size: 14px; line-height: 1.6; color: #333; font-family: -apple-system, sans-serif;">{{ finalMsg }}</pre>
+                    <h4 class="fw-bold">訂單已準備就緒</h4>
+                    <p class="text-muted small mb-4">請點擊下方按鈕，傳送訂單給客服確認</p>
+                    <div class="p-3 bg-light rounded-4 text-start mb-4 border" style="max-height: 220px; overflow-y: auto;">
+                        <pre style="white-space: pre-wrap; margin: 0; font-size: 15px; line-height: 1.8; color: #333; font-family: -apple-system, sans-serif; font-weight: 500;">{{ finalMsg }}</pre>
                     </div>
                     <div class="btn-action-group">
-                        <button class="btn-action btn-line" @click="sendToLine(finalMsg)">
+                        <button class="btn-action btn-line shadow-sm" @click="sendToLine(finalMsg)">
                             <i class="fab fa-line fa-lg"></i><span>直接傳送給客服</span>
                         </button>
-                        <button class="btn-action btn-copy" @click="copyText(finalMsg)">
-                            <i class="fas fa-copy"></i><span>{{ hasCopied ? '已成功複製' : '複製訂單文字' }}</span>
+                        <button class="btn-action btn-copy shadow-sm" @click="copyText(finalMsg)">
+                            <i class="fas fa-copy"></i><span>{{ hasCopied ? '已複製內容' : '複製訂單文字' }}</span>
                         </button>
                     </div>
-                    <button class="btn btn-link text-muted mt-3 small text-decoration-none" @click="closeSuccess">回商城首頁</button>
+                    <button class="btn btn-link text-muted mt-3 small text-decoration-none fw-bold" @click="closeSuccess">回商城首頁</button>
                 </div>
             </div>
         </div>
@@ -215,24 +214,24 @@
         <div class="modal fade" id="historyModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content">
-                    <div class="modal-header border-0 bg-light">
+                    <div class="modal-header border-0 bg-light p-4">
                         <h5 class="fw-bold mb-0">歷史下單紀錄</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body p-3">
+                    <div class="modal-body p-4">
                         <div v-if="orderHistory.length === 0" class="text-center py-5 text-muted">
                             <i class="fas fa-receipt fa-3x mb-3 opacity-25"></i>
-                            <p>尚無歷史紀錄</p>
+                            <p>尚無歷史下單紀錄</p>
                         </div>
                         <div v-for="h in orderHistory" :key="h.id" class="history-item">
                             <div class="history-meta">
                                 <span>{{ h.timestamp }}</span>
-                                <span>#{{ h.id }}</span>
+                                <span>ID: {{ h.id }}</span>
                             </div>
-                            <div class="history-title">總計 ${{ h.totalAmount }}</div>
-                            <div class="history-summary">{{ h.itemsSummary }}</div>
+                            <div class="history-title">總額：${{ h.totalAmount }}</div>
+                            <div class="text-muted mb-3" style="font-size: 13px; line-height: 1.6;">{{ h.itemsSummary }}</div>
                             <div class="d-flex gap-2">
-                                <button class="btn btn-outline-success flex-grow-1 py-2 rounded-3 fw-bold" @click="sendToLine(h.fullMsg)">
+                                <button class="btn btn-outline-success flex-grow-1 py-2 rounded-3 fw-bold shadow-sm" @click="sendToLine(h.fullMsg)">
                                     <i class="fab fa-line me-1"></i> 重傳客服
                                 </button>
                                 <button class="btn btn-outline-dark px-3 py-2 rounded-3" @click="copyText(h.fullMsg)">
@@ -257,7 +256,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v125', bankInfo: '' });
+                const settings = ref({ version: 'v126', bankInfo: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({ displayName: '', userId: '' });
@@ -268,7 +267,6 @@
                 const finalMsg = ref('');
                 let cartModal, successModal, historyModal;
 
-                // 初始化加速載入
                 const loadCache = () => {
                     const cProd = localStorage.getItem('mm_products_v123');
                     const cSett = localStorage.getItem('mm_settings_v123');
@@ -295,9 +293,7 @@
                         }
                         if (sRes.liffId) {
                             await liff.init({ liffId: sRes.liffId });
-                            if (liff.isLoggedIn()) {
-                                userProfile.value = await liff.getProfile();
-                            }
+                            if (liff.isLoggedIn()) userProfile.value = await liff.getProfile();
                         }
                     } catch (e) { console.error(e); }
                     finally {
@@ -314,7 +310,6 @@
                     historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
                 });
 
-                // 購物邏輯
                 const categories = computed(() => [...new Set(products.value.map(p => p.category).filter(Boolean))]);
                 const filteredProducts = computed(() => currentCat.value === 'ALL' ? products.value : products.value.filter(p => p.category === currentCat.value));
                 const cartItems = computed(() => Object.keys(cart.value).map(id => {
@@ -331,43 +326,56 @@
                     else if (next <= (p.stock || 99)) cart.value[p.id] = next;
                 };
 
-                // 下單處理
                 const handleCheckout = async () => {
-                    isSubmitting.value = true;
+                    if (totalPrice.value < 50) return; // 再次檢查最低金額
                     
-                    // 訪客名稱保存
+                    isSubmitting.value = true;
                     if (guestName.value) localStorage.setItem('mm_guest_name', guestName.value);
                     
-                    const orderId = 'M' + Date.now().toString().slice(-6);
-                    const itemsStr = cartItems.value.map((i, idx) => `${idx + 1}. ${i.name} X${i.qty}`).join('\n');
-                    const timeStr = new Date().toLocaleString('zh-TW');
-
-                    // 身份識別處理
+                    // 產生訂單編號 M + YYYYMMDDHHmm
+                    const now = new Date();
+                    const pad = (n) => String(n).padStart(2, '0');
+                    const orderId = 'M' + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + pad(now.getHours()) + pad(now.getMinutes());
+                    
+                    const timeStr = now.getFullYear() + '/' + pad(now.getMonth() + 1) + '/' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+                    
+                    const itemsTextForMsg = cartItems.value.map((i, idx) => `${idx + 1}、${i.name} X${i.qty}`).join('\n');
                     const finalName = userProfile.value.displayName || (guestName.value ? '訪客 - ' + guestName.value : '匿名訪客');
-                    const finalId = userProfile.value.userId || 'WEB_' + Math.random().toString(36).substr(2, 9);
+                    const finalId = userProfile.value.userId || 'WEB_' + Math.random().toString(36).substr(2, 6).toUpperCase();
 
-                    let msg = `🛒 【麥麥訂單 ${orderId}】\n----------------\n訂購人: ${finalName}\n----------------\n${itemsStr}\n----------------\n💰 總金額: $${totalPrice.value}`;
-                    if (activeGift.value) msg += `\n🎁 滿額贈: ${activeGift.value}`;
-                    msg += `\n\n${settings.value.bankInfo}`;
+                    // 建構訊息
+                    let msg = `✨ 【麥麥小舖電子票券】 ✨\n`;
+                    msg += `🆔 訂單編號：${orderId}\n`;
+                    msg += `⏰ 訂購時間：${timeStr}\n`;
+                    msg += `👤 訂購人：${finalName}\n`;
+                    msg += `------------------------\n`;
+                    msg += `📦 訂購商品：\n${itemsTextForMsg}\n`;
+                    msg += `------------------------\n`;
+                    msg += `💰 總金額：$${totalPrice.value}\n`;
+                    if (activeGift.value) msg += `🎁 滿額贈：${activeGift.value}\n`;
+                    msg += `------------------------\n`;
+                    msg += `🏦 匯款資訊：\n${settings.value.bankInfo}\n\n`;
+                    msg += `⚠️ 請於匯款後告知客服帳號末五碼，以便核對。`;
+
                     finalMsg.value = msg;
 
-                    // 保存歷史
+                    // 儲存歷史
                     const newRecord = {
                         id: orderId,
                         timestamp: timeStr,
                         totalAmount: totalPrice.value,
-                        itemsSummary: itemsStr.split('\n').slice(0, 3).join('\n') + (itemsStr.split('\n').length > 3 ? '\n...' : ''),
+                        itemsSummary: itemsTextForMsg.split('\n').slice(0, 3).join('\n') + (itemsTextForMsg.split('\n').length > 3 ? '\n...' : ''),
                         fullMsg: msg
                     };
-                    orderHistory.value = [newRecord, ...orderHistory.value].slice(0, 20);
+                    orderHistory.value = [newRecord, ...orderHistory.value].slice(0, 30);
                     localStorage.setItem('mm_history_v123', JSON.stringify(orderHistory.value));
 
-                    // 遠端存儲 (GAS)
+                    // 記錄到雲端
                     fetch(API_URL, {
                         method: 'POST', mode: 'no-cors',
                         body: JSON.stringify({
                             timestamp: timeStr, id: orderId,
-                            itemsText: itemsStr.replace(/\n/g, ', '),
+                            itemsText: itemsTextForMsg.replace(/\n/g, ', '),
                             totalAmount: totalPrice.value,
                             giftText: activeGift.value || '無',
                             userId: finalId,
@@ -384,7 +392,6 @@
                     if (liff.isInClient()) {
                         try {
                             await liff.sendMessages([{ type: 'text', text: txt }]);
-                            alert("訊息已直接發送！");
                         } catch (e) {
                             window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
                         }
@@ -403,14 +410,12 @@
                     setTimeout(() => hasCopied.value = false, 2000);
                 };
 
-                const closeSuccess = () => { successModal.hide(); cart.value = {}; };
-                const openHistory = () => historyModal.show();
-
                 return {
                     products, settings, cart, currentCat, categories, filteredProducts,
                     updateCart, totalQty, totalPrice, cartItems, activeGift, userProfile, guestName,
                     handleCheckout, isSubmitting, finalMsg, sendToLine, copyText, hasCopied,
-                    openCart: () => cartModal.show(), closeSuccess, openHistory, orderHistory
+                    openCart: () => cartModal.show(), closeSuccess: () => { successModal.hide(); cart.value = {}; }, 
+                    openHistory: () => historyModal.show(), orderHistory
                 };
             }
         }).mount('#app');
