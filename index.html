@@ -70,7 +70,7 @@
         .qty-ctrl { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; border-radius: 50px; padding: 3px; border: 1px solid #eee; }
         .qty-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-        .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--gradient-red); color: white; padding: 18px 25px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 -8px 20px rgba(218, 41, 28, 0.2); }
+        .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--gradient-red); color: white; padding: 18px 25px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 -8px 20px rgba(218, 41, 28, 0.2); cursor: pointer; }
         .line-float { position: fixed; bottom: 85px; right: 20px; width: 54px; height: 54px; background: var(--line-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 26px; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.3); z-index: 1001; text-decoration: none; border: 2px solid white; transition: 0.2s; }
         .line-float:active { transform: scale(0.9); }
 
@@ -82,9 +82,9 @@
 <script type="importmap">
 {
   "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
     "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3"
+    "react/": "https://esm.sh/react@^19.2.3/"
   }
 }
 </script>
@@ -93,7 +93,7 @@
 
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-3 ver-tag">載入中...</div>
+        <div class="mt-3 ver-tag">極速載入中...</div>
     </div>
 
     <div id="app" v-cloak>
@@ -110,7 +110,7 @@
             </div>
             
             <div class="category-scroll">
-                <button class="cat-btn" :class="{ active: currentCat === 'ALL' }" @click="currentCat = 'ALL'">🌟 全部</button>
+                <button class="cat-btn" :class="{ active: currentCat === 'ALL' }" @click="currentCat = 'ALL'">🌟 全部商品</button>
                 <button v-for="cat in categories" :key="cat" class="cat-btn" :class="{ active: currentCat === cat }" @click="currentCat = cat">{{ cat }}</button>
             </div>
         </div>
@@ -144,12 +144,13 @@
             </div>
         </div>
 
+        <!-- 購物車導覽列優化 -->
         <div class="cart-bar shadow-lg" v-if="totalQty > 0" @click="openCart">
             <div class="d-flex align-items-center">
                 <div class="me-3" style="background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 10px; font-size: 13px; font-weight: 800;">{{ totalQty }} 件</div>
                 <div class="fw-bold fs-4">${{ totalPrice }}</div>
             </div>
-            <div class="fw-bold fs-6"><i class="fas fa-shopping-cart me-2"></i>🛒 購物車 <i class="fas fa-arrow-right ms-2"></i></div>
+            <div class="fw-bold fs-6"><i class="fas fa-shopping-cart me-1"></i> 購物車 <i class="fas fa-arrow-right ms-2"></i></div>
         </div>
 
         <a class="line-float" href="https://lin.ee/ejXmXDl" target="_blank"><i class="fab fa-line"></i></a>
@@ -167,7 +168,7 @@
                             <div class="fw-bold text-danger flex-shrink-0">${{ item.price * item.qty }}</div>
                         </div>
                         <div class="d-flex justify-content-between fw-bold fs-3 p-3 bg-light rounded-4 mt-4">
-                            <span>總額</span><span class="text-danger">${{ totalPrice }}</span>
+                            <span>總計</span><span class="text-danger">${{ totalPrice }}</span>
                         </div>
                         <div v-if="totalPrice < 50" class="text-danger text-center mt-2 small fw-bold">
                             ⚠️ 訂單需滿 $50 才能出貨 (還差 ${{ 50 - totalPrice }})
@@ -178,7 +179,7 @@
                                 style="background: var(--gradient-red); border: none;" 
                                 @click="handleCheckout" 
                                 :disabled="isSubmitting || totalPrice < 50">
-                            <i class="fas fa-paper-plane me-2"></i>{{ totalPrice < 50 ? '金額未滿 $50' : '確認訂單並送出' }}
+                            <i class="fas fa-paper-plane me-2"></i>{{ totalPrice < 50 ? '金額不足 $50' : '確認訂單並送出' }}
                         </button>
                     </div>
                 </div>
@@ -189,17 +190,21 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content text-center p-4 border-0 rounded-4 shadow-lg">
                     <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
-                    <h4 class="fw-bold">訂單已成功！</h4>
+                    <h4 class="fw-bold">訂單已成功成立！</h4>
                     <div class="p-3 bg-light rounded-4 text-start mb-4 small">
                         <pre class="m-0" style="white-space: pre-wrap; font-family: inherit; font-weight: 600; line-height: 1.5; color: #444;">{{ finalMsg }}</pre>
                     </div>
-                    <button class="btn btn-line-custom w-100 rounded-pill py-3 fw-bold mb-2 shadow-sm" @click="sendToLine(finalMsg)">
-                        <i class="fab fa-line me-2"></i>直接傳送訂單到 LINE
+                    <!-- 傳送按鈕優化 -->
+                    <button class="btn btn-line-custom w-100 rounded-pill py-3 fw-bold mb-2 shadow-sm d-flex align-items-center justify-content-center" 
+                            @click="sendToLine(finalMsg)" :disabled="isLineSending">
+                        <i v-if="isLineSending" class="fas fa-spinner fa-spin me-2"></i>
+                        <i v-else class="fab fa-line me-2"></i>
+                        {{ isLineSending ? '傳送中...' : '直接傳送訂單到 LINE' }}
                     </button>
                     <button class="btn btn-copy-custom w-100 rounded-pill py-3 fw-bold mb-2 shadow-sm" @click="copyMsg(finalMsg)">
                         <i class="fas fa-copy me-2"></i>複製訂單文字
                     </button>
-                    <button class="btn btn-link text-muted" data-bs-dismiss="modal" @click="cart = {}">回商城首頁</button>
+                    <button class="btn btn-link text-muted" data-bs-dismiss="modal" @click="cart = {}">返回商城首頁</button>
                 </div>
             </div>
         </div>
@@ -227,6 +232,7 @@
                 const guestName = ref(localStorage.getItem('mm_guest_name') || '');
                 const finalMsg = ref('');
                 const isSubmitting = ref(false);
+                const isLineSending = ref(false);
                 let cartModal, successModal;
 
                 onMounted(() => {
@@ -241,8 +247,10 @@
                     if (sRes) settings.value = sRes;
                     if (sRes.liffId) {
                         liff.init({ liffId: sRes.liffId }).then(async () => {
-                            if (liff.isLoggedIn()) userProfile.value = await liff.getProfile();
-                        }).catch(err => console.error("LIFF Error", err));
+                            if (liff.isLoggedIn()) {
+                                userProfile.value = await liff.getProfile();
+                            }
+                        }).catch(err => console.error("LIFF Init Error", err));
                     }
                     const loader = document.getElementById('static-loader');
                     if (loader) {
@@ -311,30 +319,50 @@
                     successModal.show();
                 };
 
+                // 深度修復 LINE 傳送邏輯
                 const sendToLine = async (txt) => {
-                    // 若在 LINE 環境內且支援 sendMessages (直接發送)
-                    if (liff.isInClient()) {
-                        try {
-                            await liff.sendMessages([{ type: 'text', text: txt }]);
-                            alert('訂單已直接傳送到對話視窗！');
-                            liff.closeWindow();
-                        } catch (err) {
-                            // 若權限不足或環境不支援直接發送，改用分享器
-                            if (liff.isApiAvailable('shareTargetPicker')) {
-                                liff.shareTargetPicker([{ type: 'text', text: txt }]);
+                    isLineSending.value = true;
+                    
+                    try {
+                        if (liff.isInClient()) {
+                            const context = liff.getContext();
+                            // 1. 如果在對話視窗內（utou/group/room），嘗試直接發送
+                            if (context && ['utou', 'group', 'room'].includes(context.type)) {
+                                await liff.sendMessages([{ type: 'text', text: txt }]);
+                                liff.closeWindow(); // 發送完畢直接關閉
                             } else {
+                                // 2. 不在具體對話視窗（例如從首頁打開），彈出分享對象選擇器
+                                if (liff.isApiAvailable('shareTargetPicker')) {
+                                    await liff.shareTargetPicker([{ type: 'text', text: txt }]);
+                                } else {
+                                    window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
+                                }
+                            }
+                        } else {
+                            // 3. 在外部瀏覽器，嘗試分享選擇器或跳轉
+                            if (liff.isLoggedIn()) {
+                                if (liff.isApiAvailable('shareTargetPicker')) {
+                                    await liff.shareTargetPicker([{ type: 'text', text: txt }]);
+                                } else {
+                                    window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
+                                }
+                            } else {
+                                // 未登入則使用傳送連結
                                 window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
                             }
                         }
-                    } else {
-                        // 外部瀏覽器：使用通用分享連結
+                    } catch (err) {
+                        console.error("LINE Send Failed:", err);
+                        // 最後保險措施：通用連結跳轉
                         window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
+                    } finally {
+                        isLineSending.value = false;
                     }
                 };
 
                 const copyMsg = (txt) => {
                     if (navigator.clipboard) {
-                        navigator.clipboard.writeText(txt).then(() => alert('已複製！')).catch(() => fallbackCopyText(txt));
+                        navigator.clipboard.writeText(txt).then(() => alert('訂單內容已複製！')).catch(() => fallbackCopyText(txt));
                     } else {
                         fallbackCopyText(txt);
                     }
@@ -346,11 +374,11 @@
                     textArea.style.position = "fixed"; 
                     document.body.appendChild(textArea);
                     textArea.select();
-                    try { document.execCommand('copy'); alert('已複製！'); } catch (err) { alert('請手動複製'); }
+                    try { document.execCommand('copy'); alert('訂單內容已複製！'); } catch (err) { alert('請手動選取文字複製'); }
                     document.body.removeChild(textArea);
                 };
 
-                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, finalMsg, isSubmitting, sendToLine, copyMsg, openCart: () => cartModal.show(), userProfile, guestName };
+                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, finalMsg, isSubmitting, isLineSending, sendToLine, copyMsg, openCart: () => cartModal.show(), userProfile, guestName };
             }
         }).mount('#app');
     </script>
