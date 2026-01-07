@@ -79,6 +79,10 @@
         .btn-copy-custom { background-color: var(--copy-blue) !important; color: white !important; border: none !important; }
 
         [v-cloak] { display: none; }
+
+        /* 歷史紀錄卡片樣式 */
+        .history-item { background: #f8f9fa; border-radius: 15px; padding: 15px; margin-bottom: 12px; border: 1px solid #eee; }
+        .history-tag { font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 5px; background: #eee; color: #888; margin-bottom: 5px; display: inline-block; }
     </style>
 <script type="importmap">
 {
@@ -94,7 +98,7 @@
 
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-2 ver-tag">v141 加載中...</div>
+        <div class="mt-2 ver-tag">v142 加載中...</div>
     </div>
 
     <div id="app" v-cloak>
@@ -103,7 +107,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v141</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v142</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -215,6 +219,48 @@
                 </div>
             </div>
         </div>
+
+        <!-- 歷史紀錄 Modal -->
+        <div class="modal fade" id="historyModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 rounded-4 shadow-lg">
+                    <div class="modal-header border-0 pt-4 px-4 bg-light">
+                        <h5 class="fw-bold fs-4"><i class="fas fa-history me-2"></i>歷史購買紀錄</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body px-4 py-3" style="max-height: 60vh; overflow-y: auto;">
+                        <div v-if="orderHistory.length === 0" class="text-center py-5 text-muted">
+                            <i class="fas fa-box-open fa-3x mb-3 opacity-25"></i>
+                            <p>尚無任何購買紀錄</p>
+                        </div>
+                        <div v-else>
+                            <div v-for="h in orderHistory" :key="h.id" class="history-item shadow-sm">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <span class="history-tag">#{{ h.id }}</span>
+                                        <div class="fw-bold small text-muted">{{ h.timestamp }}</div>
+                                    </div>
+                                    <div class="text-danger fw-bold fs-5">${{ h.totalAmount }}</div>
+                                </div>
+                                <div class="mb-3 small">
+                                    <div v-for="it in h.items" :key="it.name" class="d-flex justify-content-between">
+                                        <span>• {{ it.name }}</span>
+                                        <span class="fw-bold">x{{ it.qty }}</span>
+                                    </div>
+                                    <div v-if="h.gift" class="text-success fw-bold mt-1">★ 贈品: {{ h.gift }}</div>
+                                </div>
+                                <button class="btn btn-outline-success btn-sm w-100 rounded-pill fw-bold py-2" @click="resendHistory(h)">
+                                    <i class="fab fa-line me-1"></i>重新傳送訂單給客服
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4">
+                        <button class="btn btn-dark w-100 rounded-pill py-2 fw-bold" data-bs-dismiss="modal">關閉</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js"></script>
@@ -231,7 +277,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v141', bankInfo: '', liffId: '' });
+                const settings = ref({ version: 'v142', bankInfo: '', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -239,12 +285,15 @@
                 const finalMsg = ref('');
                 const isSubmitting = ref(false);
                 const isLineSending = ref(false);
-                let cartModal, successModal;
+                const orderHistory = ref(JSON.parse(localStorage.getItem('mm_order_history') || '[]'));
+                
+                let cartModal, successModal, historyModal;
 
                 onMounted(() => {
                     initApp();
                     cartModal = new bootstrap.Modal(document.getElementById('cartModal'));
                     successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                    historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
                 });
 
                 const initApp = async () => {
@@ -283,15 +332,10 @@
                     else if (next <= Number(p.stock)) cart.value[p.id] = next;
                 };
 
-                const handleCheckout = async () => {
-                    if (totalPrice.value < 50) return;
-                    isSubmitting.value = true;
-                    const now = new Date();
-                    const pad = (n) => String(n).padStart(2, '0');
-                    const orderId = 'M' + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
-                    
+                // 生成訂單文字範本
+                const generateMsg = (orderId, date, items, total, gift) => {
                     const numIcons = ['❶','❷','❸','❹','❺','❻','❼','❽','❾','❿'];
-                    const itemsDetail = cartItems.value.map((i, idx) => {
+                    const itemsDetail = items.map((i, idx) => {
                         const num = numIcons[idx] || (idx + 1) + '.';
                         return `${num} ${i.name}\n   🔹數量：${i.qty}\n   🔹小計：$${i.price * i.qty}\n   🔹效期：${i.expiryDate || '依門市說明'}`;
                     }).join('\n');
@@ -309,14 +353,39 @@
                     msg += `------------------------\n`;
                     msg += `🍱 訂購商品：\n${itemsDetail}\n`;
                     msg += `------------------------\n`;
-                    msg += `💰 應付總額：$${totalPrice.value}\n`;
+                    msg += `💰 應付總額：$${total}\n`;
+                    if (gift) msg += `🎁 滿額贈：${gift}\n`;
                     msg += `------------------------\n`;
                     msg += `🏦 匯款資訊：\n`;
                     msg += `${cleanBankInfo}`;
+                    return msg;
+                };
+
+                const handleCheckout = async () => {
+                    if (totalPrice.value < 50) return;
+                    isSubmitting.value = true;
+                    const now = new Date();
+                    const pad = (n) => String(n).padStart(2, '0');
+                    const orderId = 'M' + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
                     
+                    const giftText = totalPrice.value >= 999 ? '滿福堡加蛋套餐' : (totalPrice.value >= 500 ? '大蛋捲冰淇淋' : '');
+                    
+                    const msg = generateMsg(orderId, now.toLocaleString(), cartItems.value, totalPrice.value, giftText);
                     finalMsg.value = msg;
                     
-                    // 背景記錄訂單
+                    const record = {
+                        id: orderId,
+                        timestamp: now.toLocaleString(),
+                        totalAmount: totalPrice.value,
+                        gift: giftText,
+                        items: cartItems.value.map(i => ({ name: i.name, qty: i.qty, price: i.price, expiryDate: i.expiryDate }))
+                    };
+
+                    // 存入歷史紀錄
+                    orderHistory.value = [record, ...orderHistory.value].slice(0, 20);
+                    localStorage.setItem('mm_order_history', JSON.stringify(orderHistory.value));
+
+                    // 背景記錄訂單到 GAS
                     fetch(API_URL, {
                         method: 'POST', mode: 'no-cors',
                         body: JSON.stringify({
@@ -363,6 +432,11 @@
                     }
                 };
 
+                const resendHistory = (h) => {
+                    const msg = generateMsg(h.id, h.timestamp, h.items, h.totalAmount, h.gift);
+                    sendToLine(msg);
+                };
+
                 const copyMsg = (txt) => {
                     const fallback = (text) => {
                         const textArea = document.createElement("textarea");
@@ -389,7 +463,14 @@
                     }
                 };
 
-                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, finalMsg, isSubmitting, isLineSending, sendToLine, copyMsg, openCart: () => cartModal.show(), userProfile, guestName };
+                return { 
+                    products, cart, currentCat, categories, filteredProducts, updateCart, 
+                    totalQty, totalPrice, cartItems, handleCheckout, finalMsg, 
+                    isSubmitting, isLineSending, sendToLine, copyMsg, 
+                    openCart: () => cartModal.show(), 
+                    openHistory: () => historyModal.show(),
+                    orderHistory, resendHistory, userProfile, guestName 
+                };
             }
         }).mount('#app');
     </script>
