@@ -248,6 +248,14 @@
                         const num = numIcons[idx] || (idx + 1) + '.';
                         return `${num} ${i.name}\n   🔹數量：${i.qty}\n   🔹小計：$${i.price * i.qty}\n   🔹效期：${i.expiryDate || '依門市說明'}`;
                     }).join('\n');
+
+                    // 清理匯款資訊：移除重複標題與冗餘文字
+                    let cleanBankInfo = settings.value.bankInfo || "";
+                    cleanBankInfo = cleanBankInfo
+                        .replace("【匯款資訊】", "")
+                        .replace("確認有貨轉帳後請告知，謝謝。", "")
+                        .replace("※ 匯款後請提供【帳號末五碼】，以便快速對帳，謝謝！", "")
+                        .trim();
                     
                     let msg = `🛒【麥麥小舖電子票券】\n`;
                     msg += `🎫 訂單編號：${orderId}\n`;
@@ -258,8 +266,7 @@
                     msg += `💰 應付總額：$${totalPrice.value}\n`;
                     msg += `------------------------\n`;
                     msg += `🏦 匯款資訊：\n`;
-                    msg += `${settings.value.bankInfo}\n\n`;
-                    msg += `※ 匯款後請提供【帳號末五碼】，以便快速對帳，謝謝！`;
+                    msg += `${cleanBankInfo}`;
                     
                     finalMsg.value = msg;
                     
