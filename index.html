@@ -166,7 +166,7 @@
                     <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
                     <h4 class="fw-bold">訂單已成立！</h4>
                     <div class="p-3 bg-light rounded-4 text-start mb-4 small">
-                        <pre class="m-0" style="white-space: pre-wrap; font-family: inherit; font-weight: 600;">{{ finalMsg }}</pre>
+                        <pre class="m-0" style="white-space: pre-wrap; font-family: inherit; font-weight: 600; line-height: 1.5;">{{ finalMsg }}</pre>
                     </div>
                     <button class="btn btn-success w-100 rounded-pill py-3 fw-bold mb-2" @click="sendToLine(finalMsg)">
                         <i class="fab fa-line me-2"></i>直接傳送到 LINE
@@ -243,17 +243,23 @@
                     const pad = (n) => String(n).padStart(2, '0');
                     const orderId = 'M' + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
                     
-                    const itemsText = cartItems.value.map((i, idx) => `${idx + 1}、${i.name} X${i.qty}`).join('\n');
+                    const numIcons = ['❶','❷','❸','❹','❺','❻','❼','❽','❾','❿'];
+                    const itemsDetail = cartItems.value.map((i, idx) => {
+                        const num = numIcons[idx] || (idx + 1) + '.';
+                        return `${num} ${i.name}\n   🔹數量：${i.qty}\n   🔹小計：$${i.price * i.qty}\n   🔹效期：${i.expiryDate || '依門市說明'}`;
+                    }).join('\n');
                     
-                    let msg = `✨ 【麥麥小舖電子票券】 ✨\n`;
-                    msg += `🆔 訂單編號：${orderId}\n`;
-                    msg += `👤 訂購人：${userProfile.value.displayName || guestName.value || '訪客'}\n`;
+                    let msg = `🛒【麥麥小舖電子票券】\n`;
+                    msg += `🎫 訂單編號：${orderId}\n`;
+                    msg += `👤 訂購人：${userProfile.value.displayName || guestName.value || '親愛的客人'}\n`;
                     msg += `------------------------\n`;
-                    msg += `📦 訂購商品：\n${itemsText}\n`;
+                    msg += `🍱 訂購商品：\n${itemsDetail}\n`;
                     msg += `------------------------\n`;
-                    msg += `💰 總金額：$${totalPrice.value}\n`;
+                    msg += `💰 應付總額：$${totalPrice.value}\n`;
                     msg += `------------------------\n`;
-                    msg += `🏦 匯款資訊：\n${settings.value.bankInfo}`;
+                    msg += `🏦 匯款資訊：\n`;
+                    msg += `${settings.value.bankInfo}\n\n`;
+                    msg += `※ 匯款後請提供【帳號末五碼】，以便快速對帳，謝謝！`;
                     
                     finalMsg.value = msg;
                     
