@@ -103,7 +103,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v137</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v138</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -145,25 +145,25 @@
             </div>
         </div>
 
-        <!-- 購物車導覽列優化 -->
+        <!-- 修正圖標重複問題 -->
         <div class="cart-bar shadow-lg" v-if="totalQty > 0" @click="openCart">
             <div class="d-flex align-items-center">
                 <div class="me-3" style="background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 10px; font-size: 13px; font-weight: 800;">{{ totalQty }} 件</div>
                 <div class="fw-bold fs-4">${{ totalPrice }}</div>
             </div>
             <div class="fw-bold fs-6">
-                <i class="fas fa-shopping-cart me-1"></i> 🛒 購物車 <i class="fas fa-arrow-right ms-2"></i>
+                🛒 購物車 <i class="fas fa-arrow-right ms-2"></i>
             </div>
         </div>
 
         <a class="line-float" href="https://lin.ee/ejXmXDl" target="_blank"><i class="fab fa-line"></i></a>
 
-        <!-- 購物車詳情 Modal -->
+        <!-- 購物車 Modal -->
         <div class="modal fade" id="cartModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 rounded-4 shadow-lg">
                     <div class="modal-header border-0 pt-4 px-4">
-                        <h5 class="fw-bold fs-4">🛒 購物車詳情</h5>
+                        <h5 class="fw-bold fs-4">🛒 購物車清單</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body px-4">
@@ -172,7 +172,7 @@
                             <div class="fw-bold text-danger flex-shrink-0">${{ item.price * item.qty }}</div>
                         </div>
                         <div class="d-flex justify-content-between fw-bold fs-3 p-3 bg-light rounded-4 mt-4">
-                            <span>總額計</span><span class="text-danger">${{ totalPrice }}</span>
+                            <span>總計金額</span><span class="text-danger">${{ totalPrice }}</span>
                         </div>
                         <div v-if="totalPrice < 50" class="text-danger text-center mt-2 small fw-bold">
                             ⚠️ 訂單需滿 $50 才能出貨 (還差 ${{ 50 - totalPrice }})
@@ -195,11 +195,13 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content text-center p-4 border-0 rounded-4 shadow-lg">
                     <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
-                    <h4 class="fw-bold">訂單已成立！</h4>
+                    <h4 class="fw-bold">訂單已成功成立！</h4>
+                    <p class="text-muted small">請點擊下方按鈕將訂單傳送給客服</p>
                     <div class="p-3 bg-light rounded-4 text-start mb-4 small">
                         <pre class="m-0" style="white-space: pre-wrap; font-family: inherit; font-weight: 600; line-height: 1.5; color: #444;">{{ finalMsg }}</pre>
                     </div>
                     
+                    <!-- 傳送按鈕優化 -->
                     <button class="btn btn-line-custom w-100 rounded-pill py-3 fw-bold mb-2 shadow-sm d-flex align-items-center justify-content-center" 
                             @click="sendToLine(finalMsg)" :disabled="isLineSending">
                         <i v-if="isLineSending" class="fas fa-spinner fa-spin me-2"></i>
@@ -225,14 +227,13 @@
         const { createApp, ref, computed, onMounted } = Vue;
         const API_URL = 'https://script.google.com/macros/s/AKfycbx2xdqkRoBGFibvgKRo05QtVcIWZlUjBq-rr_NRJ-8nK1BsFPSorQqnsNa89IPlG45aeA/exec';
 
-        // 並行啟動網路請求提升效能
         const globalDataPromise = fetch(`${API_URL}?action=getInitData`).then(r => r.json()).catch(() => ({products:[]}));
         const globalSettingsPromise = fetch(`${API_URL}?action=getSettings`).then(r => r.json()).catch(() => ({}));
 
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v137', bankInfo: '', liffId: '' });
+                const settings = ref({ version: 'v138', bankInfo: '', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -320,7 +321,6 @@
                     
                     finalMsg.value = msg;
                     
-                    // 背景記錄訂單
                     fetch(API_URL, {
                         method: 'POST', mode: 'no-cors',
                         body: JSON.stringify({
@@ -337,62 +337,63 @@
                     successModal.show();
                 };
 
-                // 核心傳送邏輯：優先直接發送，失敗則回退到選擇器
+                // 修復傳送邏輯：使用最穩定的分享器
                 const sendToLine = async (txt) => {
                     isLineSending.value = true;
-                    const message = [{ type: 'text', text: txt }];
-
                     try {
                         if (liff.isInClient()) {
-                            // 1. 嘗試最理想的「直接發送」（無選擇視窗）
-                            // 必須在對話視窗開啟且 LIFF 具備 chat_message.write 權限
-                            const context = liff.getContext();
-                            if (context && ['utou', 'group', 'room'].includes(context.type)) {
-                                try {
-                                    await liff.sendMessages(message);
-                                    liff.closeWindow(); // 成功發送後直接關閉
-                                    return;
-                                } catch (sendErr) {
-                                    console.warn("Direct send failed, trying picker...", sendErr);
-                                }
-                            }
-                            
-                            // 2. 若不支援直接發送或權限不足，使用「分享對象選擇器」（有視窗，但保證成功）
+                            // 優先嘗試分享對象選擇器 (這是最穩定的彈窗發送方式)
                             if (liff.isApiAvailable('shareTargetPicker')) {
-                                await liff.shareTargetPicker(message);
+                                await liff.shareTargetPicker([{ type: 'text', text: txt }]);
+                                // 分享成功後通常不需要關閉視窗，讓使用者決定
                             } else {
-                                // 3. 最後手段：使用 LINE URL Scheme
-                                window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
+                                // 若不支援分享器，嘗試直接發送
+                                await liff.sendMessages([{ type: 'text', text: txt }]);
+                                alert('訂單已傳送！');
                             }
                         } else {
                             // 外部瀏覽器：使用通用傳送連結
-                            window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
+                            const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
+                            window.open(lineUrl, '_blank');
                         }
                     } catch (err) {
-                        console.error("LINE Send Logic Error:", err);
-                        // 若所有 API 都失敗，嘗試 URL 跳轉
-                        window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
+                        console.error("LINE Send Error:", err);
+                        // 最後保險措施
+                        const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
+                        window.location.href = lineUrl;
                     } finally {
                         isLineSending.value = false;
                     }
                 };
 
+                // 修復複製邏輯：雙重保險
                 const copyMsg = (txt) => {
-                    if (navigator.clipboard) {
-                        navigator.clipboard.writeText(txt).then(() => alert('訂單已複製！')).catch(() => fallbackCopyText(txt));
-                    } else {
-                        fallbackCopyText(txt);
-                    }
-                };
+                    const fallback = (text) => {
+                        const textArea = document.createElement("textarea");
+                        textArea.value = text;
+                        textArea.style.position = "fixed"; 
+                        textArea.style.left = "-9999px";
+                        textArea.style.top = "0";
+                        document.body.appendChild(textArea);
+                        textArea.focus();
+                        textArea.select();
+                        try {
+                            const successful = document.execCommand('copy');
+                            if (successful) alert('訂單文字已複製！');
+                            else alert('複製失敗，請手動全選複製');
+                        } catch (err) {
+                            alert('複製失敗，請手動全選複製');
+                        }
+                        document.body.removeChild(textArea);
+                    };
 
-                const fallbackCopyText = (text) => {
-                    const textArea = document.createElement("textarea");
-                    textArea.value = text;
-                    textArea.style.position = "fixed"; 
-                    document.body.appendChild(textArea);
-                    textArea.select();
-                    try { document.execCommand('copy'); alert('訂單已複製！'); } catch (err) { alert('複製失敗，請手動複製'); }
-                    document.body.removeChild(textArea);
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(txt)
+                            .then(() => alert('訂單文字已成功複製！'))
+                            .catch(() => fallback(txt));
+                    } else {
+                        fallback(txt);
+                    }
                 };
 
                 return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, finalMsg, isSubmitting, isLineSending, sendToLine, copyMsg, openCart: () => cartModal.show(), userProfile, guestName };
