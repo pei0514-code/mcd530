@@ -44,9 +44,13 @@
         .qty-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
         /* Floating Cart Bar */
-        .cart-bar { position: fixed; bottom: 25px; left: 15px; right: 15px; background: var(--brand-red); color: white; padding: 15px 25px; border-radius: 60px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 12px 30px rgba(218, 41, 28, 0.4); z-index: 1000; cursor: pointer; transition: 0.3s; }
+        .cart-bar { position: fixed; bottom: 25px; left: 15px; right: 80px; background: var(--brand-red); color: white; padding: 15px 25px; border-radius: 60px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 12px 30px rgba(218, 41, 28, 0.4); z-index: 1000; cursor: pointer; transition: 0.3s; }
         .cart-bar:active { transform: scale(0.95); }
         .cart-qty-badge { background: white; color: var(--brand-red); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; margin-right: 12px; }
+
+        /* Floating LINE Icon */
+        .line-float { position: fixed; bottom: 25px; right: 15px; width: 56px; height: 56px; background: var(--line-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.4); z-index: 1001; cursor: pointer; transition: 0.3s; text-decoration: none; }
+        .line-float:active { transform: scale(0.9); }
 
         /* Modals */
         .modal-content { border: none; border-radius: 30px; overflow: hidden; }
@@ -54,16 +58,16 @@
         .btn-action-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
         .btn-action { border: none; border-radius: 18px; padding: 16px 8px; font-weight: bold; font-size: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; color: white; transition: 0.2s; }
         .btn-line { background: var(--line-green); }
-        .btn-copy { background: var(--brand-dark); }
+        .btn-send-picker { background: var(--brand-dark); }
         
         [v-cloak] { display: none; }
     </style>
 <script type="importmap">
 {
   "imports": {
-    "react/": "https://esm.sh/react@^19.2.3/",
     "react": "https://esm.sh/react@^19.2.3",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "react/": "https://esm.sh/react@^19.2.3/"
   }
 }
 </script>
@@ -73,8 +77,8 @@
     <!-- 載入層 -->
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-3 text-secondary small fw-bold">麥麥商城 V121 載入中</div>
-        <div id="timeout-msg" class="text-muted mt-2 small" style="display:none">伺服器響應較慢，請稍候...</div>
+        <div class="mt-3 text-secondary small fw-bold">麥麥商城 V122 優化版載入中</div>
+        <div id="timeout-msg" class="text-muted mt-2 small" style="display:none">資料同步中，請稍候...</div>
     </div>
 
     <div id="app" v-cloak>
@@ -88,7 +92,7 @@
                         <div class="text-muted" style="font-size: 11px;">Hi, {{ userProfile.displayName || '訪客' }}</div>
                     </div>
                 </div>
-                <div class="text-muted"><i class="fas fa-history"></i></div>
+                <div class="text-muted" @click="showHistoryAlert"><i class="fas fa-history"></i></div>
             </div>
             
             <div class="category-scroll">
@@ -147,6 +151,11 @@
             <div class="fw-bold">去結帳 <i class="fas fa-chevron-right ms-2"></i></div>
         </div>
 
+        <!-- 右側 LINE 浮動圖標 -->
+        <a class="line-float" :href="lineContactLink" target="_blank">
+            <i class="fab fa-line"></i>
+        </a>
+
         <!-- 結帳 Modal -->
         <div class="modal fade" id="cartModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
@@ -178,7 +187,7 @@
                     </div>
                     <div class="modal-footer border-0">
                         <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold shadow-sm" @click="handleCheckout" :disabled="isSubmitting">
-                            {{ isSubmitting ? '正在傳送中...' : '確認並送出訂單' }}
+                            {{ isSubmitting ? '處理中...' : '確認並送出訂單' }}
                         </button>
                     </div>
                 </div>
@@ -191,7 +200,7 @@
                 <div class="modal-content text-center p-4">
                     <div class="mb-3 text-success"><i class="fas fa-check-circle fa-4x"></i></div>
                     <h4 class="fw-bold">訂單已就緒</h4>
-                    <p class="text-muted small mb-4">請選取「分享好友」將文字傳送給客服。</p>
+                    <p class="text-muted small mb-4">請選取「傳送給客服」將文字傳送給客服。</p>
                     
                     <div class="p-3 bg-light rounded-4 text-start mb-4 border" style="font-size: 10px; max-height: 150px; overflow-y: auto;">
                         <pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">{{ finalMsg }}</pre>
@@ -202,9 +211,9 @@
                             <i class="fab fa-line fa-2x"></i>
                             <span>傳送給客服</span>
                         </button>
-                        <button class="btn-action btn-copy" @click="copyText">
-                            <i class="fas fa-copy fa-2x"></i>
-                            <span>{{ hasCopied ? '已複製' : '複製訂單' }}</span>
+                        <button class="btn-action btn-send-picker" @click="sendWithPicker">
+                            <i class="fas fa-paper-plane fa-2x"></i>
+                            <span>選擇傳送對象</span>
                         </button>
                     </div>
                     <button class="btn btn-link text-muted mt-3 small text-decoration-none" @click="closeSuccess">回商城</button>
@@ -222,20 +231,36 @@
         
         // 核心設定：您的 GAS API 網址
         const API_URL = 'https://script.google.com/macros/s/AKfycbx2xdqkRoBGFibvgKRo05QtVcIWZlUjBq-rr_NRJ-8nK1BsFPSorQqnsNa89IPlG45aeA/exec';
+        const CONTACT_LINE_ID = 'your_line_id'; // 您的客服 LINE ID 或官網連結
 
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v121', bankInfo: '' });
+                const settings = ref({ version: 'v122', bankInfo: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({ displayName: '', userId: '' });
                 const isSubmitting = ref(false);
-                const hasCopied = ref(false);
                 const finalMsg = ref('');
                 
                 let cartModal = null;
                 let successModal = null;
+
+                const lineContactLink = computed(() => `https://line.me/R/ti/p/@${CONTACT_LINE_ID}`);
+
+                // 快取讀取
+                const loadCache = () => {
+                    const cachedProd = localStorage.getItem('mm_products_cache');
+                    const cachedSett = localStorage.getItem('mm_settings_cache');
+                    if (cachedProd) products.value = JSON.parse(cachedProd);
+                    if (cachedSett) settings.value = JSON.parse(cachedSett);
+                    
+                    // 如果有快取，就先隱藏 Loader 讓用戶秒看
+                    if (cachedProd) {
+                        const loader = document.getElementById('static-loader');
+                        if (loader) loader.style.display = 'none';
+                    }
+                };
 
                 const loadData = async () => {
                     // 超時提示
@@ -250,8 +275,14 @@
                             fetch(`${API_URL}?action=getSettings`).then(r => r.json())
                         ]);
 
-                        if (prodRes.products) products.value = prodRes.products;
-                        if (settRes) settings.value = settRes;
+                        if (prodRes.products) {
+                            products.value = prodRes.products;
+                            localStorage.setItem('mm_products_cache', JSON.stringify(prodRes.products));
+                        }
+                        if (settRes) {
+                            settings.value = settRes;
+                            localStorage.setItem('mm_settings_cache', JSON.stringify(settRes));
+                        }
 
                         // 初始化 LIFF
                         if (settRes.liffId) {
@@ -273,6 +304,7 @@
                 };
 
                 onMounted(() => {
+                    loadCache();
                     loadData();
                     cartModal = new bootstrap.Modal(document.getElementById('cartModal'));
                     successModal = new bootstrap.Modal(document.getElementById('successModal'));
@@ -304,7 +336,6 @@
                     return null;
                 });
 
-                // 結帳邏輯
                 const handleCheckout = async () => {
                     if (isSubmitting.value) return;
                     isSubmitting.value = true;
@@ -319,7 +350,6 @@
                     
                     finalMsg.value = msg;
 
-                    // 非同步紀錄到試算表
                     try {
                         fetch(API_URL, {
                             method: 'POST',
@@ -336,17 +366,14 @@
                         });
                     } catch (e) {}
 
-                    // 如果在 LINE 內嘗試直接傳送 (需要額外權限，否則跳轉分享頁)
-                    if (liff.isInClient() && liff.isApiAvailable('shareTargetPicker')) {
-                        // 此處僅先關閉結帳視窗開啟成功視窗讓用戶手動傳送最穩
-                    }
-
                     isSubmitting.value = false;
                     cartModal.hide();
                     successModal.show();
                 };
 
+                // 改進的傳送功能
                 const shareToLine = () => {
+                    // 優先使用 LINE 協議跳轉到指定客服聊天室
                     const url = `https://line.me/R/msg/text/?${encodeURIComponent(finalMsg.value)}`;
                     if (liff.isInClient()) {
                         liff.openWindow({ url, external: true });
@@ -355,15 +382,21 @@
                     }
                 };
 
-                const copyText = () => {
-                    const el = document.createElement('textarea');
-                    el.value = finalMsg.value;
-                    document.body.appendChild(el);
-                    el.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(el);
-                    hasCopied.value = true;
-                    setTimeout(() => hasCopied.value = false, 2000);
+                const sendWithPicker = async () => {
+                    if (liff.isApiAvailable('shareTargetPicker')) {
+                        try {
+                            const res = await liff.shareTargetPicker([{
+                                type: "text",
+                                text: finalMsg.value
+                            }]);
+                            if (res) alert("訂單已成功傳送！");
+                        } catch (error) {
+                            console.error("Picker failed", error);
+                            shareToLine();
+                        }
+                    } else {
+                        shareToLine();
+                    }
                 };
 
                 const closeSuccess = () => {
@@ -374,8 +407,9 @@
                 return {
                     products, settings, cart, currentCat, categories, filteredProducts,
                     updateCart, totalQty, totalPrice, cartItems, activeGift, userProfile,
-                    handleCheckout, isSubmitting, finalMsg, copyText, hasCopied,
-                    shareToLine, openCart: () => cartModal.show(), closeSuccess
+                    handleCheckout, isSubmitting, finalMsg, shareToLine, sendWithPicker,
+                    lineContactLink, openCart: () => cartModal.show(), closeSuccess,
+                    showHistoryAlert: () => alert('歷史功能開發中，目前僅保存最近一筆。')
                 };
             }
         }).mount('#app');
