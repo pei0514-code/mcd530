@@ -107,7 +107,7 @@
 
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-3 ver-tag">麥麥商城 v132</div>
+        <div class="mt-3 ver-tag">麥麥商城 v133</div>
     </div>
 
     <div id="app" v-cloak>
@@ -117,11 +117,11 @@
                 <div class="d-flex align-items-center gap-3">
                     <div class="logo-m shadow">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 17px;">麥麥商城 <span class="ver-tag">v132</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 17px;">麥麥商城 <span class="ver-tag">v133</span></div>
                         <div class="text-muted" style="font-size: 12px; font-weight: 600;">👋 你好，{{ userProfile.displayName || guestName || '親愛的客人' }}</div>
                     </div>
                 </div>
-                <div class="text-muted p-2" @click="openHistory"><i class="fas fa-history fa-lg"></i></div>
+                <div class="text-muted p-2" @click="openHistory" style="cursor: pointer;"><i class="fas fa-history fa-lg"></i></div>
             </div>
             
             <div class="category-scroll">
@@ -220,6 +220,7 @@
                         <pre style="white-space: pre-wrap; margin: 0; font-size: 14px; line-height: 1.8; color: #333; font-family: -apple-system, sans-serif; font-weight: 600;">{{ finalMsg }}</pre>
                     </div>
                     <div class="btn-action-group">
+                        <!-- 修改跳轉邏輯 -->
                         <button class="btn-action btn-line shadow-sm" @click="sendToLine(finalMsg)">
                             <i class="fab fa-line fa-xl"></i><span>直接傳送 LINE 客服</span>
                         </button>
@@ -274,7 +275,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v132', bankInfo: '' });
+                const settings = ref({ version: 'v133', bankInfo: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({ displayName: '', userId: '' });
@@ -312,7 +313,7 @@
                         }
                         if (sRes) {
                             settings.value = sRes;
-                            settings.value.version = 'v132';
+                            settings.value.version = 'v133';
                             localStorage.setItem('mm_settings_v123', JSON.stringify(settings.value));
                         }
                         if (sRes.liffId) {
@@ -361,7 +362,12 @@
                     }));
 
                     const finalName = userProfile.value.displayName || (guestName.value ? '訪客 - ' + guestName.value : '未命名客人');
-                    const cleanBankInfo = settings.value.bankInfo ? settings.value.bankInfo.replace(/確認有貨轉帳後請告知.*?/g, '').trim() : '';
+                    
+                    // 清理 bankInfo，移除所有可能的重複提示
+                    let cleanBankInfo = settings.value.bankInfo || '';
+                    cleanBankInfo = cleanBankInfo.replace(/確認有貨轉帳後請告知.*?/g, '').trim();
+                    // 移除重複的 "（匯款後請提供..." 提示 (如果 settings 中已經帶有了)
+                    cleanBankInfo = cleanBankInfo.split('（匯款後請提供')[0].trim();
 
                     let msg = `【麥麥小舖電子票券】\n`;
                     msg += `訂單編號：${orderId}\n`;
@@ -372,8 +378,8 @@
                     msg += `總金額：$${totalPrice.value}\n`;
                     if (activeGift.value) msg += `🎁 滿額贈：${activeGift.value}\n`;
                     msg += `------------------------\n`;
-                    msg += `🏦 匯款資訊：\n${cleanBankInfo}\n`;
-                    // 移除手動重複加入的匯款提示，因為 cleanBankInfo 內已經包含了
+                    msg += `🏦 匯款資訊：\n${cleanBankInfo}\n\n`;
+                    msg += `（匯款後請提供帳號末五碼方便對帳，謝謝！）`;
 
                     finalMsg.value = msg;
                     const newRecord = { id: orderId, timestamp: timeStr, totalAmount: totalPrice.value, itemsSummary: cartItems.value.map(i => `${i.name} x${i.qty}`).join(', '), fullMsg: msg };
@@ -392,21 +398,12 @@
                     successModal.show();
                 };
 
+                // 優化發送邏輯，避免權限不足導致的 menu 錯誤
                 const sendToLine = async (txt) => {
-                    if (liff.isInClient()) {
-                        try {
-                            await liff.sendMessages([{ type: 'text', text: txt }]);
-                            // 發送成功後可選擇是否關閉視窗
-                            // liff.closeWindow(); 
-                        } catch (e) {
-                            console.error('LIFF 發送失敗', e);
-                            const url = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
-                            window.location.href = url;
-                        }
-                    } else {
-                        const url = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
-                        window.location.href = url;
-                    }
+                    // 在 LIFF 環境下，跳轉至 line.me/R/msg/text/ 是最穩定的方式
+                    // 它會直接打開 LINE 的對話框並帶入文字，比 sendMessages 權限要求更低且更符合用戶習慣
+                    const url = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
+                    window.location.href = url;
                 };
 
                 const copyText = (txt) => {
