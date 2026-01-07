@@ -13,64 +13,82 @@
             --brand-yellow: #FFC72C; 
             --line-green: #06C755; 
             --gradient-red: linear-gradient(135deg, #DA291C 0%, #FF5E52 100%);
-            --gradient-gold: linear-gradient(135deg, #FFC72C 0%, #FFA000 100%);
-            --menu-bg: rgba(255, 255, 255, 0.85);
+            --app-bg: linear-gradient(180deg, #fffcfc 0%, #f8f9fa 100%);
+            --glass: rgba(255, 255, 255, 0.85);
         }
-        body { background-color: #f8f9fb; padding-bottom: 120px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            background: var(--app-bg); 
+            min-height: 100vh;
+            padding-bottom: 120px; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+        }
         
         #static-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s; }
         .spinner { width: 45px; height: 45px; border: 4px solid #f3f3f3; border-top-color: var(--brand-red); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* Header & Category */
-        .sticky-header { position: sticky; top: 0; z-index: 1000; background: var(--menu-bg); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .category-scroll { display: flex; gap: 12px; overflow-x: auto; padding: 12px 15px; scrollbar-width: none; }
+        .sticky-header { position: sticky; top: 0; z-index: 1000; background: var(--glass); backdrop-filter: blur(25px); border-bottom: 1px solid rgba(0,0,0,0.04); }
+        .category-scroll { display: flex; gap: 12px; overflow-x: auto; padding: 15px; scrollbar-width: none; }
         .category-scroll::-webkit-scrollbar { display: none; }
-        .cat-btn { padding: 10px 20px; border-radius: 50px; font-size: 14px; font-weight: 800; white-space: nowrap; border: 1px solid #eee; background: #fff; color: #666; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-        .cat-btn.active { background: var(--gradient-red); color: #fff; border-color: transparent; box-shadow: 0 8px 20px rgba(218, 41, 28, 0.3); transform: scale(1.1) translateY(-2px); }
+        
+        .cat-btn { 
+            padding: 10px 22px; 
+            border-radius: 50px; 
+            font-size: 14px; 
+            font-weight: 800; 
+            white-space: nowrap; 
+            border: 1px solid rgba(0,0,0,0.05); 
+            background: #fff; 
+            color: #777; 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03); 
+        }
+        .cat-btn.active { 
+            background: var(--gradient-red); 
+            color: #fff; 
+            border-color: transparent; 
+            box-shadow: 0 8px 20px rgba(218, 41, 28, 0.35); 
+            transform: scale(1.1) translateY(-2px); 
+        }
 
-        .logo-m { width: 46px; height: 46px; background: var(--gradient-red); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-style: italic; font-size: 26px; box-shadow: 0 4px 12px rgba(218, 41, 28, 0.2); }
+        .logo-m { width: 48px; height: 48px; background: var(--gradient-red); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-style: italic; font-size: 28px; box-shadow: 0 6px 15px rgba(218, 41, 28, 0.25); }
         .ver-tag { background: var(--gradient-red); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; font-size: 14px; letter-spacing: 0.5px; }
 
         /* Product Cards */
-        .product-card { background: white; border-radius: 28px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); height: 100%; display: flex; flex-direction: column; border: 1px solid #f1f1f1; position: relative; transition: all 0.3s; }
+        .product-card { background: white; border-radius: 30px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.06); height: 100%; display: flex; flex-direction: column; border: 1px solid rgba(0,0,0,0.03); position: relative; transition: all 0.3s; }
         .product-card:active { transform: scale(0.96); }
         .product-card.sold-out { filter: grayscale(100%); opacity: 0.7; }
         
-        .p-img-box { position: relative; width: 100%; padding-top: 100%; background: #fcfcfc; }
+        .p-img-box { position: relative; width: 100%; padding-top: 100%; background: #fdfdfd; }
         .p-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
-        .p-body { padding: 18px; flex: 1; display: flex; flex-direction: column; }
-        .p-title { font-weight: 800; font-size: 15px; margin-bottom: 10px; color: #2d3436; line-height: 1.4; height: 42px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .p-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .p-title { font-weight: 800; font-size: 16px; margin-bottom: 10px; color: #2d3436; line-height: 1.4; height: 44px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .p-info { font-size: 11px; color: #b2bec3; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
         .stock-tag { background: #fff5f5; color: #ff7675; padding: 2px 10px; border-radius: 8px; font-weight: 800; }
         
-        .p-price { color: var(--brand-red); font-weight: 900; font-size: 24px; }
-        .p-price-old { font-size: 12px; text-decoration: line-through; color: #dfe6e9; margin-left: 6px; }
+        .p-price { color: var(--brand-red); font-weight: 900; font-size: 26px; }
+        .p-price-old { font-size: 13px; text-decoration: line-through; color: #dfe6e9; margin-left: 6px; }
         
-        .btn-buy { background: var(--brand-dark); color: white; border: none; padding: 13px 0; border-radius: 50px; font-size: 14px; font-weight: 800; width: 100%; margin-top: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .qty-ctrl { display: flex; justify-content: space-between; align-items: center; background: #fdfdfd; border-radius: 50px; padding: 6px; border: 1px solid #f1f1f1; margin-top: auto; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
-        .qty-btn { width: 38px; height: 38px; border-radius: 50%; border: none; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.08); color: var(--brand-dark); transition: 0.2s; }
-        .qty-btn:active { transform: scale(0.85); background: #eee; }
+        .btn-buy { background: var(--brand-dark); color: white; border: none; padding: 14px 0; border-radius: 50px; font-size: 14px; font-weight: 800; width: 100%; margin-top: auto; box-shadow: 0 6px 15px rgba(0,0,0,0.12); transition: 0.3s; }
+        .btn-buy:active { background: #000; transform: translateY(2px); }
+        
+        .qty-ctrl { display: flex; justify-content: space-between; align-items: center; background: #f8f9fb; border-radius: 50px; padding: 6px; border: 1px solid #f1f3f5; margin-top: auto; box-shadow: inset 0 2px 5px rgba(0,0,0,0.02); }
+        .qty-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08); color: var(--brand-dark); transition: 0.2s; }
 
         /* Floating UI */
-        .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--gradient-red); color: white; padding: 22px 30px; border-radius: 30px 30px 0 0; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 -12px 40px rgba(218, 41, 28, 0.25); z-index: 1000; cursor: pointer; transition: all 0.3s; }
-        .cart-bar:active { padding-top: 28px; }
+        .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--gradient-red); color: white; padding: 25px 30px; border-radius: 35px 35px 0 0; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 -15px 45px rgba(218, 41, 28, 0.3); z-index: 1000; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .cart-bar:active { padding-top: 30px; }
 
-        .line-float { position: fixed; bottom: 100px; right: 20px; width: 62px; height: 62px; background: var(--line-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; box-shadow: 0 12px 30px rgba(6, 199, 85, 0.4); z-index: 1001; cursor: pointer; transition: 0.3s; text-decoration: none; border: 2px solid white; }
-        .line-float:active { transform: scale(0.9) translateY(5px); }
+        .line-float { position: fixed; bottom: 105px; right: 20px; width: 64px; height: 64px; background: var(--line-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 34px; box-shadow: 0 15px 35px rgba(6, 199, 85, 0.45); z-index: 1001; cursor: pointer; transition: 0.3s; text-decoration: none; border: 3px solid white; }
 
         /* Modals */
-        .modal-content { border: none; border-radius: 35px; overflow: hidden; }
-        .gift-box { background: #fffcfc; border: 2px dashed #ff7675; border-radius: 22px; padding: 18px; margin-top: 15px; display: flex; align-items: center; gap: 15px; }
-        .btn-action-group { display: flex; flex-direction: column; gap: 14px; width: 100%; }
-        .btn-action { border: none; border-radius: 22px; padding: 20px; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 12px; color: white; transition: 0.2s; box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
-        .btn-line { background: var(--line-green); }
-        .btn-copy { background: var(--brand-dark); }
+        .modal-content { border: none; border-radius: 40px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.15); }
+        .gift-box { background: #fff9f9; border: 2px dashed #ff7675; border-radius: 25px; padding: 20px; margin-top: 15px; display: flex; align-items: center; gap: 15px; }
         
-        .guest-input { background: #f8f9fb; border: 2px solid #edf2f7; border-radius: 18px; padding: 15px 20px; font-size: 16px; font-weight: 700; width: 100%; outline: none; transition: 0.3s; }
-        .guest-input:focus { border-color: var(--brand-red); background: #fff; box-shadow: 0 0 0 6px rgba(218, 41, 28, 0.1); }
-
-        .history-item { background: #fff; border-radius: 24px; padding: 20px; margin-bottom: 15px; border: 1px solid #f1f1f1; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .history-item { background: #fff; border-radius: 28px; padding: 22px; margin-bottom: 18px; border: 1px solid rgba(0,0,0,0.03); box-shadow: 0 6px 18px rgba(0,0,0,0.04); }
 
         [v-cloak] { display: none; }
     </style>
@@ -88,34 +106,34 @@
 
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-3 ver-tag" style="letter-spacing: 2px;">麥麥商城 v129</div>
+        <div class="mt-3 ver-tag" style="letter-spacing: 2px;">麥麥商城 v130</div>
     </div>
 
     <div id="app" v-cloak>
         <!-- Header -->
-        <div class="sticky-header">
+        <div class="sticky-header shadow-sm">
             <div class="p-3 d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="logo-m shadow">M</div>
+                    <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 17px; display: flex; align-items: center; gap: 6px;">
-                            麥麥商城 <span class="ver-tag">v129</span>
+                        <div class="fw-bold text-dark" style="font-size: 18px; display: flex; align-items: center; gap: 6px;">
+                            麥麥商城 <span class="ver-tag">v130</span>
                         </div>
                         <div class="text-muted" style="font-size: 12px; font-weight: 600;">👋 你好，{{ userProfile.displayName || guestName || '親愛的客人' }}</div>
                     </div>
                 </div>
-                <div class="text-muted p-2" @click="openHistory"><i class="fas fa-history fa-lg"></i></div>
+                <div class="text-muted p-2" @click="openHistory" style="cursor: pointer;"><i class="fas fa-history fa-lg"></i></div>
             </div>
             
             <div class="category-scroll">
-                <button class="cat-btn" :class="{ active: currentCat === 'ALL' }" @click="currentCat = 'ALL'">所有商品</button>
+                <button class="cat-btn" :class="{ active: currentCat === 'ALL' }" @click="currentCat = 'ALL'">🔥 全部商品</button>
                 <button v-for="cat in categories" :key="cat" class="cat-btn" :class="{ active: currentCat === cat }" @click="currentCat = cat">{{ cat }}</button>
             </div>
         </div>
 
         <!-- 商品列表 -->
         <div class="container-fluid px-3 py-3">
-            <div class="row g-3">
+            <div class="row g-4">
                 <div class="col-6 col-md-4" v-for="p in filteredProducts" :key="p.id">
                     <div class="product-card" :class="{ 'sold-out': Number(p.stock) <= 0 }">
                         <div class="p-img-box">
@@ -124,7 +142,7 @@
                         <div class="p-body">
                             <div class="p-title">{{ p.name }}</div>
                             <div class="p-info">
-                                <span class="fw-bold">{{ p.expiryDate }}</span>
+                                <span class="fw-bold"><i class="far fa-calendar-alt me-1"></i>{{ p.expiryDate }}</span>
                                 <span class="stock-tag">庫存 {{ p.stock }}</span>
                             </div>
                             <div class="mb-3">
@@ -137,8 +155,8 @@
                                 <span class="fw-bold fs-5">{{ cart[p.id] }}</span>
                                 <button class="qty-btn" @click.stop="updateCart(p, 1)"><i class="fas fa-plus"></i></button>
                             </div>
-                            <button v-else class="btn-buy shadow-sm" @click.stop="updateCart(p, 1)">
-                                {{ Number(p.stock) <= 0 ? '缺貨中' : '加入購物車' }}
+                            <button v-else class="btn-buy" @click.stop="updateCart(p, 1)">
+                                {{ Number(p.stock) <= 0 ? '缺貨補貨中' : '加入購物車' }}
                             </button>
                         </div>
                     </div>
@@ -149,13 +167,13 @@
         <!-- 購物車浮動條 (充滿底部) -->
         <div class="cart-bar" v-if="totalQty > 0" @click="openCart">
             <div class="d-flex align-items-center">
-                <div class="cart-qty-badge me-3" style="background: rgba(255,255,255,0.2); padding: 5px 14px; border-radius: 14px; font-size: 14px; font-weight: 900;">{{ totalQty }} 件商品</div>
-                <div class="fw-bold fs-4">${{ totalPrice }}</div>
+                <div class="cart-qty-badge me-3" style="background: rgba(255,255,255,0.25); padding: 5px 16px; border-radius: 15px; font-size: 14px; font-weight: 900;">{{ totalQty }} 件</div>
+                <div class="fw-bold fs-3">${{ totalPrice }}</div>
             </div>
-            <div class="fw-bold fs-5">送出訂單 <i class="fas fa-chevron-right ms-2"></i></div>
+            <div class="fw-bold fs-5">確認清單並送出 <i class="fas fa-arrow-right ms-2"></i></div>
         </div>
 
-        <!-- LINE 浮動圖標 (上移至 100px) -->
+        <!-- LINE 浮動圖標 (上移) -->
         <a class="line-float" href="https://lin.ee/ejXmXDl" target="_blank">
             <i class="fab fa-line"></i>
         </a>
@@ -163,15 +181,15 @@
         <!-- 結帳 Modal -->
         <div class="modal fade" id="cartModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content shadow-lg">
+                <div class="modal-content">
                     <div class="modal-header border-0 pb-0 pt-4 px-4">
-                        <h5 class="fw-bold fs-3">確認清單</h5>
+                        <h5 class="fw-bold fs-3">🛒 我的購物清單</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body pt-3 px-4">
                         <div v-if="!userProfile.displayName" class="mb-4">
-                            <label class="form-label small fw-bold text-muted mb-2">您的稱呼 (對帳使用)</label>
-                            <input type="text" class="guest-input" v-model="guestName" placeholder="請輸入名字或暱稱">
+                            <label class="form-label small fw-bold text-muted mb-2">請輸入您的稱呼</label>
+                            <input type="text" class="guest-input" v-model="guestName" placeholder="方便我們對帳唷">
                         </div>
 
                         <div v-for="item in cartItems" :key="item.id" class="d-flex justify-content-between py-3 border-bottom border-light">
@@ -180,18 +198,18 @@
                         </div>
                         <div v-if="activeGift" class="gift-box shadow-sm">
                             <i class="fas fa-gift text-danger fs-3"></i>
-                            <div class="text-danger fw-bold" style="font-size: 15px;">滿額加贈：{{ activeGift }}</div>
+                            <div class="text-danger fw-bold" style="font-size: 15px;">滿額加贈好禮：{{ activeGift }}</div>
                         </div>
-                        <div class="d-flex justify-content-between fw-bold fs-3 p-4 bg-light rounded-4 mt-4 shadow-sm border">
+                        <div class="d-flex justify-content-between fw-bold fs-3 p-4 bg-light rounded-4 mt-4 border shadow-sm">
                             <span>應付總額</span><span class="text-danger">${{ totalPrice }}</span>
                         </div>
                         <div v-if="totalPrice < 50" class="mt-3 text-danger small text-center fw-bold">
-                            🚫 未達最低訂購門檻 $50 元
+                            ⚠️ 訂單需滿 $50 才能送出唷！
                         </div>
                     </div>
                     <div class="modal-footer border-0 p-4">
                         <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold fs-4 shadow-sm" style="background: var(--gradient-red); border: none;" @click="handleCheckout" :disabled="isSubmitting || totalPrice < 50">
-                            {{ isSubmitting ? '請稍候...' : '產生訂單訊息' }}
+                            {{ isSubmitting ? '正在產生訂單...' : '產生訂單並通知客服' }}
                         </button>
                     </div>
                 </div>
@@ -202,18 +220,18 @@
         <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content text-center p-4">
-                    <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x animate__animated animate__bounceIn"></i></div>
-                    <h3 class="fw-bold">訂單已產生</h3>
-                    <p class="text-muted mb-4 px-3">請傳送訊息給客服並完成匯款，以便核銷票券</p>
+                    <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
+                    <h3 class="fw-bold">訂單已準備就緒！</h3>
+                    <p class="text-muted mb-4 px-3">請傳送訊息給客服完成匯款，核對後將立即發貨</p>
                     <div class="p-3 bg-light rounded-4 text-start mb-4 border" style="max-height: 280px; overflow-y: auto;">
                         <pre style="white-space: pre-wrap; margin: 0; font-size: 14px; line-height: 1.8; color: #333; font-family: -apple-system, sans-serif; font-weight: 600;">{{ finalMsg }}</pre>
                     </div>
                     <div class="btn-action-group">
                         <button class="btn-action btn-line shadow-sm" @click="sendToLine(finalMsg)">
-                            <i class="fab fa-line fa-xl"></i><span>直接傳送 LINE 客服</span>
+                            <i class="fab fa-line fa-xl"></i><span>直接傳送訊息</span>
                         </button>
                         <button class="btn-action btn-copy shadow-sm" @click="copyText(finalMsg)">
-                            <i class="fas fa-copy"></i><span>{{ hasCopied ? '✅ 已複製到剪貼簿' : '複製訂單內容' }}</span>
+                            <i class="fas fa-copy"></i><span>{{ hasCopied ? '✅ 內容已複製' : '複製訂單文字' }}</span>
                         </button>
                     </div>
                     <button class="btn btn-link text-muted mt-3 small text-decoration-none fw-bold" @click="closeSuccess">回商城首頁</button>
@@ -226,24 +244,24 @@
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header border-0 bg-light p-4">
-                        <h5 class="fw-bold mb-0 fs-4">近期購票紀錄</h5>
+                        <h5 class="fw-bold mb-0 fs-4">📚 我的購買歷史</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body p-4 bg-light">
                         <div v-if="orderHistory.length === 0" class="text-center py-5 text-muted">
                             <i class="fas fa-receipt fa-4x mb-3 opacity-20"></i>
-                            <p>尚無任何紀錄</p>
+                            <p>還沒有下單紀錄唷</p>
                         </div>
                         <div v-for="h in orderHistory" :key="h.id" class="history-item">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="badge bg-dark rounded-pill">#{{ h.id }}</span>
                                 <span class="text-muted small fw-bold">{{ h.timestamp }}</span>
                             </div>
-                            <div class="fw-bold text-danger fs-5 mb-2">總計：${{ h.totalAmount }}</div>
+                            <div class="fw-bold text-danger fs-5 mb-2">總額：${{ h.totalAmount }}</div>
                             <div class="text-muted mb-3 small" style="line-height: 1.6; font-weight: 500;">{{ h.itemsSummary }}</div>
                             <div class="d-flex gap-2">
                                 <button class="btn btn-outline-success flex-grow-1 py-2 rounded-3 fw-bold shadow-sm" @click="sendToLine(h.fullMsg)">
-                                    <i class="fab fa-line me-1"></i> 重傳 LINE
+                                    <i class="fab fa-line me-1"></i> 重傳客服
                                 </button>
                                 <button class="btn btn-outline-dark px-3 py-2 rounded-3" @click="copyText(h.fullMsg)">
                                     <i class="fas fa-copy"></i>
@@ -267,7 +285,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v129', bankInfo: '' });
+                const settings = ref({ version: 'v130', bankInfo: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({ displayName: '', userId: '' });
@@ -300,7 +318,7 @@
                         }
                         if (sRes) {
                             settings.value = sRes;
-                            settings.value.version = 'v129';
+                            settings.value.version = 'v130';
                             localStorage.setItem('mm_settings_v123', JSON.stringify(settings.value));
                         }
                         if (sRes.liffId) {
@@ -347,19 +365,27 @@
                     const now = new Date();
                     const pad = (n) => String(n).padStart(2, '0');
                     const orderId = 'M' + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
-                    
                     const timeStr = now.getFullYear() + '/' + pad(now.getMonth() + 1) + '/' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
                     
-                    // 商品格式：1、商品名稱 x 數量 單價$XX 總計$XX (效期:XXXX)
+                    // 格式化發送給 LINE 客服的訊息
                     const itemsTextForMsg = cartItems.value.map((i, idx) => {
                         const subtotal = i.price * i.qty;
                         return `${idx + 1}、${i.name} x ${i.qty} 單價$${i.price} 總計$${subtotal} (效期:${i.expiryDate || '依門市'})`;
                     }).join('\n');
                     
+                    // 準備發送到試算表的陣列數據
+                    const itemsArrayForSheet = cartItems.value.map(i => ({
+                        name: i.name,
+                        qty: i.qty,
+                        price: i.price,
+                        subtotal: i.price * i.qty,
+                        expiry: i.expiryDate || '依門市'
+                    }));
+                    
                     const finalName = userProfile.value.displayName || (guestName.value ? '訪客 - ' + guestName.value : '未命名客人');
                     const finalId = userProfile.value.userId || 'WEB_GUEST';
 
-                    // 去除銀行資訊中可能重複的提示語
+                    // 清理銀行資訊
                     const cleanBankInfo = settings.value.bankInfo ? settings.value.bankInfo.replace(/確認有貨轉帳後請告知.*?/g, '').trim() : '';
 
                     let msg = `【麥麥小舖電子票券】\n`;
@@ -372,7 +398,7 @@
                     if (activeGift.value) msg += `🎁 滿額贈：${activeGift.value}\n`;
                     msg += `------------------------\n`;
                     msg += `🏦 匯款資訊：\n${cleanBankInfo}\n\n`;
-                    msg += `（匯款後請提供帳號末五碼方便對帳，謝謝！）`;
+                    msg += `（匯款後請提供帳號末五碼，以便快速核對發貨，謝謝！）`;
 
                     finalMsg.value = msg;
 
@@ -386,11 +412,13 @@
                     orderHistory.value = [newRecord, ...orderHistory.value].slice(0, 30);
                     localStorage.setItem('mm_history_v123', JSON.stringify(orderHistory.value));
 
+                    // 發送到 Google Apps Script
                     fetch(API_URL, {
                         method: 'POST', mode: 'no-cors',
                         body: JSON.stringify({
-                            timestamp: timeStr, id: orderId,
-                            itemsText: itemsTextForMsg.replace(/\n/g, ', '),
+                            timestamp: timeStr, 
+                            id: orderId,
+                            items: itemsArrayForSheet, // 發送品項陣列以便後端分行記錄
                             totalAmount: totalPrice.value,
                             giftText: activeGift.value || '無',
                             userId: finalId,
@@ -437,7 +465,7 @@
                         document.execCommand('copy');
                         showCopySuccess();
                     } catch (err) {
-                        alert('您的瀏覽器不支援自動複製，請手動全選複製訂單內容。');
+                        alert('不支援自動複製，請手動全選複製。');
                     }
                     document.body.removeChild(el);
                 };
