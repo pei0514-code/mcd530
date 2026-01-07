@@ -94,7 +94,7 @@
 
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-2 ver-tag">v139 加載中...</div>
+        <div class="mt-2 ver-tag">v140 加載中...</div>
     </div>
 
     <div id="app" v-cloak>
@@ -103,7 +103,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v139</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v140</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -144,7 +144,7 @@
             </div>
         </div>
 
-        <!-- 修正圖標為白色白色購物車 -->
+        <!-- 白色購物車圖示 -->
         <div class="cart-bar shadow-lg" v-if="totalQty > 0" @click="openCart">
             <div class="d-flex align-items-center">
                 <div class="me-3" style="background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 10px; font-size: 13px; font-weight: 800;">{{ totalQty }} 件</div>
@@ -225,14 +225,13 @@
         const { createApp, ref, computed, onMounted } = Vue;
         const API_URL = 'https://script.google.com/macros/s/AKfycbx2xdqkRoBGFibvgKRo05QtVcIWZlUjBq-rr_NRJ-8nK1BsFPSorQqnsNa89IPlG45aeA/exec';
 
-        // 並行請求加速加載
         const globalDataPromise = fetch(`${API_URL}?action=getInitData`).then(r => r.json()).catch(() => ({products:[]}));
         const globalSettingsPromise = fetch(`${API_URL}?action=getSettings`).then(r => r.json()).catch(() => ({}));
 
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v139', bankInfo: '', liffId: '' });
+                const settings = ref({ version: 'v140', bankInfo: '', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -249,7 +248,6 @@
                 });
 
                 const initApp = async () => {
-                    // 並行處理數據與 LIFF 初始化
                     const [pRes, sRes] = await Promise.all([globalDataPromise, globalSettingsPromise]);
                     if (pRes.products) products.value = pRes.products;
                     if (sRes) settings.value = sRes;
@@ -262,7 +260,6 @@
                         }).catch(err => console.error("LIFF Init Error", err));
                     }
 
-                    // 加速關閉 Loader
                     const loader = document.getElementById('static-loader');
                     if (loader) {
                         loader.style.opacity = '0';
@@ -319,6 +316,7 @@
                     
                     finalMsg.value = msg;
                     
+                    // 背景記錄訂單
                     fetch(API_URL, {
                         method: 'POST', mode: 'no-cors',
                         body: JSON.stringify({
@@ -335,31 +333,26 @@
                     successModal.show();
                 };
 
-                // 極致傳送邏輯：優先嘗試背景傳送
                 const sendToLine = async (txt) => {
                     isLineSending.value = true;
                     try {
                         if (liff.isInClient()) {
-                            // 1. 嘗試直接在聊天室發送 (背景傳送，無彈窗)
                             const context = liff.getContext();
                             if (context && ['utou', 'group', 'room'].includes(context.type)) {
                                 try {
                                     await liff.sendMessages([{ type: 'text', text: txt }]);
-                                    liff.closeWindow(); // 發送完畢直接關閉商城
+                                    liff.closeWindow();
                                     return;
                                 } catch (e) {
-                                    console.warn("Direct sendMessages failed, fallback to picker");
+                                    console.warn("Direct send failed");
                                 }
                             }
-                            
-                            // 2. 若不在對話視窗內或發送失敗，嘗試分享器 (彈窗選擇對象)
                             if (liff.isApiAvailable('shareTargetPicker')) {
                                 await liff.shareTargetPicker([{ type: 'text', text: txt }]);
                             } else {
                                 window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
                             }
                         } else {
-                            // 3. 外部瀏覽器
                             window.open(`https://line.me/R/msg/text/?${encodeURIComponent(txt)}`, '_blank');
                         }
                     } catch (err) {
@@ -370,7 +363,6 @@
                     }
                 };
 
-                // 強化複製邏輯
                 const copyMsg = (txt) => {
                     const fallback = (text) => {
                         const textArea = document.createElement("textarea");
@@ -385,7 +377,7 @@
                             document.execCommand('copy');
                             alert('訂單內容已複製到剪貼簿！');
                         } catch (err) {
-                            alert('複製失敗，請手動長按選取文字');
+                            alert('複製失敗，請手動選取文字');
                         }
                         document.body.removeChild(textArea);
                     };
