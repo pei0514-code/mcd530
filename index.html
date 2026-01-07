@@ -13,116 +13,80 @@
             --brand-yellow: #FFC72C; 
             --line-green: #06C755; 
             --gradient-red: linear-gradient(135deg, #DA291C 0%, #FF5E52 100%);
-            --app-bg: linear-gradient(180deg, #FFF5F5 0%, #FDFDFD 100%);
+            --app-bg: #FDFDFD;
             --glass: rgba(255, 255, 255, 0.95);
         }
         
         body { 
             background: var(--app-bg); 
             min-height: 100vh;
-            padding-bottom: 120px; 
+            padding-bottom: 110px; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif; 
             -webkit-tap-highlight-color: transparent; 
             color: var(--brand-dark);
         }
         
         #static-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s; }
-        .spinner { width: 45px; height: 45px; border: 4px solid #f3f3f3; border-top-color: var(--brand-red); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top-color: var(--brand-red); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Header & Category */
         .sticky-header { position: sticky; top: 0; z-index: 1000; background: var(--glass); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .category-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 12px 15px; scrollbar-width: none; }
+        .category-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 12px 15px; scrollbar-width: none; }
         .category-scroll::-webkit-scrollbar { display: none; }
         
-        .cat-btn { 
-            padding: 8px 20px; 
-            border-radius: 50px; 
-            font-size: 14px; 
-            font-weight: 800; 
-            white-space: nowrap; 
-            border: 1.5px solid #f0f0f0; 
-            background: #fff; 
-            color: #666; 
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.02); 
-        }
-        .cat-btn.active { 
-            background: var(--gradient-red); 
-            color: #fff; 
-            border-color: transparent; 
-            box-shadow: 0 6px 15px rgba(218, 41, 28, 0.3); 
-            transform: scale(1.05); 
-        }
+        .cat-btn { padding: 7px 18px; border-radius: 50px; font-size: 14px; font-weight: 700; white-space: nowrap; border: 1.5px solid #f0f0f0; background: #fff; color: #777; transition: 0.3s; }
+        .cat-btn.active { background: var(--gradient-red); color: #fff; border-color: transparent; box-shadow: 0 4px 12px rgba(218, 41, 28, 0.3); }
 
-        .logo-m { width: 44px; height: 44px; background: var(--gradient-red); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-style: italic; font-size: 24px; box-shadow: 0 4px 12px rgba(218, 41, 28, 0.2); }
-        .ver-tag { font-weight: 900; font-size: 13px; color: var(--brand-red); opacity: 0.8; }
+        .logo-m { width: 40px; height: 40px; background: var(--gradient-red); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-style: italic; font-size: 22px; }
+        .ver-tag { font-weight: 900; font-size: 11px; color: var(--brand-red); opacity: 0.6; }
 
-        /* Product Cards */
-        .product-card { 
-            background: white; 
-            border-radius: 24px; 
-            overflow: hidden; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.04); 
-            height: 100%; 
-            display: flex; 
-            flex-direction: column; 
-            border: 1px solid rgba(0,0,0,0.03); 
-            transition: transform 0.2s;
-        }
-        .product-card:active { transform: scale(0.97); }
-        
-        .p-img-box { position: relative; width: 100%; padding-top: 100%; background: #fdfdfd; }
+        .product-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.03); height: 100%; display: flex; flex-direction: column; border: 1px solid rgba(0,0,0,0.02); }
+        .p-img-box { position: relative; width: 100%; padding-top: 100%; background: #fdfdfd; overflow: hidden; }
         .p-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
-        .p-body { padding: 15px; flex: 1; display: flex; flex-direction: column; }
+        
+        .p-body { padding: 14px; flex: 1; display: flex; flex-direction: column; }
         .p-title { font-weight: 800; font-size: 14px; color: #333; line-height: 1.4; height: 40px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px; }
-        .p-info { font-size: 11px; color: #999; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .p-info { font-size: 10px; color: #999; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .stock-tag { background: #fff1f0; color: #ff4d4f; padding: 1px 6px; border-radius: 4px; font-weight: 800; }
+        .stock-tag.none { background: #f5f5f5; color: #bfbfbf; }
         
-        .p-price { color: var(--brand-red); font-weight: 900; font-size: 22px; }
-        .p-price-old { font-size: 11px; text-decoration: line-through; color: #ccc; margin-left: 4px; }
+        .p-price { color: var(--brand-red); font-weight: 900; font-size: 20px; }
+        .btn-buy { background: var(--brand-dark); color: white; border: none; padding: 10px 0; border-radius: 50px; font-size: 13px; font-weight: 800; width: 100%; margin-top: auto; }
+        .btn-buy:disabled { background: #e0e0e0; color: #aaa; }
         
-        .btn-buy { background: var(--brand-dark); color: white; border: none; padding: 10px 0; border-radius: 50px; font-size: 13px; font-weight: 800; width: 100%; margin-top: auto; transition: 0.2s; }
-        .btn-buy:active { opacity: 0.8; }
-        
-        .qty-ctrl { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; border-radius: 50px; padding: 4px; border: 1px solid #eee; margin-top: auto; }
-        .qty-btn { width: 34px; height: 34px; border-radius: 50%; border: none; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.08); color: var(--brand-dark); }
+        .qty-ctrl { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; border-radius: 50px; padding: 3px; border: 1px solid #eee; }
+        .qty-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-        /* Floating UI */
-        .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--gradient-red); color: white; padding: 20px 25px; border-radius: 24px 24px 0 0; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 -8px 25px rgba(218, 41, 28, 0.2); z-index: 1000; cursor: pointer; }
-        
-        .line-float { position: fixed; bottom: 95px; right: 20px; width: 58px; height: 58px; background: var(--line-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.35); z-index: 1001; text-decoration: none; border: 2px solid white; }
-
-        /* 按鈕風格 */
-        .btn-action-group { display: flex; flex-direction: column; gap: 12px; width: 100%; }
-        .btn-action { border: none; border-radius: 18px; padding: 16px; font-weight: 800; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; color: white; transition: 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .btn-line { background: var(--line-green); }
-        .btn-copy { background: var(--brand-dark); }
-        .btn-action:active { transform: scale(0.96); }
-
-        .modal-content { border: none; border-radius: 28px; overflow: hidden; }
-        .guest-input { background: #f8f9fa; border: 2px solid #eee; border-radius: 14px; padding: 12px 16px; font-size: 15px; font-weight: 600; width: 100%; outline: none; transition: 0.2s; }
-        .guest-input:focus { border-color: var(--brand-red); background: #fff; }
+        .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--gradient-red); color: white; padding: 18px 25px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
+        .line-float { position: fixed; bottom: 85px; right: 20px; width: 54px; height: 54px; background: var(--line-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 26px; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.3); z-index: 1001; text-decoration: none; border: 2px solid white; }
 
         [v-cloak] { display: none; }
     </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
 </head>
 <body>
 
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-3 ver-tag">麥麥商城 v134</div>
+        <div class="mt-3 ver-tag">麥麥商城 v138</div>
     </div>
 
     <div id="app" v-cloak>
-        <!-- Header -->
         <div class="sticky-header">
             <div class="p-3 d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-2">
-                    <div class="logo-m shadow-sm">M</div>
+                    <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 16px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v134</span></div>
-                        <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }}，您好 👋</div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v138</span></div>
+                        <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
                 <div class="text-muted p-2" @click="openHistory" style="cursor: pointer;"><i class="fas fa-history fa-lg"></i></div>
@@ -134,31 +98,27 @@
             </div>
         </div>
 
-        <!-- 商品列表 -->
         <div class="container-fluid px-3 py-3">
             <div class="row g-3">
                 <div class="col-6 col-md-4" v-for="p in filteredProducts" :key="p.id">
-                    <div class="product-card" :class="{ 'sold-out': Number(p.stock) <= 0 }">
-                        <div class="p-img-box">
-                            <img :src="p.image || 'https://via.placeholder.com/300?text=No+Image'" class="p-img" loading="lazy">
-                        </div>
+                    <div class="product-card">
+                        <div class="p-img-box"><img :src="p.image || 'https://via.placeholder.com/300'" class="p-img"></div>
                         <div class="p-body">
                             <div class="p-title">{{ p.name }}</div>
                             <div class="p-info">
                                 <span class="fw-bold"><i class="far fa-calendar-alt me-1"></i>{{ p.expiryDate }}</span>
-                                <span class="stock-tag">剩 {{ p.stock }}</span>
+                                <span class="stock-tag" :class="{ none: Number(p.stock) <= 0 }">剩 {{ p.stock }}</span>
                             </div>
                             <div class="mb-3">
                                 <span class="p-price">${{ p.price }}</span>
-                                <span v-if="p.originalPrice" class="p-price-old">${{ p.originalPrice }}</span>
+                                <span v-if="p.originalPrice" class="p-price-old ms-1 text-muted small text-decoration-line-through">${{ p.originalPrice }}</span>
                             </div>
-                            
                             <div v-if="cart[p.id]" class="qty-ctrl">
                                 <button class="qty-btn" @click.stop="updateCart(p, -1)"><i class="fas fa-minus"></i></button>
                                 <span class="fw-bold">{{ cart[p.id] }}</span>
-                                <button class="qty-btn" @click.stop="updateCart(p, 1)"><i class="fas fa-plus"></i></button>
+                                <button class="qty-btn" @click.stop="updateCart(p, 1)" :disabled="cart[p.id] >= Number(p.stock)"><i class="fas fa-plus"></i></button>
                             </div>
-                            <button v-else class="btn-buy" @click.stop="updateCart(p, 1)">
+                            <button v-else class="btn-buy" @click.stop="updateCart(p, 1)" :disabled="Number(p.stock) <= 0">
                                 {{ Number(p.stock) <= 0 ? '暫時售完' : '加入購物車' }}
                             </button>
                         </div>
@@ -167,101 +127,47 @@
             </div>
         </div>
 
-        <!-- 購物車浮動條 -->
         <div class="cart-bar shadow-lg" v-if="totalQty > 0" @click="openCart">
             <div class="d-flex align-items-center">
-                <div class="me-3" style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 10px; font-size: 13px; font-weight: 800;">{{ totalQty }} 件</div>
+                <div class="me-3" style="background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 10px; font-size: 13px; font-weight: 800;">{{ totalQty }} 件</div>
                 <div class="fw-bold fs-4">${{ totalPrice }}</div>
             </div>
-            <div class="fw-bold fs-5">確認訂單 <i class="fas fa-arrow-right ms-2"></i></div>
+            <div class="fw-bold fs-6">結帳確認 <i class="fas fa-arrow-right ms-2"></i></div>
         </div>
 
-        <a class="line-float" href="https://lin.ee/ejXmXDl" target="_blank">
-            <i class="fab fa-line"></i>
-        </a>
+        <a class="line-float" href="https://lin.ee/ejXmXDl" target="_blank"><i class="fab fa-line"></i></a>
 
-        <!-- 結帳 Modal -->
         <div class="modal fade" id="cartModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content shadow-lg">
-                    <div class="modal-header border-0 pb-0 pt-4 px-4">
-                        <h5 class="fw-bold fs-3">🛒 訂購內容</h5>
+                <div class="modal-content border-0 rounded-4">
+                    <div class="modal-header border-0 pt-4 px-4">
+                        <h5 class="fw-bold fs-4">🛒 您的購物車</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body pt-3 px-4">
-                        <div v-if="!userProfile.displayName" class="mb-3">
-                            <label class="form-label small fw-bold text-muted mb-1">您的稱呼 (對帳用)</label>
-                            <input type="text" class="guest-input" v-model="guestName" placeholder="例如：王小明">
-                        </div>
-                        <div v-for="item in cartItems" :key="item.id" class="d-flex justify-content-between py-3 border-bottom border-light">
-                            <div style="font-weight: 700;">{{ item.name }} <span class="text-muted ms-1">x{{ item.qty }}</span></div>
+                    <div class="modal-body px-4">
+                        <div v-for="item in cartItems" :key="item.id" class="d-flex justify-content-between py-3 border-bottom">
+                            <div class="fw-bold">{{ item.name }} x{{ item.qty }}</div>
                             <div class="fw-bold text-danger">${{ item.price * item.qty }}</div>
                         </div>
-                        <div v-if="activeGift" class="mt-3 p-3 bg-light rounded-4 text-danger fw-bold text-center border">
-                            🎁 滿額贈：{{ activeGift }}
-                        </div>
                         <div class="d-flex justify-content-between fw-bold fs-3 p-3 bg-light rounded-4 mt-4">
-                            <span>應付總額</span><span class="text-danger">${{ totalPrice }}</span>
+                            <span>總金額</span><span class="text-danger">${{ totalPrice }}</span>
                         </div>
                     </div>
                     <div class="modal-footer border-0 p-4">
-                        <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold fs-5" style="background: var(--gradient-red); border: none;" @click="handleCheckout" :disabled="isSubmitting || totalPrice < 10">
-                            {{ isSubmitting ? '處理中...' : '產生訂單並發送' }}
-                        </button>
+                        <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold fs-5" style="background: var(--gradient-red); border: none;" @click="handleCheckout" :disabled="isSubmitting">確認訂單並送出</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 成功訊息 Modal -->
-        <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal fade" id="successModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content text-center p-4">
+                <div class="modal-content text-center p-4 border-0 rounded-4">
                     <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
-                    <h3 class="fw-bold">訂單已準備好！</h3>
-                    <p class="text-muted mb-3">請傳送訊息並完成匯款</p>
-                    <div class="p-3 bg-light rounded-4 text-start mb-4 border" style="max-height: 200px; overflow-y: auto;">
-                        <pre style="white-space: pre-wrap; margin: 0; font-size: 13px; color: #444; font-family: inherit; font-weight: 600;">{{ finalMsg }}</pre>
-                    </div>
-                    <div class="btn-action-group">
-                        <button class="btn-action btn-line shadow-sm" @click="sendToLine(finalMsg)">
-                            <i class="fab fa-line fa-xl"></i><span>直接傳送 LINE 客服</span>
-                        </button>
-                        <button class="btn-action btn-copy shadow-sm" @click="copyText(finalMsg)">
-                            <i class="fas fa-copy"></i><span>{{ hasCopied ? '✅ 已複製成功' : '複製訂單文字' }}</span>
-                        </button>
-                    </div>
-                    <button class="btn btn-link text-muted mt-3 small text-decoration-none fw-bold" @click="closeSuccess">回首頁繼續購物</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 歷史紀錄 Modal -->
-        <div class="modal fade" id="historyModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header border-0 bg-light p-4">
-                        <h5 class="fw-bold mb-0">購買紀錄</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body p-4 bg-light">
-                        <div v-if="orderHistory.length === 0" class="text-center py-5 text-muted">
-                            <i class="fas fa-receipt fa-4x mb-3 opacity-20"></i>
-                            <p>尚無任何紀錄</p>
-                        </div>
-                        <div v-for="h in orderHistory" :key="h.id" class="p-3 bg-white rounded-4 shadow-sm mb-3 border">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span class="badge bg-dark">#{{ h.id }}</span>
-                                <span class="text-muted small">{{ h.timestamp }}</span>
-                            </div>
-                            <div class="fw-bold text-danger fs-5 mb-1">${{ h.totalAmount }}</div>
-                            <div class="text-muted small mb-2">{{ h.itemsSummary }}</div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-outline-success btn-sm flex-grow-1 fw-bold" @click="sendToLine(h.fullMsg)">LINE 重傳</button>
-                                <button class="btn btn-outline-dark btn-sm" @click="copyText(h.fullMsg)"><i class="fas fa-copy"></i></button>
-                            </div>
-                        </div>
-                    </div>
+                    <h4 class="fw-bold">訂單已成立！</h4>
+                    <div class="p-3 bg-light rounded-4 text-start mb-4 small"><pre class="m-0" style="white-space: pre-wrap;">{{ finalMsg }}</pre></div>
+                    <button class="btn btn-success w-100 rounded-pill py-3 fw-bold mb-2" @click="sendToLine(finalMsg)">直接傳送到 LINE</button>
+                    <button class="btn btn-link text-muted" data-bs-dismiss="modal" @click="cart = {}">回商城首頁</button>
                 </div>
             </div>
         </div>
@@ -278,30 +184,19 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v134', bankInfo: '' });
+                const settings = ref({ version: 'v138' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
-                const userProfile = ref({ displayName: '', userId: '' });
+                const userProfile = ref({});
                 const guestName = ref(localStorage.getItem('mm_guest_name') || '');
-                const orderHistory = ref([]);
-                const isSubmitting = ref(false);
-                const hasCopied = ref(false);
                 const finalMsg = ref('');
-                let cartModal, successModal, historyModal;
+                const isSubmitting = ref(false);
+                let cartModal, successModal;
 
-                onMounted(() => {
-                    const cProd = localStorage.getItem('mm_products_v123');
-                    const cSett = localStorage.getItem('mm_settings_v123');
-                    const cHist = localStorage.getItem('mm_history_v123');
-                    if (cProd) products.value = JSON.parse(cProd);
-                    if (cSett) settings.value = JSON.parse(cSett);
-                    if (cHist) orderHistory.value = JSON.parse(cHist);
-                    if (cProd) document.getElementById('static-loader').style.display = 'none';
-                    
+                onMounted(async () => {
                     fetchData();
                     cartModal = new bootstrap.Modal(document.getElementById('cartModal'));
                     successModal = new bootstrap.Modal(document.getElementById('successModal'));
-                    historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
                 });
 
                 const fetchData = async () => {
@@ -310,27 +205,16 @@
                             fetch(`${API_URL}?action=getInitData`).then(r => r.json()),
                             fetch(`${API_URL}?action=getSettings`).then(r => r.json())
                         ]);
-                        if (pRes.products) {
-                            products.value = pRes.products;
-                            localStorage.setItem('mm_products_v123', JSON.stringify(pRes.products));
-                        }
-                        if (sRes) {
-                            settings.value = sRes;
-                            settings.value.version = 'v134';
-                            localStorage.setItem('mm_settings_v123', JSON.stringify(settings.value));
-                        }
+                        if (pRes.products) products.value = pRes.products;
                         if (sRes.liffId) {
                             await liff.init({ liffId: sRes.liffId });
                             if (liff.isLoggedIn()) userProfile.value = await liff.getProfile();
                         }
                     } catch (e) { console.error(e); }
-                    finally {
-                        const loader = document.getElementById('static-loader');
-                        if (loader) loader.style.display = 'none';
-                    }
+                    finally { document.getElementById('static-loader').style.display = 'none'; }
                 };
 
-                const categories = computed(() => [...new Set(products.value.map(p => p.category).filter(Boolean))]);
+                const categories = computed(() => [...new Set(products.value.map(p => p.category))]);
                 const filteredProducts = computed(() => currentCat.value === 'ALL' ? products.value : products.value.filter(p => p.category === currentCat.value));
                 const cartItems = computed(() => Object.keys(cart.value).map(id => {
                     const p = products.value.find(x => x.id === id);
@@ -338,107 +222,38 @@
                 }).filter(x => x));
                 const totalQty = computed(() => cartItems.value.reduce((a, b) => a + b.qty, 0));
                 const totalPrice = computed(() => cartItems.value.reduce((a, b) => a + (b.price * b.qty), 0));
-                const activeGift = computed(() => totalPrice.value >= 999 ? "C.3 豬肉滿福堡套餐" : (totalPrice.value >= 500 ? "A.3 大蛋捲冰淇淋" : null));
 
                 const updateCart = (p, d) => {
                     const next = (cart.value[p.id] || 0) + d;
                     if (next <= 0) delete cart.value[p.id];
-                    else if (next <= (p.stock || 99)) cart.value[p.id] = next;
+                    else if (next <= Number(p.stock)) cart.value[p.id] = next;
                 };
 
                 const handleCheckout = async () => {
-                    if (totalPrice.value < 10) return;
                     isSubmitting.value = true;
-                    if (guestName.value) localStorage.setItem('mm_guest_name', guestName.value);
-                    
-                    const now = new Date();
-                    const pad = (n) => String(n).padStart(2, '0');
-                    const orderId = 'M' + now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate()) + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
-                    const timeStr = now.getFullYear() + '/' + pad(now.getMonth() + 1) + '/' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
-                    
-                    const itemSymbols = ["❶", "❷", "❸", "❹", "❺", "❻", "❼", "❽", "❾", "❿"];
-                    const itemsTextForMsg = cartItems.value.map((i, idx) => {
-                        const sym = itemSymbols[idx] || (idx + 1) + ".";
-                        return `${sym} ${i.name}\n    🔹 數量: ${i.qty}\n    🔹 小計: $${i.price * i.qty}\n    🔹 效期: ${i.expiryDate || '依門市'}`;
-                    }).join('\n');
-                    
-                    const finalName = userProfile.value.displayName || (guestName.value ? '訪客 - ' + guestName.value : '未命名客人');
-                    
-                    // 銀行資訊處理，移除重複的提示字
-                    let cleanBankInfo = (settings.value.bankInfo || '').split('（匯款後請提供')[0].trim();
-                    cleanBankInfo = cleanBankInfo.replace(/確認有貨轉帳後請告知.*?/g, '').trim();
-
-                    let msg = `🛒【麥麥小舖電子票券】\n`;
-                    msg += `🆔 訂單編號：${orderId}\n`;
-                    msg += `👤 訂購人：${finalName}\n`;
-                    msg += `📅 訂購時間：${timeStr}\n`;
-                    msg += `------------------------\n`;
-                    msg += `🍱 訂購商品：\n${itemsTextForMsg}\n`;
-                    msg += `------------------------\n`;
-                    msg += `💰 應付總額：$${totalPrice.value}\n`;
-                    if (activeGift.value) msg += `🎁 滿額加贈：${activeGift.value}\n`;
-                    msg += `------------------------\n`;
-                    msg += `🏦 匯款資訊：\n${cleanBankInfo}\n\n`;
-                    msg += `※ 匯款後請提供【帳號末五碼】，以便核對入帳，謝謝您！`;
-
+                    const orderId = 'M' + Date.now().toString().slice(-6);
+                    const itemsText = cartItems.value.map((i, idx) => `❶ ${i.name} x${i.qty} ($${i.price * i.qty})`).join('\n');
+                    let msg = `🛒【麥麥小舖訂單 v138】\n🎫 訂單號：${orderId}\n👤 訂購人：${userProfile.value.displayName || '訪客'}\n------------------------\n🍱 商品：\n${itemsText}\n------------------------\n💰 總計：$${totalPrice.value}\n※ 已過濾子資料夾，確保庫存準確。`;
                     finalMsg.value = msg;
-                    const newRecord = { id: orderId, timestamp: timeStr, totalAmount: totalPrice.value, itemsSummary: cartItems.value.map(i => `${i.name} x${i.qty}`).join(', '), fullMsg: msg };
-                    orderHistory.value = [newRecord, ...orderHistory.value].slice(0, 30);
-                    localStorage.setItem('mm_history_v123', JSON.stringify(orderHistory.value));
-
-                    // 非同步記錄到後端
                     fetch(API_URL, {
                         method: 'POST', mode: 'no-cors',
                         body: JSON.stringify({
-                            timestamp: timeStr, id: orderId, items: cartItems.value.map(i => ({ name: i.name, qty: i.qty, price: i.price, subtotal: i.price * i.qty })), totalAmount: totalPrice.value, giftText: activeGift.value || '無', userId: userProfile.value.userId || 'GUEST', userName: finalName
+                            id: orderId, timestamp: new Date().toLocaleString(), items: cartItems.value.map(i => ({name: i.name, qty: i.qty, price: i.price, subtotal: i.price*i.qty})), totalAmount: totalPrice.value, userId: userProfile.value.userId || 'GUEST', userName: userProfile.value.displayName || 'GUEST'
                         })
                     }).catch(() => {});
-
                     isSubmitting.value = false;
                     cartModal.hide();
                     successModal.show();
                 };
 
-                const sendToLine = async (txt) => {
-                    // 優先使用 sendMessages (如果權限足夠)
+                const sendToLine = (txt) => {
                     if (liff.isInClient()) {
-                        try {
-                            const context = liff.getContext();
-                            if (context && ['utou', 'group', 'room'].includes(context.type)) {
-                                await liff.sendMessages([{ type: 'text', text: txt }]);
-                                // 發送後可以選擇關閉 LIFF 視窗
-                                // liff.closeWindow();
-                                return;
-                            }
-                        } catch (e) {
-                            console.error('sendMessages failed', e);
-                        }
+                        liff.sendMessages([{ type: 'text', text: txt }]).then(() => liff.closeWindow());
+                    } else {
+                        window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
                     }
-                    // 權限不足或不在對話 context 則跳轉
-                    const url = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
-                    window.location.href = url;
                 };
-
-                const copyText = (txt) => {
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                        navigator.clipboard.writeText(txt).then(() => {
-                            hasCopied.value = true;
-                            setTimeout(() => hasCopied.value = false, 2500);
-                        }).catch(() => fallbackCopy(txt));
-                    } else fallbackCopy(txt);
-                };
-
-                const fallbackCopy = (txt) => {
-                    const el = document.createElement('textarea');
-                    el.value = txt; el.style.position = 'absolute'; el.style.left = '-9999px';
-                    document.body.appendChild(el); el.select();
-                    try { document.execCommand('copy'); hasCopied.value = true; setTimeout(() => hasCopied.value = false, 2500); } catch(e) { alert('複製失敗'); }
-                    document.body.removeChild(el);
-                };
-
-                return {
-                    products, settings, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, activeGift, userProfile, guestName, handleCheckout, isSubmitting, finalMsg, sendToLine, copyText, hasCopied, openCart: () => cartModal.show(), closeSuccess: () => { successModal.hide(); cart.value = {}; }, openHistory: () => historyModal.show(), orderHistory
-                };
+                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, finalMsg, isSubmitting, sendToLine, openCart: () => cartModal.show(), userProfile };
             }
         }).mount('#app');
     </script>
