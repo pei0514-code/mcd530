@@ -107,7 +107,7 @@
 
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-3 ver-tag">麥麥商城 v131</div>
+        <div class="mt-3 ver-tag">麥麥商城 v132</div>
     </div>
 
     <div id="app" v-cloak>
@@ -117,7 +117,7 @@
                 <div class="d-flex align-items-center gap-3">
                     <div class="logo-m shadow">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 17px;">麥麥商城 <span class="ver-tag">v131</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 17px;">麥麥商城 <span class="ver-tag">v132</span></div>
                         <div class="text-muted" style="font-size: 12px; font-weight: 600;">👋 你好，{{ userProfile.displayName || guestName || '親愛的客人' }}</div>
                     </div>
                 </div>
@@ -209,7 +209,7 @@
             </div>
         </div>
 
-        <!-- 成功訊息 Modal (回覆生動按鈕風格) -->
+        <!-- 成功訊息 Modal (生動風格按鈕) -->
         <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content text-center p-4">
@@ -274,7 +274,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v131', bankInfo: '' });
+                const settings = ref({ version: 'v132', bankInfo: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({ displayName: '', userId: '' });
@@ -312,7 +312,7 @@
                         }
                         if (sRes) {
                             settings.value = sRes;
-                            settings.value.version = 'v131';
+                            settings.value.version = 'v132';
                             localStorage.setItem('mm_settings_v123', JSON.stringify(settings.value));
                         }
                         if (sRes.liffId) {
@@ -372,8 +372,8 @@
                     msg += `總金額：$${totalPrice.value}\n`;
                     if (activeGift.value) msg += `🎁 滿額贈：${activeGift.value}\n`;
                     msg += `------------------------\n`;
-                    msg += `🏦 匯款資訊：\n${cleanBankInfo}\n\n`;
-                    msg += `（匯款後請提供帳號末五碼，方便對帳，謝謝！）`;
+                    msg += `🏦 匯款資訊：\n${cleanBankInfo}\n`;
+                    // 移除手動重複加入的匯款提示，因為 cleanBankInfo 內已經包含了
 
                     finalMsg.value = msg;
                     const newRecord = { id: orderId, timestamp: timeStr, totalAmount: totalPrice.value, itemsSummary: cartItems.value.map(i => `${i.name} x${i.qty}`).join(', '), fullMsg: msg };
@@ -392,9 +392,21 @@
                     successModal.show();
                 };
 
-                const sendToLine = (txt) => {
-                    const url = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
-                    window.location.href = url;
+                const sendToLine = async (txt) => {
+                    if (liff.isInClient()) {
+                        try {
+                            await liff.sendMessages([{ type: 'text', text: txt }]);
+                            // 發送成功後可選擇是否關閉視窗
+                            // liff.closeWindow(); 
+                        } catch (e) {
+                            console.error('LIFF 發送失敗', e);
+                            const url = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
+                            window.location.href = url;
+                        }
+                    } else {
+                        const url = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
+                        window.location.href = url;
+                    }
                 };
 
                 const copyText = (txt) => {
