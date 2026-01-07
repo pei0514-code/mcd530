@@ -94,7 +94,7 @@
 
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-2 ver-tag">v140 加載中...</div>
+        <div class="mt-2 ver-tag">v141 加載中...</div>
     </div>
 
     <div id="app" v-cloak>
@@ -103,7 +103,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v140</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v141</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -231,7 +231,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v140', bankInfo: '', liffId: '' });
+                const settings = ref({ version: 'v141', bankInfo: '', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
