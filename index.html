@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>麥麥電子票券商城</title>
     
-    <!-- 預載入關鍵資源提升載入速度 -->
+    <!-- 預載入關鍵資源 -->
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js" as="script">
     <link rel="preload" href="https://static.line-scdn.net/liff/edge/2/sdk.js" as="script">
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" as="style">
@@ -34,12 +34,12 @@
             color: var(--brand-dark);
             overflow-x: hidden;
             opacity: 0;
-            animation: fadeInBody 0.3s forwards;
+            animation: fadeInBody 0.2s forwards;
         }
         @keyframes fadeInBody { to { opacity: 1; } }
         
-        #static-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s ease; }
-        .spinner { width: 38px; height: 38px; border: 4px solid #f3f3f3; border-top-color: var(--brand-red); border-radius: 50%; animation: spin 0.6s linear infinite; }
+        #static-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.2s ease; }
+        .spinner { width: 32px; height: 32px; border: 3px solid #f3f3f3; border-top-color: var(--brand-red); border-radius: 50%; animation: spin 0.6s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         .sticky-header { position: sticky; top: 0; z-index: 1000; background: var(--glass); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(0,0,0,0.05); }
@@ -54,7 +54,7 @@
 
         .product-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.03); height: 100%; display: flex; flex-direction: column; border: 1px solid rgba(0,0,0,0.02); }
         .p-img-box { position: relative; width: 100%; aspect-ratio: 1/1; background: #fdfdfd; overflow: hidden; }
-        .p-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity 0.3s; }
+        .p-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
         
         .p-body { padding: 14px; flex: 1; display: flex; flex-direction: column; }
         .p-title { font-weight: 800; font-size: 14px; color: #333; line-height: 1.4; min-height: 40px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px; }
@@ -64,16 +64,16 @@
         
         .p-price { color: var(--brand-red); font-weight: 900; font-size: 20px; }
         .btn-buy { background: var(--brand-dark); color: white; border: none; padding: 10px 0; border-radius: 50px; font-size: 13px; font-weight: 800; width: 100%; margin-top: auto; transition: 0.2s; }
-        .btn-buy:active { transform: scale(0.96); opacity: 0.9; }
-        .btn-buy:disabled { background: #e0e0e0; color: #aaa; transform: none; }
+        .btn-buy:active { transform: scale(0.96); }
+        .btn-buy:disabled { background: #e0e0e0; color: #aaa; }
         
         .qty-ctrl { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; border-radius: 50px; padding: 3px; border: 1px solid #eee; }
         .qty-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
         .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--gradient-red); color: white; padding: 18px 25px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 -8px 20px rgba(218, 41, 28, 0.2); cursor: pointer; transition: 0.2s; }
         .cart-bar:active { transform: translateY(2px); }
+        
         .line-float { position: fixed; bottom: 85px; right: 20px; width: 54px; height: 54px; background: var(--line-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 26px; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.3); z-index: 1001; text-decoration: none; border: 2px solid white; transition: 0.2s; }
-        .line-float:active { transform: scale(0.9); }
 
         .btn-line-custom { background-color: var(--line-green) !important; color: white !important; border: none !important; }
         .btn-copy-custom { background-color: var(--copy-blue) !important; color: white !important; border: none !important; }
@@ -94,7 +94,7 @@
 
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-3 ver-tag">載入中...</div>
+        <div class="mt-2 ver-tag">v139 加載中...</div>
     </div>
 
     <div id="app" v-cloak>
@@ -103,7 +103,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v138</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v139</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -129,7 +129,6 @@
                             </div>
                             <div class="mb-3">
                                 <span class="p-price">${{ p.price }}</span>
-                                <span v-if="p.originalPrice" class="p-price-old ms-1 text-muted small text-decoration-line-through">${{ p.originalPrice }}</span>
                             </div>
                             <div v-if="cart[p.id]" class="qty-ctrl">
                                 <button class="qty-btn" @click.stop="updateCart(p, -1)"><i class="fas fa-minus"></i></button>
@@ -145,14 +144,14 @@
             </div>
         </div>
 
-        <!-- 修正圖標重複問題 -->
+        <!-- 修正圖標為白色白色購物車 -->
         <div class="cart-bar shadow-lg" v-if="totalQty > 0" @click="openCart">
             <div class="d-flex align-items-center">
                 <div class="me-3" style="background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 10px; font-size: 13px; font-weight: 800;">{{ totalQty }} 件</div>
                 <div class="fw-bold fs-4">${{ totalPrice }}</div>
             </div>
             <div class="fw-bold fs-6">
-                🛒 購物車 <i class="fas fa-arrow-right ms-2"></i>
+                <i class="fas fa-shopping-cart me-2"></i>購物車 <i class="fas fa-arrow-right ms-2"></i>
             </div>
         </div>
 
@@ -163,7 +162,7 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 rounded-4 shadow-lg">
                     <div class="modal-header border-0 pt-4 px-4">
-                        <h5 class="fw-bold fs-4">🛒 購物車清單</h5>
+                        <h5 class="fw-bold fs-4"><i class="fas fa-shopping-cart me-2"></i>購物車清單</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body px-4">
@@ -201,12 +200,11 @@
                         <pre class="m-0" style="white-space: pre-wrap; font-family: inherit; font-weight: 600; line-height: 1.5; color: #444;">{{ finalMsg }}</pre>
                     </div>
                     
-                    <!-- 傳送按鈕優化 -->
                     <button class="btn btn-line-custom w-100 rounded-pill py-3 fw-bold mb-2 shadow-sm d-flex align-items-center justify-content-center" 
                             @click="sendToLine(finalMsg)" :disabled="isLineSending">
                         <i v-if="isLineSending" class="fas fa-spinner fa-spin me-2"></i>
                         <i v-else class="fab fa-line me-2"></i>
-                        {{ isLineSending ? '傳送中...' : '傳送訂單到 LINE' }}
+                        {{ isLineSending ? '正在傳送...' : '傳送訂單到 LINE' }}
                     </button>
                     
                     <button class="btn btn-copy-custom w-100 rounded-pill py-3 fw-bold mb-2 shadow-sm" @click="copyMsg(finalMsg)">
@@ -227,13 +225,14 @@
         const { createApp, ref, computed, onMounted } = Vue;
         const API_URL = 'https://script.google.com/macros/s/AKfycbx2xdqkRoBGFibvgKRo05QtVcIWZlUjBq-rr_NRJ-8nK1BsFPSorQqnsNa89IPlG45aeA/exec';
 
+        // 並行請求加速加載
         const globalDataPromise = fetch(`${API_URL}?action=getInitData`).then(r => r.json()).catch(() => ({products:[]}));
         const globalSettingsPromise = fetch(`${API_URL}?action=getSettings`).then(r => r.json()).catch(() => ({}));
 
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v138', bankInfo: '', liffId: '' });
+                const settings = ref({ version: 'v139', bankInfo: '', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -250,25 +249,24 @@
                 });
 
                 const initApp = async () => {
+                    // 並行處理數據與 LIFF 初始化
                     const [pRes, sRes] = await Promise.all([globalDataPromise, globalSettingsPromise]);
                     if (pRes.products) products.value = pRes.products;
                     if (sRes) settings.value = sRes;
                     
                     if (sRes.liffId) {
-                        try {
-                            await liff.init({ liffId: sRes.liffId });
+                        liff.init({ liffId: sRes.liffId }).then(async () => {
                             if (liff.isLoggedIn()) {
                                 userProfile.value = await liff.getProfile();
                             }
-                        } catch (err) {
-                            console.error("LIFF Init Error", err);
-                        }
+                        }).catch(err => console.error("LIFF Init Error", err));
                     }
 
+                    // 加速關閉 Loader
                     const loader = document.getElementById('static-loader');
                     if (loader) {
                         loader.style.opacity = '0';
-                        setTimeout(() => loader.style.display = 'none', 300);
+                        setTimeout(() => loader.style.display = 'none', 200);
                     }
                 };
 
@@ -337,36 +335,42 @@
                     successModal.show();
                 };
 
-                // 修復傳送邏輯：使用最穩定的分享器
+                // 極致傳送邏輯：優先嘗試背景傳送
                 const sendToLine = async (txt) => {
                     isLineSending.value = true;
                     try {
                         if (liff.isInClient()) {
-                            // 優先嘗試分享對象選擇器 (這是最穩定的彈窗發送方式)
+                            // 1. 嘗試直接在聊天室發送 (背景傳送，無彈窗)
+                            const context = liff.getContext();
+                            if (context && ['utou', 'group', 'room'].includes(context.type)) {
+                                try {
+                                    await liff.sendMessages([{ type: 'text', text: txt }]);
+                                    liff.closeWindow(); // 發送完畢直接關閉商城
+                                    return;
+                                } catch (e) {
+                                    console.warn("Direct sendMessages failed, fallback to picker");
+                                }
+                            }
+                            
+                            // 2. 若不在對話視窗內或發送失敗，嘗試分享器 (彈窗選擇對象)
                             if (liff.isApiAvailable('shareTargetPicker')) {
                                 await liff.shareTargetPicker([{ type: 'text', text: txt }]);
-                                // 分享成功後通常不需要關閉視窗，讓使用者決定
                             } else {
-                                // 若不支援分享器，嘗試直接發送
-                                await liff.sendMessages([{ type: 'text', text: txt }]);
-                                alert('訂單已傳送！');
+                                window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
                             }
                         } else {
-                            // 外部瀏覽器：使用通用傳送連結
-                            const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
-                            window.open(lineUrl, '_blank');
+                            // 3. 外部瀏覽器
+                            window.open(`https://line.me/R/msg/text/?${encodeURIComponent(txt)}`, '_blank');
                         }
                     } catch (err) {
                         console.error("LINE Send Error:", err);
-                        // 最後保險措施
-                        const lineUrl = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
-                        window.location.href = lineUrl;
+                        window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
                     } finally {
                         isLineSending.value = false;
                     }
                 };
 
-                // 修復複製邏輯：雙重保險
+                // 強化複製邏輯
                 const copyMsg = (txt) => {
                     const fallback = (text) => {
                         const textArea = document.createElement("textarea");
@@ -378,19 +382,16 @@
                         textArea.focus();
                         textArea.select();
                         try {
-                            const successful = document.execCommand('copy');
-                            if (successful) alert('訂單文字已複製！');
-                            else alert('複製失敗，請手動全選複製');
+                            document.execCommand('copy');
+                            alert('訂單內容已複製到剪貼簿！');
                         } catch (err) {
-                            alert('複製失敗，請手動全選複製');
+                            alert('複製失敗，請手動長按選取文字');
                         }
                         document.body.removeChild(textArea);
                     };
 
                     if (navigator.clipboard && window.isSecureContext) {
-                        navigator.clipboard.writeText(txt)
-                            .then(() => alert('訂單文字已成功複製！'))
-                            .catch(() => fallback(txt));
+                        navigator.clipboard.writeText(txt).then(() => alert('訂單內容已成功複製！')).catch(() => fallback(txt));
                     } else {
                         fallback(txt);
                     }
