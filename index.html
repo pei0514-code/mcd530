@@ -82,7 +82,6 @@
         .form-label-small { font-size: 12px; font-weight: 800; color: #666; margin-bottom: 5px; display: flex; justify-content: space-between; }
         .sync-tag { color: var(--line-green); font-size: 10px; }
 
-        /* 購買需知樣式 */
         .terms-box { background: #fff8f8; border: 1px solid #ffebeb; border-radius: 12px; padding: 12px; font-size: 12px; color: #666; line-height: 1.6; max-height: 150px; overflow-y: auto; margin-bottom: 15px; }
         .terms-title { font-weight: 800; color: var(--brand-red); margin-bottom: 5px; font-size: 13px; }
         .terms-check-container { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none; }
@@ -105,7 +104,7 @@
 
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-2 ver-tag">v148 加載中...</div>
+        <div class="mt-2 ver-tag">v149 加載中...</div>
     </div>
 
     <div id="app" v-cloak>
@@ -114,7 +113,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v148</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v149</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -175,7 +174,6 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body px-4">
-                        <!-- 購買需知區塊 -->
                         <div class="terms-box">
                             <div class="terms-title">📜 購買需知</div>
                             <div class="small">
@@ -203,7 +201,7 @@
                             <input type="tel" class="form-control-custom" v-model="userContact.phone" placeholder="例如: 0912345678">
                             
                             <label class="form-label-small">
-                                電子郵件 (選填)
+                                電子郵件 (僅供後台存檔)
                                 <span v-if="isLiffEmail" class="sync-tag"><i class="fas fa-check-circle"></i> 已從 LINE 同步</span>
                             </label>
                             <input type="email" class="form-control-custom" v-model="userContact.email" :disabled="isLiffEmail" placeholder="例如: user@example.com">
@@ -239,8 +237,8 @@
                     <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
                     <h4 class="fw-bold">訂單已成功成立！</h4>
                     <p class="small text-muted">官方帳號將於發貨後 28 天自動發 LINE 訊息提醒效期喔！</p>
-                    <div class="p-3 bg-light rounded-4 text-start mb-4 small">
-                        <pre class="m-0" style="white-space: pre-wrap; font-family: inherit; font-weight: 600; line-height: 1.5; color: #444;">{{ finalMsg }}</pre>
+                    <div class="p-3 bg-light rounded-4 text-start mb-4 small overflow-auto" style="max-height: 250px;">
+                        <pre class="m-0" style="white-space: pre-wrap; font-family: inherit; font-weight: 600; line-height: 1.5; color: #444; font-size: 13px;">{{ finalMsg }}</pre>
                     </div>
                     <button class="btn btn-line-custom w-100 rounded-pill py-3 fw-bold mb-2 shadow-sm" @click="sendToLine(finalMsg)" :disabled="isLineSending">
                         <i class="fab fa-line me-2"></i>傳送訂單到 LINE
@@ -265,7 +263,7 @@
                                 <span class="text-danger fw-bold">${{ h.totalAmount }}</span>
                             </div>
                             <div class="small mt-2">
-                                <div v-for="it in h.items" :key="it.name">• {{ it.name }} x{{ it.qty }}</div>
+                                <div v-for="(it, idx) in h.items" :key="it.name">{{ idx+1 }}. {{ it.name }} x{{ it.qty }}</div>
                             </div>
                             <button class="btn btn-outline-success btn-sm w-100 rounded-pill fw-bold mt-2" @click="resendHistory(h)">
                                 <i class="fab fa-line me-1"></i>重新傳送訂單
@@ -284,11 +282,12 @@
     <script>
         const { createApp, ref, computed, onMounted, watch } = Vue;
         const API_URL = 'https://script.google.com/macros/s/AKfycbx2xdqkRoBGFibvgKRo05QtVcIWZlUjBq-rr_NRJ-8nK1BsFPSorQqnsNa89IPlG45aeA/exec';
+        const NUMBERS = ['❶', '❷', '❸', '❹', '❺', '❻', '❼', '❽', '❾', '❿'];
 
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v148', bankInfo: '', liffId: '' });
+                const settings = ref({ version: 'v149', bankInfo: '', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -329,11 +328,6 @@
                             liff.init({ liffId: res.liffId }).then(async () => {
                                 if (liff.isLoggedIn()) {
                                     userProfile.value = await liff.getProfile();
-                                    const idToken = liff.getDecodedIDToken();
-                                    if (idToken && idToken.email) {
-                                        userContact.value.email = idToken.email;
-                                        isLiffEmail.value = true;
-                                    }
                                 }
                             }).catch(err => console.error("LIFF Error", err));
                         }
@@ -365,18 +359,18 @@
                     isSubmitting.value = true;
                     const now = new Date();
                     const orderId = 'M' + now.getTime().toString().slice(-8);
-                    const giftText = totalPrice.value >= 999 ? '滿福堡加蛋套餐' : (totalPrice.value >= 500 ? '大蛋捲冰淇淋' : '');
                     
-                    let msg = `🛒【麥麥小舖電子票券】\n🎫 訂單編號：${orderId}\n👤 訂購人：${userProfile.value.displayName || guestName.value || 'GUEST'}\n📱 電話：${userContact.value.phone}\n📧 Email：${userContact.value.email || '未填寫'}\n------------------------\n`;
+                    let msg = `🛒【麥麥小舖電子票券】\n🎫 訂單編號：${orderId}\n🍱 訂購商品：\n`;
                     cartItems.value.forEach((i, idx) => {
-                        msg += `${idx+1}. ${i.name} x${i.qty} ($${i.price*i.qty})\n`;
+                        const numIcon = NUMBERS[idx] || (idx + 1) + '.';
+                        msg += `${numIcon} ${i.name}\n🔹數量：${i.qty}\n🔹小計：${i.price * i.qty}\n🔹效期：${i.expiryDate}\n`;
                     });
-                    msg += `------------------------\n💰 應付總額：$${totalPrice.value}\n🎁 滿額贈：${giftText || '無'}\n------------------------\n🏦 將來銀行(823): 88658888888840`;
+                    msg += `💰 應付總額：$${totalPrice.value}\n🏦 匯款資訊：\n將來銀行(823): 88658888888840\n中國信託(822): 864540221080\n台新銀行(812): 28881013072004\n街口支付: 901794346\n⚠️ 請於匯款後告知客服帳號末五碼，以便核對。`;
                     
                     finalMsg.value = msg;
 
                     const record = {
-                        id: orderId, timestamp: now.toLocaleString(), totalAmount: totalPrice.value, gift: giftText,
+                        id: orderId, timestamp: now.toLocaleString(), totalAmount: totalPrice.value,
                         items: cartItems.value.map(i => ({ name: i.name, qty: i.qty, price: i.price }))
                     };
                     orderHistory.value = [record, ...orderHistory.value].slice(0, 30);
@@ -413,9 +407,12 @@
                 };
 
                 const resendHistory = (h) => {
-                    let msg = `🛒【麥麥小舖】歷史訂單補傳\n🎫 訂單編號：${h.id}\n時間：${h.timestamp}\n------------------------\n`;
-                    h.items.forEach((it, idx) => msg += `${idx+1}. ${it.name} x${it.qty}\n`);
-                    msg += `------------------------\n總金額：$${h.totalAmount}`;
+                    let msg = `🛒【麥麥小舖電子票券】歷史訂單補傳\n🎫 訂單編號：${h.id}\n🍱 訂購商品：\n`;
+                    h.items.forEach((it, idx) => {
+                        const numIcon = NUMBERS[idx] || (idx + 1) + '.';
+                        msg += `${numIcon} ${it.name}\n🔹數量：${it.qty}\n🔹小計：${it.price * it.qty}\n`;
+                    });
+                    msg += `💰 應付總額：$${h.totalAmount}\n⚠️ 請於匯款後告知客服帳號末五碼。`;
                     sendToLine(msg);
                 };
 
