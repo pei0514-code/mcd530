@@ -131,6 +131,14 @@
         .guide-content h6 { font-weight: 800; margin-bottom: 4px; color: #333; font-size: 15px; }
         .guide-content p { font-size: 12px; color: #777; margin: 0; line-height: 1.4; }
 
+        /* Icon Legend in Guide */
+        .guide-legend { background: #f8f9fa; border-radius: 15px; padding: 15px; margin-top: 20px; border: 1px dashed #ddd; }
+        .legend-item { display: flex; align-items: center; margin-bottom: 10px; }
+        .legend-item:last-child { margin-bottom: 0; }
+        .legend-icon-wrap { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin-right: 12px; border: 1px solid #eee; background: white; color: var(--brand-red); font-size: 18px; }
+        .legend-text { font-size: 12px; font-weight: 700; color: #555; }
+        .legend-icon-wrap.green { background: var(--line-green); color: white; border: none; }
+
         /* Timeline Flow in Loader */
         .timeline-container { position: relative; padding-left: 10px; margin-top: 10px; }
         .timeline-container::before {
@@ -191,7 +199,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v179</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v180</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -231,7 +239,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v179</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v180</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -449,6 +457,23 @@
                                 <p>送出 LINE 訊息，匯款後等待客服核對發券。</p>
                             </div>
                         </div>
+                        
+                        <div class="guide-legend">
+                           <div class="legend-item">
+                               <div class="legend-icon-wrap"><i class="fas fa-columns"></i></div>
+                               <div class="legend-text">
+                                   <div class="fw-bold text-dark">版面切換 (左下角)</div>
+                                   自定義商品顯示大小 (大/中/小)
+                               </div>
+                           </div>
+                           <div class="legend-item">
+                               <div class="legend-icon-wrap green"><i class="fab fa-line"></i></div>
+                               <div class="legend-text">
+                                   <div class="fw-bold text-dark">官方客服 (右下角)</div>
+                                   加入 LINE 官方帳號獲得協助
+                               </div>
+                           </div>
+                        </div>
 
                         <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold mt-2 shadow-sm" style="background: var(--gradient-red); border: none;" data-bs-dismiss="modal">
                             我明白了，開始購物！
@@ -497,7 +522,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v179', liffId: '' });
+                const settings = ref({ version: 'v180', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -630,7 +655,8 @@
 
                     localStorage.setItem('mm_user_phone', userContact.value.phone);
                     const now = new Date();
-                    const orderId = `M${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+                    // FIX: Added Seconds to Order ID to prevent duplicates for same-minute orders
+                    const orderId = `M${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
                     
                     const deliveryText = deliveryMethod.value === 'screenshot' ? '📸 截圖發送' : '🎁 momo 轉贈';
                     const deliveryBackend = deliveryMethod.value === 'screenshot' ? '截圖發送' : 'momo 轉贈';
