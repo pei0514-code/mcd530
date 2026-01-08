@@ -36,7 +36,7 @@
         }
         @keyframes fadeInBody { to { opacity: 1; } }
         
-        #static-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.2s ease; }
+        #static-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.2s ease; text-align: center; padding: 20px; }
 
         .sticky-header { position: sticky; top: 0; z-index: 1000; background: var(--glass); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(0,0,0,0.05); }
         .category-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 12px 15px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
@@ -80,10 +80,8 @@
 
         .form-label-small { font-size: 13px; font-weight: 700; color: #666; margin-bottom: 5px; }
         .form-control-pill { border-radius: 50px; padding: 10px 20px; border: 1px solid #eee; background: #f8f9fa; font-size: 14px; }
-
         .checkout-img { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; margin-right: 12px; background: #eee; flex-shrink: 0; border: 1px solid #eee; }
 
-        /* 新手操作指南 美化 */
         .guide-step { display: flex; align-items: center; gap: 15px; margin-bottom: 18px; padding: 12px; background: #fafafa; border-radius: 16px; transition: 0.2s; border: 1px solid transparent; }
         .guide-step:hover { background: #fff; border-color: #ffebeb; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
         .guide-icon { width: 44px; height: 44px; background: var(--gradient-red); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(218, 41, 28, 0.15); }
@@ -91,7 +89,11 @@
         .guide-text p { font-size: 12px; color: #777; margin: 0; line-height: 1.4; font-weight: 500; }
 
         .btn-help { background: #f8f9fa; color: #999; border: 1px solid #eee; border-radius: 50px; padding: 4px 12px; font-size: 12px; font-weight: 700; transition: 0.2s; }
-        .btn-help:active { background: #eee; }
+        
+        /* 選項群組樣式 */
+        .option-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .option-btn { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid #eee; background: #f9f9f9; font-size: 14px; font-weight: 700; color: #777; transition: 0.2s; text-align: center; cursor: pointer; }
+        .option-btn.active { background: #fff5f5; border-color: var(--brand-red); color: var(--brand-red); }
 
         [v-cloak] { display: none; }
     </style>
@@ -108,8 +110,15 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 14px;">MCD Mall v167</div>
-        <div class="mt-2 text-muted" style="font-size: 11px;">載入電子票券數據...</div>
+        <div class="fw-bold text-danger" style="font-size: 18px;">MCD Mall v169</div>
+        <div class="mt-2 text-muted fw-bold" style="font-size: 13px;">載入電子票券數據中...</div>
+        <div class="mt-4 p-3 bg-light rounded-4 small text-muted text-start" style="max-width: 300px; border: 1px dashed #DA291C;">
+            <div class="fw-bold text-danger mb-2">💡 快速操作指南：</div>
+            1. 挑選商品加入購物車<br>
+            2. 確認訂單並填寫資料<br>
+            3. 傳送 LINE 訊息給客服<br>
+            4. 完成匯款並核對後發券
+        </div>
     </div>
 
     <div id="app" v-cloak>
@@ -118,7 +127,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v167</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v169</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -180,7 +189,6 @@
 
         <a class="line-float" href="https://lin.ee/ejXmXDl" target="_blank"><i class="fab fa-line"></i></a>
 
-        <!-- 新手導覽 Modal -->
         <div class="modal fade" id="guideModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
@@ -188,7 +196,6 @@
                         <div class="logo-m mx-auto mb-3">M</div>
                         <h4 class="fw-bold mb-1">新手操作指南</h4>
                         <p class="text-muted small mb-4">歡迎使用麥麥商城，簡單三步驟快速下單</p>
-                        
                         <div class="guide-step">
                             <div class="guide-icon"><i class="fas fa-store"></i></div>
                             <div class="guide-text">
@@ -196,7 +203,6 @@
                                 <p>挑選心儀商品並點擊「加入購物車」。</p>
                             </div>
                         </div>
-
                         <div class="guide-step">
                             <div class="guide-icon"><i class="fas fa-shopping-basket"></i></div>
                             <div class="guide-text">
@@ -204,7 +210,6 @@
                                 <p>進入購物車填寫電話，並確認總金額。</p>
                             </div>
                         </div>
-
                         <div class="guide-step">
                             <div class="guide-icon"><i class="fab fa-line"></i></div>
                             <div class="guide-text">
@@ -212,11 +217,9 @@
                                 <p>點擊「傳送 LINE」，客服核對匯款後立即發券。</p>
                             </div>
                         </div>
-
                         <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold mt-2 shadow-sm" style="background: var(--gradient-red); border: none;" data-bs-dismiss="modal">
                             我明白了，開始購物！
                         </button>
-                        <p class="text-muted mt-3" style="font-size: 10px; font-weight: 600;">隨時可點擊右上角「操作說明」重新查看</p>
                     </div>
                 </div>
             </div>
@@ -233,6 +236,27 @@
                         <div class="mb-3">
                             <label class="form-label-small">聯絡手機 (選填)</label>
                             <input type="tel" v-model="userContact.phone" class="form-control form-control-pill" placeholder="方便核對訂單 (選填)">
+                        </div>
+
+                        <label class="form-label-small">領取方式</label>
+                        <div class="option-group">
+                            <div class="option-btn" :class="{ active: deliveryMethod === 'screenshot' }" @click="deliveryMethod = 'screenshot'">📸 截圖發送</div>
+                            <div class="option-btn" :class="{ active: deliveryMethod === 'gift' }" @click="deliveryMethod = 'gift'">🎁 momo 轉贈</div>
+                        </div>
+
+                        <div v-if="deliveryMethod === 'gift'" class="mb-3 p-3 bg-light rounded-4 border animate-in slide-in-from-top duration-200">
+                            <div class="mb-2">
+                                <label class="form-label-small text-danger">momo 會員姓名 (必填)</label>
+                                <input type="text" v-model="giftInfo.name" class="form-control rounded-pill" placeholder="請輸入收件人姓名">
+                            </div>
+                            <div>
+                                <label class="form-label-small text-danger">momo 會員電話 (必填)</label>
+                                <input type="tel" v-model="giftInfo.phone" class="form-control rounded-pill" placeholder="請輸入收件人電話">
+                            </div>
+                        </div>
+
+                        <div class="text-muted mb-3" style="font-size: 11px; font-weight: 700; color: #ff4d4f !important;">
+                            ⚠️ 善意提醒：部份票券可能無法轉贈，依客服提供為主，謝謝。
                         </div>
 
                         <div class="terms-box">
@@ -267,9 +291,10 @@
                         <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold fs-5 shadow" 
                                 style="background: var(--gradient-red); border: none;" 
                                 @click="handleCheckout" 
-                                :disabled="isSubmitting || totalPrice < 50 || !acceptTerms">
+                                :disabled="isSubmitting || totalPrice < 50 || !acceptTerms || (deliveryMethod === 'gift' && (!giftInfo.name || !giftInfo.phone))">
                             <i class="fas fa-paper-plane me-2"></i>
                             <span v-if="!acceptTerms">請勾選同意條款</span>
+                            <span v-else-if="deliveryMethod === 'gift' && (!giftInfo.name || !giftInfo.phone)">請完整填寫 momo 會員資料</span>
                             <span v-else-if="totalPrice < 50">滿 $50 才能出貨</span>
                             <span v-else>確認並送出訂單</span>
                         </button>
@@ -312,10 +337,18 @@
                             <div class="small mt-2">
                                 <div v-for="(it, idx) in h.items" :key="it.name">{{ idx+1 }}. {{ it.name }} x{{ it.quantity }}</div>
                             </div>
-                            <button class="btn btn-outline-success btn-sm w-100 rounded-pill fw-bold mt-2" @click="resendHistory(h)">
-                                <i class="fab fa-line me-1"></i>重新傳送訂單
-                            </button>
+                            <div class="d-flex gap-2 mt-3">
+                                <button class="btn btn-outline-success btn-sm flex-grow-1 rounded-pill fw-bold" @click="resendHistory(h)">
+                                    <i class="fab fa-line me-1"></i>重新傳送
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm flex-grow-1 rounded-pill fw-bold" @click="reBuy(h)">
+                                    <i class="fas fa-shopping-cart me-1"></i>再次購買
+                                </button>
+                            </div>
                         </div>
+                    </div>
+                    <div class="p-3 bg-white border-top text-center">
+                        <button class="btn btn-dark w-100 rounded-pill py-2 fw-bold" data-bs-dismiss="modal">關閉</button>
                     </div>
                 </div>
             </div>
@@ -334,7 +367,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v167', liffId: '' });
+                const settings = ref({ version: 'v169', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -345,9 +378,9 @@
                 const acceptTerms = ref(false);
                 const isLoadingData = ref(true);
                 
-                const userContact = ref({
-                    phone: localStorage.getItem('mm_user_phone') || ''
-                });
+                const deliveryMethod = ref('screenshot');
+                const giftInfo = ref({ name: '', phone: '' });
+                const userContact = ref({ phone: localStorage.getItem('mm_user_phone') || '' });
 
                 const orderHistory = ref(JSON.parse(localStorage.getItem('mm_order_history') || '[]'));
                 let cartModal, successModal, historyModal, guideModal;
@@ -365,26 +398,22 @@
                     try {
                         const prodRes = await fetch(`${API_URL}?action=getInitData`).then(r => r.json());
                         products.value = prodRes.products;
-                        
                         const setRes = await fetch(`${API_URL}?action=getSettings`).then(r => r.json());
                         settings.value = setRes;
-                        
                         if (setRes.liffId) {
                             await liff.init({ liffId: setRes.liffId });
                             if (liff.isLoggedIn()) userProfile.value = await liff.getProfile();
                         }
-                    } catch (err) {
-                        console.error("Init Error", err);
-                    } finally {
+                    } catch (err) { console.error(err); } 
+                    finally {
                         isLoadingData.value = false;
                         hideStaticLoader();
-                        // 首次進入顯示導覽
                         setTimeout(() => {
-                            if (!localStorage.getItem('mm_guided_v167')) {
+                            if (!localStorage.getItem('mm_guided_v169')) {
                                 guideModal.show();
-                                localStorage.setItem('mm_guided_v167', 'true');
+                                localStorage.setItem('mm_guided_v169', 'true');
                             }
-                        }, 300);
+                        }, 600);
                     }
                 };
 
@@ -392,20 +421,26 @@
                     const loader = document.getElementById('static-loader');
                     if (loader) {
                         loader.style.opacity = '0';
-                        setTimeout(() => loader.style.display = 'none', 200);
+                        setTimeout(() => loader.style.display = 'none', 300);
                     }
                 };
 
-                const showGuide = () => guideModal.show();
+                const reBuy = (h) => {
+                    cart.value = {};
+                    h.items.forEach(it => {
+                        const p = products.value.find(x => x.name === it.name);
+                        if (p) cart.value[p.id] = it.quantity;
+                    });
+                    historyModal.hide();
+                    cartModal.show();
+                };
 
                 const categories = computed(() => [...new Set(products.value.map(p => p.category))]);
                 const filteredProducts = computed(() => currentCat.value === 'ALL' ? products.value : products.value.filter(p => p.category === currentCat.value));
-                
                 const cartItems = computed(() => Object.keys(cart.value).map(id => {
                     const p = products.value.find(x => x.id === id);
                     return p ? { ...p, quantity: cart.value[id] } : null;
                 }).filter(x => x));
-
                 const totalQty = computed(() => cartItems.value.reduce((a, b) => a + b.quantity, 0));
                 const totalPrice = computed(() => cartItems.value.reduce((a, b) => a + (b.price * b.quantity), 0));
 
@@ -417,13 +452,19 @@
 
                 const handleCheckout = async () => {
                     if (!acceptTerms.value) return;
+                    if (deliveryMethod.value === 'gift' && (!giftInfo.value.name || !giftInfo.value.phone)) return;
+                    
                     isSubmitting.value = true;
                     localStorage.setItem('mm_user_phone', userContact.value.phone);
 
                     const now = new Date();
                     const orderId = `M${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
                     
-                    let msg = `🛒【麥麥小舖電子票券】\n🎫 訂單編號：${orderId}\n📱 聯絡手機：${userContact.value.phone || '未提供'}\n🍱 訂購商品：\n`;
+                    let msg = `🛒【麥麥小舖電子票券】\n🎫 訂單編號：${orderId}\n📱 聯絡手機：${userContact.value.phone || '未提供'}\n📦 領取方式：${deliveryMethod.value === 'screenshot' ? '📸 截圖發送' : '🎁 momo 轉贈'}\n`;
+                    if (deliveryMethod.value === 'gift') {
+                        msg += `👤 momo 姓名：${giftInfo.value.name}\n📞 momo 電話：${giftInfo.value.phone}\n`;
+                    }
+                    msg += `🍱 訂購商品：\n`;
                     cartItems.value.forEach((i, idx) => {
                         const numIcon = NUMBERS[idx] || (idx + 1) + '.';
                         msg += `${numIcon} ${i.name}\n🔹數量：${i.quantity} 🔹小計：$${i.price * i.quantity}\n🔹效期：${i.expiryDate}\n`;
@@ -431,7 +472,6 @@
                     msg += `💰 應付總額：$${totalPrice.value}\n🏦 匯款資訊：\n將來銀行(823): 88658888888840\n中國信託(822): 864540221080\n台新銀行(812): 28881013072004\n街口支付: 901794346\n⚠️ 請於匯款後告知客服帳號末五碼，以便核對。`;
                     
                     finalMsg.value = msg;
-
                     const record = {
                         id: orderId, timestamp: now.toLocaleString(), totalAmount: totalPrice.value,
                         items: cartItems.value.map(i => ({ name: i.name, quantity: i.quantity, price: i.price }))
@@ -447,7 +487,10 @@
                             totalAmount: totalPrice.value, 
                             userId: userProfile.value.userId || 'GUEST', 
                             userName: userProfile.value.displayName || guestName.value || 'GUEST',
-                            phone: userContact.value.phone || ''
+                            phone: userContact.value.phone || '',
+                            deliveryMethod: deliveryMethod.value === 'screenshot' ? '截圖' : '轉贈',
+                            momoName: giftInfo.value.name || '',
+                            momoPhone: giftInfo.value.phone || ''
                         })
                     }).catch(() => {});
 
@@ -481,9 +524,11 @@
                 const resetCart = () => {
                     cart.value = {};
                     acceptTerms.value = false;
+                    deliveryMethod.value = 'screenshot';
+                    giftInfo.value = { name: '', phone: '' };
                 };
 
-                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, finalMsg, isLineSending, sendToLine, openCart: () => cartModal.show(), openHistory: () => historyModal.show(), showGuide, orderHistory, userProfile, guestName, userContact, resendHistory, acceptTerms, resetCart, isLoadingData };
+                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, finalMsg, isLineSending, sendToLine, openCart: () => cartModal.show(), openHistory: () => historyModal.show(), showGuide: () => guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo };
             }
         }).mount('#app');
     </script>
