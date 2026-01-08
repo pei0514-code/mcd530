@@ -100,7 +100,7 @@
 
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-3 fw-bold text-muted" style="font-size: 14px;">麥麥商城 v153 加載中...</div>
+        <div class="mt-3 fw-bold text-muted" style="font-size: 14px;">麥麥商城 v154 加載中...</div>
     </div>
 
     <div id="app" v-cloak>
@@ -109,7 +109,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v153</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v154</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -123,7 +123,6 @@
         </div>
 
         <div class="container-fluid px-3 py-3">
-            <!-- 加載中佔位 -->
             <div v-if="isLoadingData" class="text-center py-5">
                 <div class="spinner-border text-danger mb-3" role="status"></div>
                 <div class="text-muted fw-bold">品項獲取中...</div>
@@ -275,7 +274,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v153', bankInfo: '', liffId: '' });
+                const settings = ref({ version: 'v154', bankInfo: '', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -363,7 +362,7 @@
                     let msg = `🛒【麥麥小舖電子票券】\n🎫 訂單編號：${orderId}\n🍱 訂購商品：\n`;
                     cartItems.value.forEach((i, idx) => {
                         const numIcon = NUMBERS[idx] || (idx + 1) + '.';
-                        msg += `${numIcon} ${i.name}\n🔹數量：${i.qty}\n🔹小計：\n${i.price * i.qty}\n🔹效期：${i.expiryDate}\n`;
+                        msg += `${numIcon} ${i.name}\n🔹數量：${i.qty}\n🔹小計：$${i.price * i.qty}\n🔹效期：${i.expiryDate}\n`;
                     });
                     msg += `💰 應付總額：$${totalPrice.value}\n🏦 匯款資訊：\n將來銀行(823): 88658888888840\n中國信託(822): 864540221080\n台新銀行(812): 28881013072004\n街口支付: 901794346\n⚠️ 請於匯款後告知客服帳號末五碼，以便核對。`;
                     
@@ -410,7 +409,7 @@
                     let msg = `🛒【麥麥小舖電子票券】歷史訂單補傳\n🎫 訂單編號：${h.id}\n🍱 訂購商品：\n`;
                     h.items.forEach((it, idx) => {
                         const numIcon = NUMBERS[idx] || (idx + 1) + '.';
-                        msg += `${numIcon} ${it.name}\n🔹數量：${it.qty}\n🔹小計：\n${it.price * it.qty}\n`;
+                        msg += `${numIcon} ${it.name}\n🔹數量：${it.qty}\n🔹小計：$${it.price * it.qty}\n`;
                     });
                     msg += `💰 應付總額：$${h.totalAmount}\n⚠️ 請於匯款後告知客服帳號末五碼。`;
                     sendToLine(msg);
