@@ -18,7 +18,6 @@
             --brand-dark: #27251F; 
             --brand-yellow: #FFC72C; 
             --line-green: #06C755; 
-            --copy-blue: #34495e;
             --gradient-red: linear-gradient(135deg, #DA291C 0%, #FF5E52 100%);
             --app-bg: #FDFDFD;
             --glass: rgba(255, 255, 255, 0.95);
@@ -37,7 +36,7 @@
         }
         @keyframes fadeInBody { to { opacity: 1; } }
         
-        #static-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.4s ease; }
+        #static-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s ease; }
         .spinner { width: 45px; height: 45px; border: 5px solid #f3f3f3; border-top-color: var(--brand-red); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -62,6 +61,8 @@
         .stock-tag.none { background: #f5f5f5; color: #bfbfbf; }
         
         .p-price { color: var(--brand-red); font-weight: 900; font-size: 20px; }
+        .p-original { font-size: 12px; color: #bbb; text-decoration: line-through; margin-left: 5px; font-weight: normal; }
+        
         .btn-buy { background: var(--brand-dark); color: white; border: none; padding: 10px 0; border-radius: 50px; font-size: 13px; font-weight: 800; width: 100%; margin-top: auto; transition: 0.2s; }
         .btn-buy:active { transform: scale(0.96); }
         .btn-buy:disabled { background: #e0e0e0; color: #aaa; }
@@ -76,35 +77,18 @@
         .btn-line-custom { background-color: var(--line-green) !important; color: white !important; border: none !important; }
         .history-item { background: #fff; border-radius: 18px; padding: 15px; margin-bottom: 15px; border: 1px solid #f0f0f0; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
 
-        .terms-box { background: #fff8f8; border: 1px solid #ffebeb; border-radius: 12px; padding: 15px; font-size: 14px; color: #444; line-height: 1.7; max-height: 200px; overflow-y: auto; margin-bottom: 15px; }
-        .terms-title { font-weight: 900; color: var(--brand-red); margin-bottom: 8px; font-size: 15px; }
-        .terms-check-container { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none; }
-        .terms-check-container input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--brand-red); }
-        .terms-check-label { font-size: 15px; font-weight: 800; color: var(--brand-dark); }
-
-        .checkout-img { width: 40px; height: 40px; object-fit: cover; border-radius: 8px; margin-right: 12px; background: #eee; }
-
         .form-label-small { font-size: 13px; font-weight: 700; color: #666; margin-bottom: 5px; }
         .form-control-pill { border-radius: 50px; padding: 10px 20px; border: 1px solid #eee; background: #f8f9fa; font-size: 14px; }
         .form-control-pill:focus { border-color: var(--brand-red); box-shadow: none; background: #fff; }
 
         [v-cloak] { display: none; }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "react/": "https://esm.sh/react@^19.2.3/"
-  }
-}
-</script>
 </head>
 <body>
 
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-3 fw-bold text-muted" style="font-size: 15px;">麥麥商城 v161 加載中...</div>
+        <div class="mt-3 fw-bold text-muted" style="font-size: 15px;">麥麥商城 v162 加載中...</div>
     </div>
 
     <div id="app" v-cloak>
@@ -113,7 +97,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v161</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v162</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -142,8 +126,9 @@
                                 <span class="fw-bold"><i class="far fa-calendar-alt me-1"></i>{{ p.expiryDate }}</span>
                                 <span class="stock-tag" :class="{ none: Number(p.stock) <= 0 }">剩 {{ p.stock }}</span>
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-3 d-flex align-items-end">
                                 <span class="p-price">${{ p.price }}</span>
+                                <span v-if="p.originalPrice" class="p-original">${{ p.originalPrice }}</span>
                             </div>
                             <div v-if="cart[p.id]" class="qty-ctrl">
                                 <button class="qty-btn" @click.stop="updateCart(p, -1)"><i class="fas fa-minus"></i></button>
@@ -186,9 +171,9 @@
 
                         <div class="terms-box">
                             <div class="terms-title">📜 購買需知</div>
-                            <div>
-                                1. 電子票券履約期限為取得後約 30 天內兌換，為免遺忘權益受損，購買後請儘速兌換。<br>
-                                2. 票券兌換依商家不同，請參考使用說明或客服訊息，截圖畫面通常即可使用。<br>
+                            <div class="small">
+                                1. 電子票券履約期限為取得後約 30 天內兌換，為免遺忘，請儘速兌換。<br>
+                                2. 票券兌換依商家不同，請參考客服訊息，截圖畫面通常即可使用。<br>
                                 3. 逾期將失效恕無法補發或退款。<br>
                                 4. 麥當勞每次交易最多兌換 5 張，可重複多次兌換。<br>
                                 5. 取消兌換後序號會鎖定 5 分鐘。<br>
@@ -258,7 +243,7 @@
                                 <span class="text-danger fw-bold">${{ h.totalAmount }}</span>
                             </div>
                             <div class="small mt-2">
-                                <div v-for="(it, idx) in h.items" :key="it.name">{{ idx+1 }}. {{ it.name }} x{{ it.qty }}</div>
+                                <div v-for="(it, idx) in h.items" :key="it.name">{{ idx+1 }}. {{ it.name }} x{{ it.quantity }}</div>
                             </div>
                             <button class="btn btn-outline-success btn-sm w-100 rounded-pill fw-bold mt-2" @click="resendHistory(h)">
                                 <i class="fab fa-line me-1"></i>重新傳送訂單
@@ -275,14 +260,14 @@
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
     <script>
-        const { createApp, ref, computed, onMounted, watch } = Vue;
+        const { createApp, ref, computed, onMounted } = Vue;
         const API_URL = 'https://script.google.com/macros/s/AKfycbx2xdqkRoBGFibvgKRo05QtVcIWZlUjBq-rr_NRJ-8nK1BsFPSorQqnsNa89IPlG45aeA/exec';
         const NUMBERS = ['❶', '❷', '❸', '❹', '❺', '❻', '❼', '❽', '❾', '❿'];
 
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v161', bankInfo: '', liffId: '' });
+                const settings = ref({ version: 'v162', bankInfo: '', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -329,7 +314,7 @@
                     } finally {
                         isLoadingData.value = false;
                         const elapsed = Date.now() - startTime;
-                        const minWait = 3000;
+                        const minWait = 1000; // 加載時間優化至 1 秒
                         const waitTime = Math.max(0, minWait - elapsed);
                         setTimeout(hideStaticLoader, waitTime);
                     }
@@ -339,19 +324,12 @@
                     const loader = document.getElementById('static-loader');
                     if (loader) {
                         loader.style.opacity = '0';
-                        setTimeout(() => loader.style.display = 'none', 400);
+                        setTimeout(() => loader.style.display = 'none', 300);
                     }
                 };
 
-                const categories = computed(() => {
-                    return [...new Set(products.value.map(p => p.category))];
-                });
-
-                const filteredProducts = computed(() => {
-                    if (currentCat.value === 'ALL') return products.value;
-                    return products.value.filter(p => p.category === currentCat.value);
-                });
-
+                const categories = computed(() => [...new Set(products.value.map(p => p.category))]);
+                const filteredProducts = computed(() => currentCat.value === 'ALL' ? products.value : products.value.filter(p => p.category === currentCat.value));
                 const cartItems = computed(() => Object.keys(cart.value).map(id => {
                     const p = products.value.find(x => x.id === id);
                     return p ? { ...p, qty: cart.value[id] } : null;
@@ -369,7 +347,6 @@
                 const handleCheckout = async () => {
                     if (!acceptTerms.value) return;
                     isSubmitting.value = true;
-                    
                     localStorage.setItem('mm_user_phone', userContact.value.phone);
 
                     const now = new Date();
@@ -392,7 +369,7 @@
 
                     const record = {
                         id: orderId, timestamp: now.toLocaleString(), totalAmount: totalPrice.value,
-                        items: cartItems.value.map(i => ({ name: i.name, qty: i.qty, price: i.price }))
+                        items: cartItems.value.map(i => ({ name: i.name, quantity: i.qty, price: i.price }))
                     };
                     orderHistory.value = [record, ...orderHistory.value].slice(0, 30);
                     localStorage.setItem('mm_order_history', JSON.stringify(orderHistory.value));
@@ -400,8 +377,13 @@
                     fetch(API_URL, {
                         method: 'POST', mode: 'no-cors',
                         body: JSON.stringify({
-                            id: orderId, timestamp: now.toLocaleString(), 
-                            items: cartItems.value.map(i => ({name: i.name, qty: i.qty, price: i.price, subtotal: i.price*i.qty})), 
+                            id: orderId, 
+                            timestamp: now.toLocaleString(), 
+                            items: cartItems.value.map(i => ({
+                                name: i.name, 
+                                quantity: i.qty, // 改為 quantity 以匹配後台
+                                price: i.price
+                            })), 
                             totalAmount: totalPrice.value, 
                             userId: userProfile.value.userId || 'GUEST', 
                             userName: userProfile.value.displayName || guestName.value || 'GUEST',
@@ -431,7 +413,7 @@
                     let msg = `🛒【麥麥小舖電子票券】歷史訂單補傳\n🎫 訂單編號：${h.id}\n🍱 訂購商品：\n`;
                     h.items.forEach((it, idx) => {
                         const numIcon = NUMBERS[idx] || (idx + 1) + '.';
-                        msg += `${numIcon} ${it.name}\n🔹數量：${it.qty} 🔹小計：$${it.price * it.qty}\n`;
+                        msg += `${numIcon} ${it.name}\n🔹數量：${it.quantity} 🔹小計：$${it.price * it.quantity}\n`;
                     });
                     msg += `💰 應付總額：$${h.totalAmount}\n⚠️ 請於匯款後告知客服帳號末五碼。`;
                     sendToLine(msg);
