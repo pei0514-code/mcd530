@@ -269,7 +269,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v184</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v185</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -320,7 +320,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v184</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v185</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -518,7 +518,7 @@
                         
                         <div class="p-3 bg-light rounded-3 border mb-3">
                             <div class="small fw-bold text-danger mb-1">⚠️ Facebook 用戶注意：</div>
-                            <div class="small text-muted">若點擊下方按鈕無反應，請點選螢幕右上角「...」並選擇「在瀏覽器開啟」，或複製連結自行加入。</div>
+                            <div class="small text-muted">若點擊下方加入官方LINE帳號無反應或無法顯示此界面等問題，請點選複製LINE官方連結，並在瀏覽器(Chrome/Safari)網址欄貼上，即可加入購買。</div>
                         </div>
 
                         <div class="d-grid gap-2">
@@ -710,7 +710,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v184', liffId: '' });
+                const settings = ref({ version: 'v185', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -896,6 +896,17 @@
                                 errors.push("momo 轉贈電話格式錯誤 (需為09開頭共10碼數字)");
                             }
                         }
+                    }
+                    
+                    // GUEST Check - Logic added here
+                    const isGuest = !userProfile.value.userId;
+                    if (isGuest && !userContact.value.phone) {
+                        if(cartModal) cartModal.hide();
+                        showToast("訪客模式需填寫手機號碼才能購買");
+                        setTimeout(() => {
+                            if(guestWarningModal) guestWarningModal.show();
+                        }, 300);
+                        return;
                     }
                     
                     if (errors.length > 0) {
