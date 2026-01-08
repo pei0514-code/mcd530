@@ -85,25 +85,22 @@
 
         .line-float { position: fixed; bottom: 85px; right: 20px; width: 54px; height: 54px; background: var(--line-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 26px; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.3); z-index: 1001; text-decoration: none; border: 2px solid white; transition: 0.2s; }
         
-        /* 修復 LINE 按鈕顏色 */
         .btn-line-custom { background-color: var(--line-green) !important; color: white !important; border: none !important; box-shadow: 0 4px 12px rgba(6, 199, 85, 0.2) !important; }
         .btn-line-custom:active { transform: scale(0.98); opacity: 0.9; }
 
         /* 不同模式下的調整 */
-        /* Mode Small = 4 columns (Very small) */
         .mode-small .product-card { border-radius: 10px; }
         .mode-small .p-body { padding: 5px; }
         .mode-small .p-title { font-size: 10px; min-height: 28px; line-height: 1.2; -webkit-line-clamp: 2; margin-bottom: 2px; }
         .mode-small .p-price { font-size: 13px; margin-right: 0; }
-        .mode-small .p-original { font-size: 8px; margin-left: 2px; display: none; } /* Hide original price in tiny mode */
+        .mode-small .p-original { font-size: 8px; margin-left: 2px; display: none; } 
         .mode-small .btn-buy { font-size: 9px; padding: 4px 0; border-radius: 4px; }
         .mode-small .qty-ctrl { padding: 1px; border-radius: 4px; }
         .mode-small .qty-btn { width: 18px; height: 18px; font-size: 9px; }
         .mode-small .qty-ctrl span { font-size: 10px; }
-        .mode-small .stock-tag { display: none; } /* Hide stock tag in tiny mode */
+        .mode-small .stock-tag { display: none; }
         .mode-small .p-info { display: none; }
 
-        /* Mode Medium = 3 columns (Like the old Small) */
         .mode-medium .product-card { border-radius: 12px; }
         .mode-medium .p-body { padding: 8px; }
         .mode-medium .p-title { font-size: 11px; min-height: 32px; -webkit-line-clamp: 2; margin-bottom: 4px; }
@@ -115,7 +112,6 @@
         .mode-medium .qty-ctrl span { font-size: 11px; }
         .mode-medium .stock-tag { font-size: 8px; padding: 0 4px; }
 
-        /* Mode Large = 2 columns (Like the old Medium) */
         .mode-large .p-title { font-size: 14px; min-height: 40px; margin-bottom: 8px; }
         .mode-large .p-price { font-size: 20px; }
         .mode-large .btn-buy { font-size: 13px; padding: 10px 0; }
@@ -125,18 +121,15 @@
 
         .cart-item-img { width: 40px; height: 40px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; flex-shrink: 0; }
 
-        /* 購物車內的數量控制器 */
         .cart-qty-ctrl { display: flex; align-items: center; background: #f8f9fa; border-radius: 50px; padding: 2px; border: 1px solid #eee; height: 28px; }
         .cart-qty-btn { width: 24px; height: 24px; border-radius: 50%; border: none; background: white; color: var(--brand-dark); display: flex; align-items: center; justify-content: center; font-size: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer; }
         .cart-qty-val { font-size: 12px; font-weight: 800; padding: 0 8px; min-width: 20px; text-align: center; }
 
-        /* Guide Modal Beautification */
         .guide-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; align-items: center; border: 1px solid #f0f0f0; }
         .guide-icon-box { width: 50px; height: 50px; border-radius: 12px; background: #fff5f5; color: var(--brand-red); display: flex; align-items: center; justify-content: center; font-size: 20px; margin-right: 15px; flex-shrink: 0; }
         .guide-content h6 { font-weight: 800; margin-bottom: 4px; color: #333; font-size: 15px; }
         .guide-content p { font-size: 12px; color: #777; margin: 0; line-height: 1.4; }
 
-        /* Icon Legend in Guide */
         .guide-legend { background: #f8f9fa; border-radius: 15px; padding: 15px; margin-top: 20px; border: 1px dashed #ddd; }
         .legend-item { display: flex; align-items: center; margin-bottom: 10px; }
         .legend-item:last-child { margin-bottom: 0; }
@@ -144,114 +137,30 @@
         .legend-text { font-size: 12px; font-weight: 700; color: #555; }
         .legend-icon-wrap.green { background: var(--line-green); color: white; border: none; }
 
-        /* Timeline Flow in Loader */
         .timeline-container { position: relative; padding-left: 10px; margin-top: 10px; }
-        .timeline-container::before {
-            content: '';
-            position: absolute;
-            left: 21px; /* Center of the number */
-            top: 12px;
-            bottom: 30px;
-            width: 2px;
-            background: #eee;
-            z-index: 1;
-        }
+        .timeline-container::before { content: ''; position: absolute; left: 21px; top: 12px; bottom: 30px; width: 2px; background: #eee; z-index: 1; }
         .flow-step { position: relative; display: flex; align-items: center; margin-bottom: 24px; z-index: 2; }
         .flow-step:last-child { margin-bottom: 0; }
-        .flow-num { 
-            width: 24px; height: 24px; 
-            background: var(--brand-red); 
-            color: white; 
-            border-radius: 50%; 
-            font-size: 12px; 
-            font-weight: 800; 
-            display: flex; align-items: center; justify-content: center; 
-            margin-right: 15px; 
-            flex-shrink: 0; 
-            box-shadow: 0 0 0 4px #fff; /* White halo to break the line */
-        }
+        .flow-num { width: 24px; height: 24px; background: var(--brand-red); color: white; border-radius: 50%; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-right: 15px; flex-shrink: 0; box-shadow: 0 0 0 4px #fff; }
         .flow-text { font-size: 15px; font-weight: 700; color: #555; }
 
-        /* Stock Tip Box - Reverted to previous style (Left red border) */
-        .stock-tip-box {
-            border-left: 5px solid var(--brand-red);
-            background: #fff;
-            padding: 12px 15px;
-            text-align: left;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            border-radius: 0 10px 10px 0;
-            margin-top: 20px;
-            font-size: 14px;
-            font-weight: 700;
-            line-height: 1.5;
-            color: #555;
-            width: 100%;
-        }
+        .stock-tip-box { border-left: 5px solid var(--brand-red); background: #fff; padding: 12px 15px; text-align: left; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 0 10px 10px 0; margin-top: 20px; font-size: 14px; font-weight: 700; line-height: 1.5; color: #555; width: 100%; }
         
-        /* History Modal Images */
-        .history-imgs-container {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding: 4px 0;
-            scrollbar-width: none;
-            -webkit-overflow-scrolling: touch;
-        }
+        .history-imgs-container { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
         .history-imgs-container::-webkit-scrollbar { display: none; }
-        .h-thumb-box {
-            position: relative;
-            flex-shrink: 0;
-            width: 48px;
-            height: 48px;
-        }
-        .h-thumb {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 8px;
-            border: 1px solid #eee;
-        }
-        .h-qty-badge {
-            position: absolute;
-            bottom: -2px;
-            right: -2px;
-            background: #333;
-            color: white;
-            font-size: 9px;
-            font-weight: 700;
-            padding: 1px 4px;
-            border-radius: 6px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-        }
+        .h-thumb-box { position: relative; flex-shrink: 0; width: 48px; height: 48px; }
+        .h-thumb { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 1px solid #eee; }
+        .h-qty-badge { position: absolute; bottom: -2px; right: -2px; background: #333; color: white; font-size: 9px; font-weight: 700; padding: 1px 4px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
         
-        /* Toast Notification */
-        #toast-container {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10000;
-            pointer-events: none;
-            width: 90%;
-            max-width: 400px;
-        }
-        .toast-msg {
-            background: rgba(0,0,0,0.85);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 50px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 700;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            opacity: 0;
-            transform: translateY(20px);
-            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .toast-msg.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        #toast-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10000; pointer-events: none; width: 90%; max-width: 400px; }
+        .toast-msg { background: rgba(0,0,0,0.85); color: white; padding: 12px 20px; border-radius: 50px; text-align: center; font-size: 14px; font-weight: 700; box-shadow: 0 4px 15px rgba(0,0,0,0.2); opacity: 0; transform: translateY(20px); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .toast-msg.show { opacity: 1; transform: translateY(0); }
+
+        /* Custom Checkbox for Payment */
+        .payment-option { cursor: pointer; border: 1.5px solid #eee; border-radius: 12px; padding: 10px; transition: 0.2s; background: #fff; margin-bottom: 8px; display: flex; align-items: center; }
+        .payment-option:hover { background: #f9f9f9; }
+        .payment-option.active { border-color: var(--brand-red); background: #fff5f5; color: var(--brand-red); font-weight: 700; }
+        .payment-icon { width: 24px; height: 24px; margin-right: 10px; object-fit: contain; }
 
         [v-cloak] { display: none; }
     </style>
@@ -269,7 +178,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v186</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v188</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -281,27 +190,23 @@
                 </div>
                 <div class="flow-step">
                     <div class="flow-num">2</div>
-                    <div class="flow-text">結帳填資料</div>
+                    <div class="flow-text">結帳選擇付款</div>
                 </div>
                 <div class="flow-step">
                     <div class="flow-num">3</div>
-                    <div class="flow-text">發送 LINE 訊息</div>
+                    <div class="flow-text">系統發送訂單</div>
                 </div>
                 <div class="flow-step">
                     <div class="flow-num">4</div>
-                    <div class="flow-text">匯款後等待發券</div>
+                    <div class="flow-text">轉帳後等待發券</div>
                 </div>
             </div>
 
             <div class="stock-tip-box">
                 ✅ <span class="text-danger">凡是可加入購物車</span><br>
-                均表示有現貨，可放心轉帳！<br>
-                <span class="d-block mt-2 text-secondary" style="font-size: 12px; font-weight: 600; border-top: 1px solid #eee; padding-top: 8px;">
-                   ⚠️ 如遇商品缺貨，請與客服聯絡
-                </span>
+                均表示有現貨，可放心轉帳！
             </div>
             
-            <!-- Force Retry Button (Hidden initially) -->
             <div id="force-load-btn" style="display:none; margin-top:20px; text-align:center;">
                  <button onclick="window.location.reload()" class="btn btn-outline-danger btn-sm rounded-pill fw-bold px-4">
                     <i class="fas fa-redo me-1"></i> 點此重新整理
@@ -320,7 +225,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v186</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v188</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -407,15 +312,35 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body px-4">
-                        <div class="mb-3">
-                            <label class="form-label-small">聯絡手機 (選填)</label>
-                            <input type="tel" v-model="userContact.phone" class="form-control form-control-pill" placeholder="方便客服核對訂單">
+                        
+                        <!-- 1. 商品列表 (置頂) -->
+                        <div class="bg-light rounded-3 p-2 mb-3 border">
+                            <div v-for="item in cartItems" :key="item.id" class="d-flex align-items-center py-2 border-bottom small">
+                                <img :src="item.image" class="cart-item-img me-2">
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold text-dark">{{ item.name }}</div>
+                                    <div class="d-flex justify-content-between align-items-center mt-1">
+                                        <div class="cart-qty-ctrl">
+                                            <button class="cart-qty-btn" @click="updateCart(item, -1)"><i class="fas fa-minus"></i></button>
+                                            <span class="cart-qty-val">{{ item.quantity }}</span>
+                                            <button class="cart-qty-btn" @click="updateCart(item, 1)" :disabled="item.quantity >= Number(item.stock)"><i class="fas fa-plus"></i></button>
+                                        </div>
+                                        <span class="fw-bold text-danger">${{ item.price * item.quantity }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between fw-bold fs-5 mt-2 px-2">
+                                <span>應付金額</span><span class="text-danger">${{ totalPrice }}</span>
+                            </div>
                         </div>
+
+                        <!-- 2. 領取方式 -->
                         <label class="form-label-small">領取方式</label>
                         <div class="option-group d-flex gap-2 mb-3">
                             <div class="option-btn btn btn-outline-danger flex-grow-1 rounded-pill" :class="{ active: deliveryMethod === 'screenshot' }" @click="deliveryMethod = 'screenshot'">📸 截圖發送</div>
                             <div class="option-btn btn btn-outline-danger flex-grow-1 rounded-pill" :class="{ active: deliveryMethod === 'gift' }" @click="deliveryMethod = 'gift'">🎁 momo 轉贈</div>
                         </div>
+                        
                         <div v-if="deliveryMethod === 'gift'" class="mb-3 p-3 bg-light rounded-4 border">
                             <div class="mb-2">
                                 <label class="form-label-small text-danger">momo 姓名 (必填)</label>
@@ -426,8 +351,29 @@
                                 <input type="tel" v-model="giftInfo.phone" class="form-control rounded-pill" placeholder="請輸入收件人電話">
                             </div>
                         </div>
-                        <div class="small text-danger fw-bold mb-3">⚠️ 提醒：部份票券無法轉贈，依客服為主。</div>
-                        
+
+                        <!-- 3. 付款方式 (新增) -->
+                        <label class="form-label-small">付款方式 (可複選)</label>
+                        <div class="mb-3">
+                             <div v-for="bank in bankAccounts" :key="bank.code" 
+                                  class="payment-option" 
+                                  :class="{ active: selectedPayments.includes(bank.code) }"
+                                  @click="togglePayment(bank.code)">
+                                  <i class="fas fa-university text-muted payment-icon"></i>
+                                  <div class="flex-grow-1">
+                                      <div class="small fw-bold">{{ bank.name }}</div>
+                                  </div>
+                                  <i class="fas fa-check-circle text-danger" v-if="selectedPayments.includes(bank.code)"></i>
+                                  <i class="far fa-circle text-muted" v-else></i>
+                             </div>
+                        </div>
+
+                        <!-- 4. 聯絡手機 (合併置底) -->
+                        <div class="mb-3 input-group">
+                            <span class="input-group-text bg-white border-end-0 rounded-start-pill"><i class="fas fa-mobile-alt text-muted"></i></span>
+                            <input type="tel" v-model="userContact.phone" class="form-control form-control-pill border-start-0" placeholder="聯絡手機 (選填，方便客服核對)">
+                        </div>
+
                         <div class="terms-box">
                             <div class="terms-title">📜 購買需知</div>
                             1. 電子票券履約期限為取得後約 30 天內兌換，為免遺忘，請儘速兌換。<br>
@@ -443,41 +389,41 @@
                             <input type="checkbox" v-model="acceptTerms">
                             <span class="small fw-bold">我已閱讀並同意「購買需知」</span>
                         </label>
-                        <div v-for="item in cartItems" :key="item.id" class="d-flex align-items-center py-2 border-bottom small">
-                            <img :src="item.image" class="cart-item-img me-2">
-                            <div class="flex-grow-1">
-                                <div class="fw-bold text-dark">{{ item.name }}</div>
-                                <div class="d-flex justify-content-between align-items-center mt-1">
-                                    <div class="cart-qty-ctrl">
-                                        <button class="cart-qty-btn" @click="updateCart(item, -1)"><i class="fas fa-minus"></i></button>
-                                        <span class="cart-qty-val">{{ item.quantity }}</span>
-                                        <button class="cart-qty-btn" @click="updateCart(item, 1)" :disabled="item.quantity >= Number(item.stock)"><i class="fas fa-plus"></i></button>
-                                    </div>
-                                    <span class="fw-bold text-danger">${{ item.price * item.quantity }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between fw-bold fs-5 mt-3">
-                            <span>應付金額</span><span class="text-danger">${{ totalPrice }}</span>
-                        </div>
+
                     </div>
                     <div class="modal-footer border-0 p-4">
-                        <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold shadow" @click="handleCheckout">確認送出訂單</button>
+                        <button class="btn btn-line-custom w-100 rounded-pill py-3 fw-bold shadow" @click="handleCheckout" :disabled="isSubmitting">
+                            <span v-if="isSubmitting"><i class="fas fa-spinner fa-spin me-2"></i>訂單傳送中...</span>
+                            <span v-else><i class="fab fa-line me-2"></i>送出訂單並傳至 LINE</span>
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Success Modal with Bank Info -->
         <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content text-center p-4 border-0 rounded-4 shadow-lg">
                     <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
-                    <h4 class="fw-bold">訂單已成功成立！</h4>
-                    <p class="small text-muted mb-4">請點擊下方按鈕將訂單發給客服進行核對。</p>
-                    <button class="btn btn-line-custom w-100 rounded-pill py-3 fw-bold mb-2 shadow-sm" @click="sendToLine(finalMsg)">
-                        <i class="fab fa-line me-2"></i>傳送訂單到 LINE
+                    <h4 class="fw-bold">訂單已成功送出！</h4>
+                    <p class="small text-muted mb-4">請完成付款後，聯繫客服告知帳號末五碼。</p>
+                    
+                    <div class="bg-light rounded-3 p-3 text-start mb-4 border">
+                        <div class="fw-bold text-dark border-bottom pb-2 mb-2"><i class="fas fa-wallet me-2"></i>匯款帳號 (點擊複製)</div>
+                        <div v-for="bank in selectedBankInfos" :key="bank.code" class="mb-2 d-flex justify-content-between align-items-center bg-white p-2 rounded border" @click="copyText(bank.account)">
+                            <div>
+                                <div class="small text-muted">{{ bank.name }}</div>
+                                <div class="fw-bold text-danger">{{ bank.account }}</div>
+                            </div>
+                            <i class="far fa-copy text-secondary"></i>
+                        </div>
+                        <div v-if="selectedBankInfos.length === 0" class="text-muted small text-center">未選擇付款方式，請參考下方完整列表</div>
+                    </div>
+
+                    <button class="btn btn-dark w-100 rounded-pill py-2 fw-bold mb-2 shadow-sm" data-bs-dismiss="modal" @click="resetCart">
+                        關閉視窗
                     </button>
-                    <button class="btn btn-link text-muted" data-bs-dismiss="modal" @click="resetCart">回商城首頁</button>
                 </div>
             </div>
         </div>
@@ -515,12 +461,6 @@
                     <div class="modal-body p-4">
                         <p class="fw-bold mb-2">您目前使用外部瀏覽器 (Facebook/Chrome...)</p>
                         <p class="small text-muted mb-3">系統無法辨識您的身分，下單將顯示為 GUEST。為了您的權益，請務必加入官方 LINE 確認訂單。</p>
-                        
-                        <div class="p-3 bg-light rounded-3 border mb-3">
-                            <div class="small fw-bold text-danger mb-1">⚠️ Facebook 用戶注意：</div>
-                            <div class="small text-muted">若點擊下方加入官方LINE帳號無反應或無法顯示此界面等問題，請點選複製LINE官方連結，並在瀏覽器(Chrome/Safari)網址欄貼上，即可加入購買。</div>
-                        </div>
-
                         <div class="d-grid gap-2">
                              <a href="https://lin.ee/ejXmXDl" target="_blank" class="btn btn-line-custom rounded-pill fw-bold">
                                 <i class="fab fa-line me-2"></i>加入官方 LINE 帳號
@@ -561,33 +501,16 @@
                             <div class="guide-icon-box"><i class="fas fa-shopping-basket"></i></div>
                             <div class="guide-content">
                                 <h6>2. 確認訂單</h6>
-                                <p>購物車檢查商品數量，填寫聯絡電話與選擇領取方式。</p>
+                                <p>購物車檢查商品數量，選擇付款與領取方式。</p>
                             </div>
                         </div>
                         
                         <div class="guide-card">
                             <div class="guide-icon-box"><i class="fab fa-line"></i></div>
                             <div class="guide-content">
-                                <h6>3. 客服發貨</h6>
-                                <p>送出 LINE 訊息，匯款後等待客服核對發券。</p>
+                                <h6>3. 發送訂單</h6>
+                                <p>一鍵發送至 LINE，完成轉帳後告知客服。</p>
                             </div>
-                        </div>
-                        
-                        <div class="guide-legend">
-                           <div class="legend-item">
-                               <div class="legend-icon-wrap"><i class="fas fa-columns"></i></div>
-                               <div class="legend-text">
-                                   <div class="fw-bold text-dark">版面切換 (左下角)</div>
-                                   自定義商品顯示大小 (大/中/小)
-                               </div>
-                           </div>
-                           <div class="legend-item">
-                               <div class="legend-icon-wrap green"><i class="fab fa-line"></i></div>
-                               <div class="legend-text">
-                                   <div class="fw-bold text-dark">官方客服 (右下角)</div>
-                                   加入 LINE 官方帳號獲得協助
-                               </div>
-                           </div>
                         </div>
 
                         <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold mt-2 shadow-sm" style="background: var(--gradient-red); border: none;" data-bs-dismiss="modal">
@@ -615,15 +538,12 @@
                                 </div>
                                 <span class="text-danger fw-bold">${{ h.totalAmount }}</span>
                             </div>
-                            
-                            <!-- 商品縮圖區 -->
                             <div class="history-imgs-container mb-3">
                                 <div v-for="item in h.items" :key="item.name" class="h-thumb-box">
                                     <img :src="getProductImage(item.name)" class="h-thumb" onerror="this.src='https://via.placeholder.com/48'">
                                     <div class="h-qty-badge">x{{ item.quantity }}</div>
                                 </div>
                             </div>
-
                             <div class="d-flex gap-2">
                                 <button class="btn btn-outline-success btn-sm flex-grow-1 rounded-pill" @click="resendHistory(h)">補傳訂單</button>
                                 <button class="btn btn-outline-danger btn-sm flex-grow-1 rounded-pill" @click="reBuy(h)">再次購買</button>
@@ -640,15 +560,11 @@
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
     <script>
-        // Global Error Handler for Android WebViews
         window.onerror = function(msg, url, line, col, error) {
            const loader = document.getElementById('static-loader');
            if(loader && loader.style.display !== 'none') {
-               // Show rudimentary error UI
                const div = document.createElement('div');
-               div.style.color = 'red';
-               div.style.fontSize = '12px';
-               div.style.padding = '10px';
+               div.style.color = 'red'; div.style.fontSize = '12px'; div.style.padding = '10px';
                div.innerHTML = '啟動錯誤: ' + msg + '<br>請嘗試重新整理';
                loader.appendChild(div);
                document.getElementById('force-load-btn').style.display = 'block';
@@ -656,7 +572,6 @@
            return false;
         };
 
-        // Safety Timeout: Force hide loader after 8 seconds if app hangs
         setTimeout(() => {
             const loader = document.getElementById('static-loader');
             if(loader && loader.style.display !== 'none') {
@@ -664,80 +579,63 @@
             }
         }, 8000);
 
-        // Safe LocalStorage Helper
         function safeGetStorage(key, defaultVal) {
-            try {
-                const val = localStorage.getItem(key);
-                return val !== null ? val : defaultVal;
-            } catch (e) {
-                console.warn('localStorage read failed', e);
-                return defaultVal;
-            }
+            try { return localStorage.getItem(key) !== null ? localStorage.getItem(key) : defaultVal; } 
+            catch (e) { return defaultVal; }
         }
-
-        function safeSetStorage(key, val) {
-            try {
-                localStorage.setItem(key, val);
-            } catch (e) {
-                console.warn('localStorage write failed', e);
-            }
-        }
+        function safeSetStorage(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
         
-        // Toast Function
         function showToast(msg) {
             const toast = document.getElementById('toast-msg');
             if(toast) {
-                toast.innerText = msg;
-                toast.classList.add('show');
+                toast.innerText = msg; toast.classList.add('show');
                 setTimeout(() => toast.classList.remove('show'), 3000);
             }
         }
         
-        // Copy Link for Guest
         window.copyGuestLink = function() {
-            navigator.clipboard.writeText('https://lin.ee/ejXmXDl').then(() => {
-                showToast('複製成功！請切換至 Chrome/Safari 貼上開啟');
-            }).catch(() => {
-                showToast('複製失敗，請長按按鈕自行複製');
-            });
+            navigator.clipboard.writeText('https://lin.ee/ejXmXDl').then(() => { showToast('複製成功！'); }).catch(() => { showToast('複製失敗'); });
         };
 
         const { createApp, ref, computed, onMounted, watch } = Vue;
         const API_URL = 'https://script.google.com/macros/s/AKfycbx2xdqkRoBGFibvgKRo05QtVcIWZlUjBq-rr_NRJ-8nK1BsFPSorQqnsNa89IPlG45aeA/exec';
         const NUMBERS = ['❶', '❷', '❸', '❹', '❺', '❻', '❼', '❽', '❾', '❿'];
-        const BANK_INFO = `🏦 匯款資訊：\n將來銀行(823): 88658888888840\n中國信託(822): 864540221080\n台新銀行(812): 28881013072004\n街口支付: 901794346\n⚠️ 請於匯款後告知客服帳號末五碼，以便核對。`;
+        
+        // Bank Information
+        const BANK_ACCOUNTS = [
+            { code: '823', name: '將來銀行 (823)', account: '88658888888840' },
+            { code: '822', name: '中國信託 (822)', account: '864540221080' },
+            { code: '812', name: '台新銀行 (812)', account: '28881013072004' },
+            { code: '396', name: '街口支付 (396)', account: '901794346' }
+        ];
 
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v186', liffId: '' });
+                const settings = ref({ version: 'v188', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
                 const guestName = ref(safeGetStorage('mm_guest_name', ''));
-                const finalMsg = ref('');
                 const isLoadingData = ref(true);
-                // Initialize acceptTerms from local storage
+                const isSubmitting = ref(false);
                 const acceptTerms = ref(safeGetStorage('mm_accept_terms', 'false') === 'true');
-                
                 const viewMode = ref(safeGetStorage('mm_view_mode', 'medium'));
                 const showLayoutMenu = ref(false);
-
                 const deliveryMethod = ref('screenshot');
                 
-                // Initialize MOMO info
+                // Payment Selection
+                const selectedPayments = ref([]);
+                const bankAccounts = ref(BANK_ACCOUNTS);
+
                 const giftInfo = ref({ 
                     name: safeGetStorage('mm_momo_name', ''), 
                     phone: safeGetStorage('mm_momo_phone', '') 
                 });
-                
                 const userContact = ref({ phone: safeGetStorage('mm_user_phone', '') });
                 let hist = [];
-                try {
-                    hist = JSON.parse(safeGetStorage('mm_order_history', '[]'));
-                } catch(e){ hist = []; }
+                try { hist = JSON.parse(safeGetStorage('mm_order_history', '[]')); } catch(e){ hist = []; }
                 const orderHistory = ref(hist);
-                
                 const alertMessages = ref([]);
 
                 let cartModal, successModal, historyModal, guideModal, alertModalInstance, guestWarningModal;
@@ -753,31 +651,12 @@
                         guestWarningModal = new bootstrap.Modal(document.getElementById('guestWarningModal'));
                     } catch(e) { console.error('Bootstrap modal init error', e); }
                     
-                    // Simple pull-to-refresh logic
                     let startY = 0;
-                    window.addEventListener('touchstart', e => {
-                        // Safer touch handling
-                        if (e.touches && e.touches.length > 0 && window.scrollY === 0) {
-                            startY = e.touches[0].pageY;
-                        }
-                    }, {passive: true});
-                    
-                    window.addEventListener('touchmove', e => {
-                         // Safer touch handling
-                         if (e.touches && e.touches.length > 0) {
-                             const y = e.touches[0].pageY;
-                             // Pulling down more than 150px at the top
-                             if (window.scrollY === 0 && (y - startY) > 150) {
-                                 window.location.reload();
-                             }
-                         }
-                    }, {passive: true});
+                    window.addEventListener('touchstart', e => { if (e.touches && e.touches.length > 0 && window.scrollY === 0) startY = e.touches[0].pageY; }, {passive: true});
+                    window.addEventListener('touchmove', e => { if (e.touches && e.touches.length > 0) { if (window.scrollY === 0 && (e.touches[0].pageY - startY) > 150) window.location.reload(); } }, {passive: true});
                 });
 
-                // Watch for changes in acceptTerms and save to localStorage
-                watch(acceptTerms, (newVal) => {
-                    safeSetStorage('mm_accept_terms', newVal);
-                });
+                watch(acceptTerms, (newVal) => { safeSetStorage('mm_accept_terms', newVal); });
 
                 const initApp = async () => {
                     isLoadingData.value = true;
@@ -789,199 +668,132 @@
                         if (setRes.liffId) {
                             try {
                                 await liff.init({ liffId: setRes.liffId });
-                                if (liff.isLoggedIn()) {
-                                    userProfile.value = await liff.getProfile();
-                                } else {
-                                    checkGuestStatus();
-                                }
-                            } catch (e) {
-                                console.warn("LIFF init failed", e);
-                                checkGuestStatus();
-                            }
+                                if (liff.isLoggedIn()) userProfile.value = await liff.getProfile();
+                                else checkGuestStatus();
+                            } catch (e) { console.warn("LIFF init failed", e); checkGuestStatus(); }
                         }
                     } catch (err) { console.error(err); } 
                     finally {
                         isLoadingData.value = false;
                         hideStaticLoader();
-                        if (!safeGetStorage('mm_guided_v172', '')) {
-                            setTimeout(() => { 
-                                if(guideModal) guideModal.show(); 
-                                safeSetStorage('mm_guided_v172', 'true'); 
-                            }, 600);
-                        }
+                        if (!safeGetStorage('mm_guided_v172', '')) { setTimeout(() => { if(guideModal) guideModal.show(); safeSetStorage('mm_guided_v172', 'true'); }, 600); }
                     }
                 };
                 
-                const reloadApp = () => {
-                    window.location.reload();
-                };
+                const reloadApp = () => { window.location.reload(); };
+                const getProductImage = (name) => { const p = products.value.find(prod => prod.name === name); return p ? p.image : 'https://via.placeholder.com/48?text=No+Img'; };
+                const checkGuestStatus = () => { const ua = navigator.userAgent || navigator.vendor || window.opera; if (!liff.isInClient() || (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1)) { setTimeout(() => { if(guestWarningModal) guestWarningModal.show(); }, 1000); } };
+                const hideStaticLoader = () => { const loader = document.getElementById('static-loader'); if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 300); } };
+                const showAlert = (msgs) => { alertMessages.value = Array.isArray(msgs) ? msgs : [msgs]; if(alertModalInstance) alertModalInstance.show(); else alert(msgs.join('\n')); };
+                const setViewMode = (mode) => { viewMode.value = mode; safeSetStorage('mm_view_mode', mode); showLayoutMenu.value = false; };
+                const togglePayment = (code) => { if (selectedPayments.value.includes(code)) selectedPayments.value = selectedPayments.value.filter(c => c !== code); else selectedPayments.value.push(code); };
                 
-                const getProductImage = (name) => {
-                    const p = products.value.find(prod => prod.name === name);
-                    return p ? p.image : 'https://via.placeholder.com/48?text=No+Img';
-                };
-
-                const checkGuestStatus = () => {
-                    // Detect Facebook Browser or if not in LIFF client
-                    const ua = navigator.userAgent || navigator.vendor || window.opera;
-                    const isFacebook = (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1);
-                    
-                    if (!liff.isInClient() || isFacebook) {
-                        setTimeout(() => { if(guestWarningModal) guestWarningModal.show(); }, 1000);
-                    }
-                };
-
-                const hideStaticLoader = () => {
-                    const loader = document.getElementById('static-loader');
-                    if (loader) {
-                        loader.style.opacity = '0';
-                        setTimeout(() => loader.style.display = 'none', 300);
-                    }
-                };
-                
-                const showAlert = (msgs) => {
-                    alertMessages.value = Array.isArray(msgs) ? msgs : [msgs];
-                    if(alertModalInstance) alertModalInstance.show();
-                    else alert(msgs.join('\n'));
-                };
-
-                const setViewMode = (mode) => {
-                    viewMode.value = mode;
-                    safeSetStorage('mm_view_mode', mode);
-                    showLayoutMenu.value = false;
-                };
+                const copyText = (txt) => { navigator.clipboard.writeText(txt).then(() => showToast('已複製帳號')).catch(() => showToast('複製失敗')); };
 
                 const gridModeClass = computed(() => `mode-${viewMode.value}`);
-                const gridRowClass = computed(() => {
-                    if (viewMode.value === 'small') return 'g-1'; // 4 cols
-                    if (viewMode.value === 'medium') return 'g-1'; // 3 cols
-                    return 'g-2'; // Large 2 cols
-                });
-                const gridColClass = computed(() => {
-                    if (viewMode.value === 'large') return 'col-6'; // 2 cols
-                    if (viewMode.value === 'medium') return 'col-4'; // 3 cols
-                    return 'col-3'; // 4 cols
-                });
+                const gridRowClass = computed(() => (viewMode.value === 'small' || viewMode.value === 'medium') ? 'g-1' : 'g-2');
+                const gridColClass = computed(() => viewMode.value === 'large' ? 'col-6' : (viewMode.value === 'medium' ? 'col-4' : 'col-3'));
 
                 const categories = computed(() => [...new Set(products.value.map(p => p.category))]);
                 const filteredProducts = computed(() => currentCat.value === 'ALL' ? products.value : products.value.filter(p => p.category === currentCat.value));
-                const cartItems = computed(() => Object.keys(cart.value).map(id => {
-                    const p = products.value.find(x => x.id === id);
-                    return p ? { ...p, quantity: cart.value[id] } : null;
-                }).filter(x => x));
+                const cartItems = computed(() => Object.keys(cart.value).map(id => { const p = products.value.find(x => x.id === id); return p ? { ...p, quantity: cart.value[id] } : null; }).filter(x => x));
                 const totalQty = computed(() => cartItems.value.reduce((a, b) => a + b.quantity, 0));
                 const totalPrice = computed(() => cartItems.value.reduce((a, b) => a + (b.price * b.quantity), 0));
+                
+                const selectedBankInfos = computed(() => {
+                    if (selectedPayments.value.length === 0) return bankAccounts.value; 
+                    return bankAccounts.value.filter(b => selectedPayments.value.includes(b.code));
+                });
 
                 const updateCart = (p, d) => {
-                    // 如果是增加數量，檢查庫存上限
-                    if (d > 0) {
-                        const current = cart.value[p.id] || 0;
-                        if (current >= Number(p.stock)) {
-                            showToast('已達庫存上限');
-                            return;
-                        }
-                    }
-                
+                    if (d > 0) { const current = cart.value[p.id] || 0; if (current >= Number(p.stock)) { showToast('已達庫存上限'); return; } }
                     const next = (cart.value[p.id] || 0) + d;
-                    if (next <= 0) delete cart.value[p.id];
-                    else if (next <= Number(p.stock)) cart.value[p.id] = next;
+                    if (next <= 0) delete cart.value[p.id]; else if (next <= Number(p.stock)) cart.value[p.id] = next;
                 };
 
                 const handleCheckout = async () => {
                     const errors = [];
                     if (!acceptTerms.value) errors.push("請先勾選「我已閱讀並同意購買需知」");
                     if (totalPrice.value < 50) errors.push("訂單金額需滿 $50 才能出貨");
-                    
                     if (deliveryMethod.value === 'gift') {
-                        if (!giftInfo.value.name || !giftInfo.value.phone) {
-                            errors.push("momo 轉贈需填寫完整收件人姓名與電話");
-                        } else {
-                            const chineseNamePattern = /^[\u4e00-\u9fa5]+$/;
-                            if (!chineseNamePattern.test(giftInfo.value.name)) {
-                                errors.push("momo 轉贈姓名必須為中文全名");
-                            }
-                            const phonePattern = /^09\d{8}$/;
-                            if (!phonePattern.test(giftInfo.value.phone)) {
-                                errors.push("momo 轉贈電話格式錯誤 (需為09開頭共10碼數字)");
-                            }
+                        if (!giftInfo.value.name || !giftInfo.value.phone) errors.push("momo 轉贈需填寫完整收件人姓名與電話");
+                        else {
+                            if (!/^[\u4e00-\u9fa5]+$/.test(giftInfo.value.name)) errors.push("momo 轉贈姓名必須為中文全名");
+                            if (!/^09\d{8}$/.test(giftInfo.value.phone)) errors.push("momo 轉贈電話格式錯誤");
                         }
                     }
+                    if (selectedPayments.value.length === 0) errors.push("請至少選擇一種付款方式");
                     
-                    // GUEST Check - Logic added here
                     const isGuest = !userProfile.value.userId;
                     if (isGuest && !userContact.value.phone) {
-                        if(cartModal) cartModal.hide();
-                        showToast("訪客模式需填寫手機號碼才能購買");
-                        setTimeout(() => {
-                            if(guestWarningModal) guestWarningModal.show();
-                        }, 300);
-                        return;
+                        if(cartModal) cartModal.hide(); showToast("訪客模式需填寫手機號碼才能購買");
+                        setTimeout(() => { if(guestWarningModal) guestWarningModal.show(); }, 300); return;
                     }
                     
-                    if (errors.length > 0) {
-                        showAlert(errors);
-                        return;
-                    }
+                    if (errors.length > 0) { showAlert(errors); return; }
                     
+                    isSubmitting.value = true;
                     safeSetStorage('mm_user_phone', userContact.value.phone);
-                    if (deliveryMethod.value === 'gift') {
-                        safeSetStorage('mm_momo_name', giftInfo.value.name);
-                        safeSetStorage('mm_momo_phone', giftInfo.value.phone);
-                    }
+                    if (deliveryMethod.value === 'gift') { safeSetStorage('mm_momo_name', giftInfo.value.name); safeSetStorage('mm_momo_phone', giftInfo.value.phone); }
 
                     const now = new Date();
                     const orderId = `M${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
                     
                     const deliveryText = deliveryMethod.value === 'screenshot' ? '📸 截圖發送' : '🎁 momo 轉贈';
-                    const deliveryBackend = deliveryMethod.value === 'screenshot' ? '截圖發送' : 'momo 轉贈';
-
-                    let msg = `🛒【麥麥小舖電子票券】\n🎫 訂單編號：${orderId}\n📱 聯絡手機：${userContact.value.phone || '未提供'}\n📦 領取方式：${deliveryText}\n`;
-                    if (deliveryMethod.value === 'gift') msg += `👤 收件人：${giftInfo.value.name}\n📞 收件電話：${giftInfo.value.phone}\n`;
-                    msg += `🍱 訂購商品：\n`;
+                    const paymentNames = selectedBankInfos.value.map(b => b.name).join('、');
                     
+                    // Construct Message
+                    let msg = `🛒【麥麥小舖訂單】\n🎫 單號：${orderId}\n💳 付款：${paymentNames}\n📦 領取：${deliveryText}\n`;
+                    if (deliveryMethod.value === 'gift') msg += `👤 收件人：${giftInfo.value.name}\n📞 電話：${giftInfo.value.phone}\n`;
+                    if (userContact.value.phone) msg += `📱 聯絡手機：${userContact.value.phone}\n`;
+                    msg += `------------------\n`;
                     cartItems.value.forEach((i, idx) => { 
-                        msg += `${NUMBERS[idx] || (idx+1)} ${i.name}\n`;
-                        msg += `🔹數量：${i.quantity} 🔹小計：$${i.price*i.quantity}\n`;
-                        msg += `🔹效期：${i.expiryDate}\n`;
+                        msg += `${NUMBERS[idx] || (idx+1)} ${i.name} x${i.quantity} ($${i.price*i.quantity})\n`;
                     });
+                    msg += `------------------\n💰 應付總額：$${totalPrice.value}\n\n`;
                     
-                    msg += `💰 應付總額：$${totalPrice.value}\n${BANK_INFO}`;
+                    // Add Bank Info to Text
+                    msg += `🏦 匯款資訊：\n`;
+                    selectedBankInfos.value.forEach(b => {
+                        msg += `${b.name}\n${b.account}\n`;
+                    });
+                    msg += `\n⚠️ 匯款後請通知客服末五碼。`;
                     
-                    finalMsg.value = msg;
                     const record = { id: orderId, timestamp: now.toLocaleString(), totalAmount: totalPrice.value, items: cartItems.value.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) };
-                    orderHistory.value = [record, ...orderHistory.value].slice(0, 30);
-                    safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
                     
+                    // 1. Send to Sheet (Critical)
                     fetch(API_URL, { 
                       method: 'POST', mode: 'no-cors', 
                       body: JSON.stringify({ 
                           ...record, 
                           phone: userContact.value.phone, 
-                          deliveryMethod: deliveryBackend, 
+                          deliveryMethod: deliveryMethod.value === 'screenshot' ? '截圖發送' : 'momo 轉贈', 
                           momoName: giftInfo.value.name, 
                           momoPhone: giftInfo.value.phone, 
                           userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', 
                           userId: (userProfile.value && userProfile.value.userId) || 'GUEST' 
                       }) 
-                    }).catch(e => console.error(e));
-                    
-                    if(cartModal) cartModal.hide(); 
-                    if(successModal) successModal.show();
-                };
-
-                const sendToLine = (txt) => {
-                    const fallbackUrl = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
-                    if (liff.isInClient()) {
-                        liff.sendMessages([{ type: 'text', text: txt }])
-                          .then(() => {
-                              liff.closeWindow();
-                          })
-                          .catch((err) => {
-                              window.location.href = fallbackUrl;
-                          });
-                    } else {
-                        window.open(fallbackUrl, '_blank');
-                    }
+                    }).then(() => {
+                         // 2. Send to LINE (If in Client)
+                         if (liff.isInClient()) {
+                            liff.sendMessages([{ type: 'text', text: msg }]).catch(e => console.error(e));
+                         } else {
+                             // Fallback for external browser: open link in new tab?
+                             // Just show success modal
+                         }
+                         
+                         // 3. Show Success & Cleanup
+                         orderHistory.value = [record, ...orderHistory.value].slice(0, 30);
+                         safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
+                         isSubmitting.value = false;
+                         if(cartModal) cartModal.hide(); 
+                         if(successModal) successModal.show();
+                         
+                    }).catch(e => {
+                        console.error(e);
+                        isSubmitting.value = false;
+                        showToast('連線錯誤，請稍後再試');
+                    });
                 };
 
                 const reBuy = (h) => {
@@ -994,16 +806,18 @@
                 const resendHistory = (h) => {
                     let msg = `🛒【歷史訂單補傳】單號：#${h.id}\n品項：\n`;
                     h.items.forEach((it, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${it.name} x${it.quantity}\n`; });
-                    msg += `總額：$${h.totalAmount}\n${BANK_INFO}`;
-                    sendToLine(msg);
+                    msg += `總額：$${h.totalAmount}`;
+                    
+                    if (liff.isInClient()) {
+                        liff.sendMessages([{ type: 'text', text: msg }]).then(() => liff.closeWindow());
+                    } else {
+                        window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msg)}`, '_blank');
+                    }
                 };
 
-                const resetCart = () => { 
-                    cart.value = {}; 
-                    deliveryMethod.value = 'screenshot'; 
-                };
+                const resetCart = () => { cart.value = {}; deliveryMethod.value = 'screenshot'; selectedPayments.value = []; };
 
-                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, finalMsg, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, sendToLine, alertMessages, getProductImage, reloadApp };
+                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayments, togglePayment, isSubmitting, selectedBankInfos, copyText };
             }
         }).mount('#app');
     </script>
