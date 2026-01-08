@@ -139,7 +139,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v172</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v173</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="max-width: 360px; border: 2px dashed #DA291C; line-height: 1.8;">
             <div class="fw-bold text-danger mb-3" style="font-size: 20px;">💡 溫馨提醒：</div>
@@ -161,7 +161,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v172</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v173</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -298,7 +298,7 @@
                         </div>
                     </div>
                     <div class="modal-footer border-0 p-4">
-                        <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold shadow" @click="handleCheckout" :disabled="!acceptTerms || totalPrice < 50 || (deliveryMethod === 'gift' && (!giftInfo.name || !giftInfo.phone))">確認送出訂單</button>
+                        <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold shadow" @click="handleCheckout" :style="{ opacity: canCheckout ? '1' : '0.5' }">確認送出訂單</button>
                     </div>
                 </div>
             </div>
@@ -393,7 +393,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v172', liffId: '' });
+                const settings = ref({ version: 'v173', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -476,6 +476,13 @@
                 const totalQty = computed(() => cartItems.value.reduce((a, b) => a + b.quantity, 0));
                 const totalPrice = computed(() => cartItems.value.reduce((a, b) => a + (b.price * b.quantity), 0));
 
+                const canCheckout = computed(() => {
+                    if (!acceptTerms.value) return false;
+                    if (totalPrice.value < 50) return false;
+                    if (deliveryMethod.value === 'gift' && (!giftInfo.value.name || !giftInfo.value.phone)) return false;
+                    return true;
+                });
+
                 const updateCart = (p, d) => {
                     const next = (cart.value[p.id] || 0) + d;
                     if (next <= 0) delete cart.value[p.id];
@@ -483,7 +490,20 @@
                 };
 
                 const handleCheckout = async () => {
-                    if (!acceptTerms.value) return;
+                    // Validation with alerts
+                    if (!acceptTerms.value) {
+                        alert("⚠️ 請先勾選「我已閱讀並同意購買需知」才能繼續。");
+                        return;
+                    }
+                    if (totalPrice.value < 50) {
+                        alert("⚠️ 訂單金額需滿 $50 才能出貨喔！");
+                        return;
+                    }
+                    if (deliveryMethod.value === 'gift' && (!giftInfo.value.name || !giftInfo.value.phone)) {
+                        alert("⚠️ 選擇 momo 轉贈時，請務必完整填寫收件人姓名與電話。");
+                        return;
+                    }
+
                     localStorage.setItem('mm_user_phone', userContact.value.phone);
                     const now = new Date();
                     const orderId = `M${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
@@ -558,7 +578,7 @@
 
                 const resetCart = () => { cart.value = {}; acceptTerms.value = false; deliveryMethod.value = 'screenshot'; giftInfo.value = { name: '', phone: '' }; };
 
-                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, finalMsg, openCart: () => cartModal.show(), openHistory: () => historyModal.show(), showGuide: () => guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, sendToLine };
+                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, finalMsg, openCart: () => cartModal.show(), openHistory: () => historyModal.show(), showGuide: () => guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, sendToLine, canCheckout };
             }
         }).mount('#app');
     </script>
