@@ -120,6 +120,23 @@
 
         .cart-item-img { width: 40px; height: 40px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; flex-shrink: 0; }
 
+        /* 購物車內的數量控制器 */
+        .cart-qty-ctrl { display: flex; align-items: center; background: #f8f9fa; border-radius: 50px; padding: 2px; border: 1px solid #eee; height: 28px; }
+        .cart-qty-btn { width: 24px; height: 24px; border-radius: 50%; border: none; background: white; color: var(--brand-dark); display: flex; align-items: center; justify-content: center; font-size: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer; }
+        .cart-qty-val { font-size: 12px; font-weight: 800; padding: 0 8px; min-width: 20px; text-align: center; }
+
+        /* Guide Modal Beautification */
+        .guide-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; align-items: center; border: 1px solid #f0f0f0; }
+        .guide-icon-box { width: 50px; height: 50px; border-radius: 12px; background: #fff5f5; color: var(--brand-red); display: flex; align-items: center; justify-content: center; font-size: 20px; margin-right: 15px; flex-shrink: 0; }
+        .guide-content h6 { font-weight: 800; margin-bottom: 4px; color: #333; font-size: 15px; }
+        .guide-content p { font-size: 12px; color: #777; margin: 0; line-height: 1.4; }
+
+        /* Loader Flow */
+        .flow-step { display: flex; align-items: center; width: 100%; margin-bottom: 4px; }
+        .flow-num { width: 20px; height: 20px; background: var(--brand-red); color: white; border-radius: 50%; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-right: 8px; flex-shrink: 0; }
+        .flow-text { font-size: 14px; font-weight: 700; color: #555; }
+        .flow-arrow { color: #ddd; font-size: 12px; margin: 2px 0 6px 7px; }
+
         [v-cloak] { display: none; }
     </style>
 <script type="importmap">
@@ -139,18 +156,34 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v173</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v174</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
-        <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="max-width: 360px; border: 2px dashed #DA291C; line-height: 1.8;">
-            <div class="fw-bold text-danger mb-3" style="font-size: 20px;">💡 溫馨提醒：</div>
-            <div class="mb-3 fw-bold text-dark" style="font-size: 16px; border-left: 6px solid #DA291C; padding-left: 12px; background: #fff;">
-                ✅ <span style="color: var(--brand-red);">凡是可加入購物車</span><br>
-                均表示有現貨，可放心轉帳！
+        <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 280px; border: 2px dashed #DA291C; line-height: 1.8;">
+            <div class="fw-bold text-danger mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
+            <div class="d-flex flex-column align-items-start ps-4">
+                <div class="flow-step">
+                    <div class="flow-num">1</div>
+                    <div class="flow-text">挑選商品</div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-num">2</div>
+                    <div class="flow-text">結帳填資料</div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-num">3</div>
+                    <div class="flow-text">發送 LINE 訊息</div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step">
+                    <div class="flow-num">4</div>
+                    <div class="flow-text">匯款後等待發券</div>
+                </div>
             </div>
             <hr class="my-3 opacity-20">
-            <div class="fw-bold text-danger mb-2" style="font-size: 16px;">📖 快速購物流程：</div>
-            <div class="small text-muted" style="font-weight: 700; font-size: 14px;">
-                1. 挑選商品 ➜ 2. 結帳填寫資料 ➜ 3. 發送 LINE 訊息 ➜ 4. 匯款後等待發券
+            <div class="text-center small text-muted fw-bold">
+                 ✅ 可加入購物車 = <span class="text-danger">有現貨</span>
             </div>
         </div>
     </div>
@@ -161,7 +194,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v173</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v174</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -269,7 +302,6 @@
                         </div>
                         <div class="small text-danger fw-bold mb-3">⚠️ 提醒：部份票券無法轉贈，依客服為主。</div>
                         
-                        <!-- 恢復完整的購買需知 -->
                         <div class="terms-box">
                             <div class="terms-title">📜 購買需知</div>
                             1. 電子票券履約期限為取得後約 30 天內兌換，為免遺忘，請儘速兌換。<br>
@@ -288,10 +320,16 @@
                         <div v-for="item in cartItems" :key="item.id" class="d-flex align-items-center py-2 border-bottom small">
                             <img :src="item.image" class="cart-item-img me-2">
                             <div class="flex-grow-1">
-                                <div>{{ item.name }}</div>
-                                <div class="text-muted" style="font-size: 11px;">x{{ item.quantity }}</div>
+                                <div class="fw-bold text-dark">{{ item.name }}</div>
+                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                    <div class="cart-qty-ctrl">
+                                        <button class="cart-qty-btn" @click="updateCart(item, -1)"><i class="fas fa-minus"></i></button>
+                                        <span class="cart-qty-val">{{ item.quantity }}</span>
+                                        <button class="cart-qty-btn" @click="updateCart(item, 1)" :disabled="item.quantity >= Number(item.stock)"><i class="fas fa-plus"></i></button>
+                                    </div>
+                                    <span class="fw-bold text-danger">${{ item.price * item.quantity }}</span>
+                                </div>
                             </div>
-                            <span class="fw-bold">${{ item.price * item.quantity }}</span>
                         </div>
                         <div class="d-flex justify-content-between fw-bold fs-5 mt-3">
                             <span>應付金額</span><span class="text-danger">${{ totalPrice }}</span>
@@ -318,35 +356,40 @@
             </div>
         </div>
 
-        <!-- Guide Modal, History Modal 保持原樣 -->
         <div class="modal fade" id="guideModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
-                    <div class="modal-body p-4 text-center">
-                        <div class="logo-m mx-auto mb-3">M</div>
-                        <h4 class="fw-bold mb-1">新手操作指南</h4>
-                        <p class="text-muted small mb-4">歡迎使用麥麥商城</p>
-                        <div class="guide-step">
-                            <div class="guide-icon"><i class="fas fa-store"></i></div>
-                            <div class="guide-text">
+                <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden bg-light">
+                    <div class="modal-body p-4">
+                        <div class="text-center mb-4">
+                            <div class="logo-m mx-auto mb-2">M</div>
+                            <h4 class="fw-bold">新手操作指南</h4>
+                            <p class="text-muted small">簡單三步驟，輕鬆享優惠</p>
+                        </div>
+                        
+                        <div class="guide-card">
+                            <div class="guide-icon-box"><i class="fas fa-store"></i></div>
+                            <div class="guide-content">
                                 <h6>1. 挑選票券</h6>
-                                <p>挑選商品並加入購物車。</p>
+                                <p>瀏覽商品列表，將喜歡的優惠券加入購物車。</p>
                             </div>
                         </div>
-                        <div class="guide-step">
-                            <div class="guide-icon"><i class="fas fa-shopping-basket"></i></div>
-                            <div class="guide-text">
+                        
+                        <div class="guide-card">
+                            <div class="guide-icon-box"><i class="fas fa-shopping-basket"></i></div>
+                            <div class="guide-content">
                                 <h6>2. 確認訂單</h6>
-                                <p>進入購物車填寫電話與領取方式。</p>
+                                <p>檢查商品數量，填寫聯絡電話與選擇領取方式。</p>
                             </div>
                         </div>
-                        <div class="guide-step">
-                            <div class="guide-icon"><i class="fab fa-line"></i></div>
-                            <div class="guide-text">
+                        
+                        <div class="guide-card">
+                            <div class="guide-icon-box"><i class="fab fa-line"></i></div>
+                            <div class="guide-content">
                                 <h6>3. 客服發貨</h6>
-                                <p>傳送 LINE 訊息，匯款核對後立即發券。</p>
+                                <p>送出 LINE 訊息，匯款後等待客服核對發券。</p>
                             </div>
                         </div>
+
                         <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold mt-2 shadow-sm" style="background: var(--gradient-red); border: none;" data-bs-dismiss="modal">
                             我明白了，開始購物！
                         </button>
@@ -389,11 +432,12 @@
         const { createApp, ref, computed, onMounted } = Vue;
         const API_URL = 'https://script.google.com/macros/s/AKfycbx2xdqkRoBGFibvgKRo05QtVcIWZlUjBq-rr_NRJ-8nK1BsFPSorQqnsNa89IPlG45aeA/exec';
         const NUMBERS = ['❶', '❷', '❸', '❹', '❺', '❻', '❼', '❽', '❾', '❿'];
+        const BANK_INFO = `🏦 匯款資訊：\n將來銀行(823): 88658888888840\n中國信託(822): 864540221080\n台新銀行(812): 28881013072004\n街口支付: 901794346\n⚠️ 請於匯款後告知客服帳號末五碼，以便核對。`;
 
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v173', liffId: '' });
+                const settings = ref({ version: 'v174', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -509,10 +553,10 @@
                     const orderId = `M${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
                     
                     const deliveryText = deliveryMethod.value === 'screenshot' ? '📸 截圖發送' : '🎁 momo 轉贈';
-                    // Backend expects Chinese text for spreadsheet readability as requested
                     const deliveryBackend = deliveryMethod.value === 'screenshot' ? '截圖發送' : 'momo 轉贈';
 
-                    let msg = `🛒【麥麥小舖電子票券】\n🎫 訂單編號：${orderId}\n📱 聯絡手機：${userContact.value.phone || '未提供'}\n📦 領取方式：${deliveryText}\n`;
+                    // Combine Order ID and Phone on the same line to save space
+                    let msg = `🛒【麥麥小舖電子票券】\n🎫 訂單編號：${orderId} 📱 聯絡手機：${userContact.value.phone || '未提供'}\n📦 領取方式：${deliveryText}\n`;
                     if (deliveryMethod.value === 'gift') msg += `👤 收件人：${giftInfo.value.name}\n📞 收件電話：${giftInfo.value.phone}\n`;
                     msg += `🍱 訂購商品：\n`;
                     
@@ -522,7 +566,7 @@
                         msg += `🔹效期：${i.expiryDate}\n`;
                     });
                     
-                    msg += `💰 應付總額：$${totalPrice.value}\n🏦 匯款資訊：\n將來銀行(823): 88658888888840\n中國信託(822): 864540221080\n台新銀行(812): 28881013072004\n街口支付: 901794346\n⚠️ 請於匯款後告知客服帳號末五碼，以便核對。`;
+                    msg += `💰 應付總額：$${totalPrice.value}\n${BANK_INFO}`;
                     
                     finalMsg.value = msg;
                     const record = { id: orderId, timestamp: now.toLocaleString(), totalAmount: totalPrice.value, items: cartItems.value.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })) };
@@ -572,7 +616,7 @@
                 const resendHistory = (h) => {
                     let msg = `🛒【歷史訂單補傳】單號：#${h.id}\n品項：\n`;
                     h.items.forEach((it, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${it.name} x${it.quantity}\n`; });
-                    msg += `總額：$${h.totalAmount}\n⚠️ 請告知匯款末五碼。`;
+                    msg += `總額：$${h.totalAmount}\n${BANK_INFO}`;
                     sendToLine(msg);
                 };
 
