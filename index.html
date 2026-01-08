@@ -217,7 +217,10 @@
 
             <div class="stock-tip-box">
                 ✅ <span class="text-danger">凡是可加入購物車</span><br>
-                均表示有現貨，可放心轉帳！
+                均表示有現貨，可放心轉帳！<br>
+                <span class="d-block mt-2 text-secondary" style="font-size: 12px; font-weight: 600; border-top: 1px solid #eee; padding-top: 8px;">
+                   ⚠️ 如遇商品缺貨，請與客服聯絡
+                </span>
             </div>
         </div>
     </div>
@@ -228,7 +231,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v175</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v177</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -494,7 +497,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v175', liffId: '' });
+                const settings = ref({ version: 'v177', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -625,7 +628,7 @@
                     msg += `💰 應付總額：$${totalPrice.value}\n${BANK_INFO}`;
                     
                     finalMsg.value = msg;
-                    const record = { id: orderId, timestamp: now.toLocaleString(), totalAmount: totalPrice.value, items: cartItems.value.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })) };
+                    const record = { id: orderId, timestamp: now.toLocaleString(), totalAmount: totalPrice.value, items: cartItems.value.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) };
                     orderHistory.value = [record, ...orderHistory.value].slice(0, 30);
                     localStorage.setItem('mm_order_history', JSON.stringify(orderHistory.value));
                     
