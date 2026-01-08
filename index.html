@@ -88,6 +88,8 @@
         .terms-check-container input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--brand-red); }
         .terms-check-label { font-size: 14px; font-weight: 800; color: var(--brand-dark); }
 
+        .checkout-img { width: 40px; height: 40px; object-fit: cover; border-radius: 8px; margin-right: 12px; background: #eee; }
+
         [v-cloak] { display: none; }
     </style>
 <script type="importmap">
@@ -104,7 +106,7 @@
 
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-2 ver-tag">v149 加載中...</div>
+        <div class="mt-2 ver-tag">v150 加載中...</div>
     </div>
 
     <div id="app" v-cloak>
@@ -113,7 +115,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v149</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v150</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -193,22 +195,9 @@
                             <span class="terms-check-label">我已閱讀並同意上述「購買需知」</span>
                         </label>
 
-                        <div class="mb-3 p-3 bg-light rounded-4">
-                            <label class="form-label-small">
-                                聯絡電話 (必填)
-                                <span v-if="isLiffPhone" class="sync-tag"><i class="fas fa-check-circle"></i> 已從 LINE 同步</span>
-                            </label>
-                            <input type="tel" class="form-control-custom" v-model="userContact.phone" placeholder="例如: 0912345678">
-                            
-                            <label class="form-label-small">
-                                電子郵件 (僅供後台存檔)
-                                <span v-if="isLiffEmail" class="sync-tag"><i class="fas fa-check-circle"></i> 已從 LINE 同步</span>
-                            </label>
-                            <input type="email" class="form-control-custom" v-model="userContact.email" :disabled="isLiffEmail" placeholder="例如: user@example.com">
-                        </div>
-
-                        <div v-for="item in cartItems" :key="item.id" class="d-flex justify-content-between py-2 border-bottom small">
-                            <div class="text-truncate me-3">{{ item.name }} x{{ item.qty }}</div>
+                        <div v-for="item in cartItems" :key="item.id" class="d-flex align-items-center py-2 border-bottom small">
+                            <img :src="item.image || 'https://via.placeholder.com/100'" class="checkout-img">
+                            <div class="text-truncate flex-grow-1 me-3">{{ item.name }} x{{ item.qty }}</div>
                             <div class="fw-bold text-danger flex-shrink-0">${{ item.price * item.qty }}</div>
                         </div>
                         <div class="d-flex justify-content-between fw-bold fs-4 p-3 bg-light rounded-4 mt-3">
@@ -219,10 +208,9 @@
                         <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold fs-5 shadow" 
                                 style="background: var(--gradient-red); border: none;" 
                                 @click="handleCheckout" 
-                                :disabled="isSubmitting || totalPrice < 50 || !userContact.phone || !acceptTerms">
+                                :disabled="isSubmitting || totalPrice < 50 || !acceptTerms">
                             <i class="fas fa-paper-plane me-2"></i>
                             <span v-if="!acceptTerms">請勾選購買需知</span>
-                            <span v-else-if="!userContact.phone">請填寫電話</span>
                             <span v-else-if="totalPrice < 50">滿 $50 才能出貨</span>
                             <span v-else>確認並送出訂單</span>
                         </button>
@@ -287,7 +275,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v149', bankInfo: '', liffId: '' });
+                const settings = ref({ version: 'v150', bankInfo: '', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -297,18 +285,11 @@
                 const isLineSending = ref(false);
                 const acceptTerms = ref(false);
                 
-                const isLiffEmail = ref(false);
-                const isLiffPhone = ref(false);
-
+                // 後台存檔用但不顯示於結帳
                 const userContact = ref({
                     phone: localStorage.getItem('mm_user_phone') || '',
                     email: localStorage.getItem('mm_user_email') || ''
                 });
-
-                watch(userContact, (val) => {
-                    localStorage.setItem('mm_user_phone', val.phone);
-                    localStorage.setItem('mm_user_email', val.email);
-                }, { deep: true });
 
                 const orderHistory = ref(JSON.parse(localStorage.getItem('mm_order_history') || '[]'));
                 let cartModal, successModal, historyModal;
@@ -328,6 +309,10 @@
                             liff.init({ liffId: res.liffId }).then(async () => {
                                 if (liff.isLoggedIn()) {
                                     userProfile.value = await liff.getProfile();
+                                    const idToken = liff.getDecodedIDToken();
+                                    if (idToken && idToken.email) {
+                                        userContact.value.email = idToken.email;
+                                    }
                                 }
                             }).catch(err => console.error("LIFF Error", err));
                         }
@@ -357,13 +342,21 @@
                 const handleCheckout = async () => {
                     if (!acceptTerms.value) return;
                     isSubmitting.value = true;
+                    
                     const now = new Date();
-                    const orderId = 'M' + now.getTime().toString().slice(-8);
+                    // 格式：M + YYYYMMDDHHmmss
+                    const Y = now.getFullYear();
+                    const M = String(now.getMonth() + 1).padStart(2, '0');
+                    const D = String(now.getDate()).padStart(2, '0');
+                    const h = String(now.getHours()).padStart(2, '0');
+                    const m = String(now.getMinutes()).padStart(2, '0');
+                    const s = String(now.getSeconds()).padStart(2, '0');
+                    const orderId = `M${Y}${M}${D}${h}${m}${s}`;
                     
                     let msg = `🛒【麥麥小舖電子票券】\n🎫 訂單編號：${orderId}\n🍱 訂購商品：\n`;
                     cartItems.value.forEach((i, idx) => {
                         const numIcon = NUMBERS[idx] || (idx + 1) + '.';
-                        msg += `${numIcon} ${i.name}\n🔹數量：${i.qty}\n🔹小計：${i.price * i.qty}\n🔹效期：${i.expiryDate}\n`;
+                        msg += `${numIcon} ${i.name}\n🔹數量：${i.qty}\n🔹小計：\n${i.price * i.qty}\n🔹效期：${i.expiryDate}\n`;
                     });
                     msg += `💰 應付總額：$${totalPrice.value}\n🏦 匯款資訊：\n將來銀行(823): 88658888888840\n中國信託(822): 864540221080\n台新銀行(812): 28881013072004\n街口支付: 901794346\n⚠️ 請於匯款後告知客服帳號末五碼，以便核對。`;
                     
@@ -384,8 +377,8 @@
                             totalAmount: totalPrice.value, 
                             userId: userProfile.value.userId || 'GUEST', 
                             userName: userProfile.value.displayName || guestName.value || 'GUEST',
-                            email: userContact.value.email,
-                            phone: userContact.value.phone
+                            email: userContact.value.email || '',
+                            phone: userContact.value.phone || ''
                         })
                     }).catch(() => {});
 
@@ -410,7 +403,7 @@
                     let msg = `🛒【麥麥小舖電子票券】歷史訂單補傳\n🎫 訂單編號：${h.id}\n🍱 訂購商品：\n`;
                     h.items.forEach((it, idx) => {
                         const numIcon = NUMBERS[idx] || (idx + 1) + '.';
-                        msg += `${numIcon} ${it.name}\n🔹數量：${it.qty}\n🔹小計：${it.price * it.qty}\n`;
+                        msg += `${numIcon} ${it.name}\n🔹數量：${it.qty}\n🔹小計：\n${it.price * it.qty}\n`;
                     });
                     msg += `💰 應付總額：$${h.totalAmount}\n⚠️ 請於匯款後告知客服帳號末五碼。`;
                     sendToLine(msg);
@@ -421,7 +414,7 @@
                     acceptTerms.value = false;
                 };
 
-                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, finalMsg, isLineSending, sendToLine, openCart: () => cartModal.show(), openHistory: () => historyModal.show(), orderHistory, userProfile, guestName, userContact, isLiffEmail, isLiffPhone, resendHistory, acceptTerms, resetCart };
+                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, finalMsg, isLineSending, sendToLine, openCart: () => cartModal.show(), openHistory: () => historyModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, acceptTerms, resetCart };
             }
         }).mount('#app');
     </script>
