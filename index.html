@@ -61,7 +61,7 @@
         .stock-tag.none { background: #f5f5f5; color: #bfbfbf; }
         
         .p-price { color: var(--brand-red); font-weight: 900; font-size: 20px; }
-        .p-original { font-size: 12px; color: #bbb; text-decoration: line-through; margin-left: 5px; font-weight: normal; }
+        .p-original { font-size: 11px; color: #bbb; text-decoration: line-through; margin-left: 6px; font-weight: 500; }
         
         .btn-buy { background: var(--brand-dark); color: white; border: none; padding: 10px 0; border-radius: 50px; font-size: 13px; font-weight: 800; width: 100%; margin-top: auto; transition: 0.2s; }
         .btn-buy:active { transform: scale(0.96); }
@@ -83,12 +83,21 @@
 
         [v-cloak] { display: none; }
     </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
 </head>
 <body>
 
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-3 fw-bold text-muted" style="font-size: 15px;">麥麥商城 v162 加載中...</div>
+        <div class="mt-3 fw-bold text-muted" style="font-size: 15px;">麥麥商城 v163 加載中...</div>
     </div>
 
     <div id="app" v-cloak>
@@ -97,7 +106,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v162</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v163</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -126,9 +135,9 @@
                                 <span class="fw-bold"><i class="far fa-calendar-alt me-1"></i>{{ p.expiryDate }}</span>
                                 <span class="stock-tag" :class="{ none: Number(p.stock) <= 0 }">剩 {{ p.stock }}</span>
                             </div>
-                            <div class="mb-3 d-flex align-items-end">
+                            <div class="mb-3 d-flex align-items-baseline">
                                 <span class="p-price">${{ p.price }}</span>
-                                <span v-if="p.originalPrice" class="p-original">${{ p.originalPrice }}</span>
+                                <span v-if="p.originalPrice && p.originalPrice > p.price" class="p-original">${{ p.originalPrice }}</span>
                             </div>
                             <div v-if="cart[p.id]" class="qty-ctrl">
                                 <button class="qty-btn" @click.stop="updateCart(p, -1)"><i class="fas fa-minus"></i></button>
@@ -189,8 +198,8 @@
 
                         <div v-for="item in cartItems" :key="item.id" class="d-flex align-items-center py-2 border-bottom small">
                             <img :src="item.image || 'https://via.placeholder.com/100'" class="checkout-img">
-                            <div class="text-truncate flex-grow-1 me-3">{{ item.name }} x{{ item.qty }}</div>
-                            <div class="fw-bold text-danger flex-shrink-0">${{ item.price * item.qty }}</div>
+                            <div class="text-truncate flex-grow-1 me-3">{{ item.name }} x{{ item.quantity }}</div>
+                            <div class="fw-bold text-danger flex-shrink-0">${{ item.price * item.quantity }}</div>
                         </div>
                         <div class="d-flex justify-content-between fw-bold fs-4 p-3 bg-light rounded-4 mt-3">
                             <span>應付金額</span><span class="text-danger">${{ totalPrice }}</span>
@@ -267,7 +276,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v162', bankInfo: '', liffId: '' });
+                const settings = ref({ version: 'v163', bankInfo: '', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -314,7 +323,7 @@
                     } finally {
                         isLoadingData.value = false;
                         const elapsed = Date.now() - startTime;
-                        const minWait = 1000; // 加載時間優化至 1 秒
+                        const minWait = 800; // 再度優化加載延遲感
                         const waitTime = Math.max(0, minWait - elapsed);
                         setTimeout(hideStaticLoader, waitTime);
                     }
@@ -330,13 +339,14 @@
 
                 const categories = computed(() => [...new Set(products.value.map(p => p.category))]);
                 const filteredProducts = computed(() => currentCat.value === 'ALL' ? products.value : products.value.filter(p => p.category === currentCat.value));
+                
                 const cartItems = computed(() => Object.keys(cart.value).map(id => {
                     const p = products.value.find(x => x.id === id);
-                    return p ? { ...p, qty: cart.value[id] } : null;
+                    return p ? { ...p, quantity: cart.value[id] } : null;
                 }).filter(x => x));
 
-                const totalQty = computed(() => cartItems.value.reduce((a, b) => a + b.qty, 0));
-                const totalPrice = computed(() => cartItems.value.reduce((a, b) => a + (b.price * b.qty), 0));
+                const totalQty = computed(() => cartItems.value.reduce((a, b) => a + b.quantity, 0));
+                const totalPrice = computed(() => cartItems.value.reduce((a, b) => a + (b.price * b.quantity), 0));
 
                 const updateCart = (p, d) => {
                     const next = (cart.value[p.id] || 0) + d;
@@ -350,18 +360,12 @@
                     localStorage.setItem('mm_user_phone', userContact.value.phone);
 
                     const now = new Date();
-                    const Y = now.getFullYear();
-                    const M = String(now.getMonth() + 1).padStart(2, '0');
-                    const D = String(now.getDate()).padStart(2, '0');
-                    const h = String(now.getHours()).padStart(2, '0');
-                    const m = String(now.getMinutes()).padStart(2, '0');
-                    const s = String(now.getSeconds()).padStart(2, '0');
-                    const orderId = `M${Y}${M}${D}${h}${m}${s}`;
+                    const orderId = `M${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
                     
                     let msg = `🛒【麥麥小舖電子票券】\n🎫 訂單編號：${orderId}\n📱 聯絡手機：${userContact.value.phone || '未提供'}\n🍱 訂購商品：\n`;
                     cartItems.value.forEach((i, idx) => {
                         const numIcon = NUMBERS[idx] || (idx + 1) + '.';
-                        msg += `${numIcon} ${i.name}\n🔹數量：${i.qty} 🔹小計：$${i.price * i.qty}\n🔹效期：${i.expiryDate}\n`;
+                        msg += `${numIcon} ${i.name}\n🔹數量：${i.quantity} 🔹小計：$${i.price * i.quantity}\n🔹效期：${i.expiryDate}\n`;
                     });
                     msg += `💰 應付總額：$${totalPrice.value}\n🏦 匯款資訊：\n將來銀行(823): 88658888888840\n中國信託(822): 864540221080\n台新銀行(812): 28881013072004\n街口支付: 901794346\n⚠️ 請於匯款後告知客服帳號末五碼，以便核對。`;
                     
@@ -369,11 +373,12 @@
 
                     const record = {
                         id: orderId, timestamp: now.toLocaleString(), totalAmount: totalPrice.value,
-                        items: cartItems.value.map(i => ({ name: i.name, quantity: i.qty, price: i.price }))
+                        items: cartItems.value.map(i => ({ name: i.name, quantity: i.quantity, price: i.price }))
                     };
                     orderHistory.value = [record, ...orderHistory.value].slice(0, 30);
                     localStorage.setItem('mm_order_history', JSON.stringify(orderHistory.value));
 
+                    // POST 至 GAS，明確使用 quantity 欄位
                     fetch(API_URL, {
                         method: 'POST', mode: 'no-cors',
                         body: JSON.stringify({
@@ -381,13 +386,12 @@
                             timestamp: now.toLocaleString(), 
                             items: cartItems.value.map(i => ({
                                 name: i.name, 
-                                quantity: i.qty, // 改為 quantity 以匹配後台
+                                quantity: i.quantity,
                                 price: i.price
                             })), 
                             totalAmount: totalPrice.value, 
                             userId: userProfile.value.userId || 'GUEST', 
                             userName: userProfile.value.displayName || guestName.value || 'GUEST',
-                            email: userContact.value.email || '',
                             phone: userContact.value.phone || ''
                         })
                     }).catch(() => {});
