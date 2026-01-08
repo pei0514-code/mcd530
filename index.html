@@ -32,19 +32,18 @@
             color: var(--brand-dark);
             overflow-x: hidden;
             opacity: 0;
-            animation: fadeInBody 0.2s forwards;
+            animation: fadeInBody 0.1s forwards;
         }
         @keyframes fadeInBody { to { opacity: 1; } }
         
-        #static-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s ease; }
-        .spinner { width: 45px; height: 45px; border: 5px solid #f3f3f3; border-top-color: var(--brand-red); border-radius: 50%; animation: spin 0.8s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        /* 移除旋轉，改為極簡加載層 */
+        #static-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.2s ease; }
 
         .sticky-header { position: sticky; top: 0; z-index: 1000; background: var(--glass); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(0,0,0,0.05); }
         .category-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 12px 15px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
         .category-scroll::-webkit-scrollbar { display: none; }
         
-        .cat-btn { padding: 7px 18px; border-radius: 50px; font-size: 14px; font-weight: 700; white-space: nowrap; border: 1.5px solid #f0f0f0; background: #fff; color: #777; transition: 0.15s; }
+        .cat-btn { padding: 7px 18px; border-radius: 50px; font-size: 14px; font-weight: 700; white-space: nowrap; border: 1.5px solid #f0f0f0; background: #fff; color: #777; transition: 0.1s; }
         .cat-btn.active { background: var(--gradient-red); color: #fff; border-color: transparent; box-shadow: 0 4px 10px rgba(218, 41, 28, 0.2); }
 
         .logo-m { width: 40px; height: 40px; background: var(--gradient-red); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-style: italic; font-size: 22px; }
@@ -77,12 +76,14 @@
         .btn-line-custom { background-color: var(--line-green) !important; color: white !important; border: none !important; }
         .history-item { background: #fff; border-radius: 18px; padding: 15px; margin-bottom: 15px; border: 1px solid #f0f0f0; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
 
+        /* 購買需知優化：高度縮減並提供滾動 */
+        .terms-box { background: #fff8f8; border: 1px solid #ffebeb; border-radius: 12px; padding: 12px; font-size: 13px; color: #444; line-height: 1.6; height: 100px; overflow-y: auto; margin-bottom: 15px; scrollbar-width: thin; }
+        .terms-title { font-weight: 900; color: var(--brand-red); margin-bottom: 5px; font-size: 14px; position: sticky; top: 0; background: #fff8f8; }
+
         .form-label-small { font-size: 13px; font-weight: 700; color: #666; margin-bottom: 5px; }
         .form-control-pill { border-radius: 50px; padding: 10px 20px; border: 1px solid #eee; background: #f8f9fa; font-size: 14px; }
-        .form-control-pill:focus { border-color: var(--brand-red); box-shadow: none; background: #fff; }
 
-        /* 購物車小圖優化 */
-        .checkout-img { width: 48px; height: 48px; object-fit: cover; border-radius: 8px; margin-right: 12px; background: #eee; flex-shrink: 0; border: 1px solid #eee; }
+        .checkout-img { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; margin-right: 12px; background: #eee; flex-shrink: 0; border: 1px solid #eee; }
 
         [v-cloak] { display: none; }
     </style>
@@ -99,8 +100,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="spinner"></div>
-        <div class="mt-3 fw-bold text-muted" style="font-size: 15px;">麥麥商城 v164 加載中...</div>
+        <div class="fw-bold text-danger" style="font-size: 14px;">MCD Mall v165</div>
     </div>
 
     <div id="app" v-cloak>
@@ -109,7 +109,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v164</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v165</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -176,27 +176,26 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body px-4">
-                        <div class="mb-4">
+                        <div class="mb-3">
                             <label class="form-label-small">聯絡手機 (選填)</label>
                             <input type="tel" v-model="userContact.phone" class="form-control form-control-pill" placeholder="方便核對訂單 (選填)">
                         </div>
 
+                        <!-- 優化後的捲軸式購買需知 -->
                         <div class="terms-box">
                             <div class="terms-title">📜 購買需知</div>
-                            <div class="small">
-                                1. 電子票券履約期限為取得後約 30 天內兌換，為免遺忘，請儘速兌換。<br>
-                                2. 票券兌換依商家不同，請參考客服訊息，截圖畫面通常即可使用。<br>
-                                3. 逾期將失效恕無法補發或退款。<br>
-                                4. 麥當勞每次交易最多兌換 5 張，可重複多次兌換。<br>
-                                5. 取消兌換後序號會鎖定 5 分鐘。<br>
-                                6. 自備環保杯可依店家規定折抵 5-10 元。<br>
-                                7. 效期以客服提供之圖片或說明為主。
-                            </div>
+                            1. 電子票券履約期限為取得後約 30 天內兌換，為免遺忘，請儘速兌換。<br>
+                            2. 票券兌換依商家不同，請參考客服訊息，截圖畫面通常即可使用。<br>
+                            3. 逾期將失效恕無法補發或退款。<br>
+                            4. 麥當勞每次交易最多兌換 5 張，可重複多次兌換。<br>
+                            5. 取消兌換後序號會鎖定 5 分鐘。<br>
+                            6. 自備環保杯可依店家規定折抵 5-10 元。<br>
+                            7. 效期以客服提供之圖片或說明為主。
                         </div>
 
-                        <label class="terms-check-container mb-4">
-                            <input type="checkbox" v-model="acceptTerms">
-                            <span class="terms-check-label">我已閱讀並同意上述「購買需知」</span>
+                        <label class="d-flex align-items-start gap-2 mb-3" style="cursor: pointer;">
+                            <input type="checkbox" v-model="acceptTerms" style="width: 18px; height: 18px; margin-top: 2px; accent-color: var(--brand-red);">
+                            <span class="small fw-bold">我已閱讀並同意「購買需知」</span>
                         </label>
 
                         <div v-for="item in cartItems" :key="item.id" class="d-flex align-items-center py-2 border-bottom small">
@@ -207,7 +206,7 @@
                             </div>
                             <div class="fw-bold text-danger flex-shrink-0">${{ item.price * item.quantity }}</div>
                         </div>
-                        <div class="d-flex justify-content-between fw-bold fs-4 p-3 bg-light rounded-4 mt-3">
+                        <div class="d-flex justify-content-between fw-bold fs-5 p-2 bg-light rounded-3 mt-2">
                             <span>應付金額</span><span class="text-danger">${{ totalPrice }}</span>
                         </div>
                     </div>
@@ -217,7 +216,7 @@
                                 @click="handleCheckout" 
                                 :disabled="isSubmitting || totalPrice < 50 || !acceptTerms">
                             <i class="fas fa-paper-plane me-2"></i>
-                            <span v-if="!acceptTerms">請勾選購買需知</span>
+                            <span v-if="!acceptTerms">請勾選同意條款</span>
                             <span v-else-if="totalPrice < 50">滿 $50 才能出貨</span>
                             <span v-else>確認並送出訂單</span>
                         </button>
@@ -232,7 +231,7 @@
                     <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
                     <h4 class="fw-bold">訂單已成功成立！</h4>
                     <p class="small text-muted">請點擊下方按鈕將訂單發送給客服進行核對。</p>
-                    <div class="p-3 bg-light rounded-4 text-start mb-4 small overflow-auto" style="max-height: 250px;">
+                    <div class="p-3 bg-light rounded-4 text-start mb-4 small overflow-auto" style="max-height: 200px;">
                         <pre class="m-0" style="white-space: pre-wrap; font-family: inherit; font-weight: 600; line-height: 1.5; color: #444; font-size: 13px;">{{ finalMsg }}</pre>
                     </div>
                     <button class="btn btn-line-custom w-100 rounded-pill py-3 fw-bold mb-2 shadow-sm" @click="sendToLine(finalMsg)" :disabled="isLineSending">
@@ -282,7 +281,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v164', bankInfo: '', liffId: '' });
+                const settings = ref({ version: 'v165', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -294,8 +293,7 @@
                 const isLoadingData = ref(true);
                 
                 const userContact = ref({
-                    phone: localStorage.getItem('mm_user_phone') || '',
-                    email: localStorage.getItem('mm_user_email') || ''
+                    phone: localStorage.getItem('mm_user_phone') || ''
                 });
 
                 const orderHistory = ref(JSON.parse(localStorage.getItem('mm_order_history') || '[]'));
@@ -309,7 +307,6 @@
                 });
 
                 const initApp = async () => {
-                    const startTime = Date.now();
                     isLoadingData.value = true;
                     try {
                         const prodRes = await fetch(`${API_URL}?action=getInitData`).then(r => r.json());
@@ -320,18 +317,13 @@
                         
                         if (setRes.liffId) {
                             await liff.init({ liffId: setRes.liffId });
-                            if (liff.isLoggedIn()) {
-                                userProfile.value = await liff.getProfile();
-                            }
+                            if (liff.isLoggedIn()) userProfile.value = await liff.getProfile();
                         }
                     } catch (err) {
                         console.error("Init Error", err);
                     } finally {
                         isLoadingData.value = false;
-                        const elapsed = Date.now() - startTime;
-                        const minWait = 500; 
-                        const waitTime = Math.max(0, minWait - elapsed);
-                        setTimeout(hideStaticLoader, waitTime);
+                        hideStaticLoader();
                     }
                 };
 
@@ -339,7 +331,7 @@
                     const loader = document.getElementById('static-loader');
                     if (loader) {
                         loader.style.opacity = '0';
-                        setTimeout(() => loader.style.display = 'none', 300);
+                        setTimeout(() => loader.style.display = 'none', 200);
                     }
                 };
 
@@ -387,13 +379,8 @@
                     fetch(API_URL, {
                         method: 'POST', mode: 'no-cors',
                         body: JSON.stringify({
-                            id: orderId, 
-                            timestamp: now.toLocaleString(), 
-                            items: cartItems.value.map(i => ({
-                                name: i.name, 
-                                quantity: i.quantity,
-                                price: i.price
-                            })), 
+                            id: orderId, timestamp: now.toLocaleString(), 
+                            items: cartItems.value.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })), 
                             totalAmount: totalPrice.value, 
                             userId: userProfile.value.userId || 'GUEST', 
                             userName: userProfile.value.displayName || guestName.value || 'GUEST',
