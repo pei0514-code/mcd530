@@ -191,7 +191,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v178</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v179</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -231,7 +231,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v178</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v179</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -438,7 +438,7 @@
                             <div class="guide-icon-box"><i class="fas fa-shopping-basket"></i></div>
                             <div class="guide-content">
                                 <h6>2. 確認訂單</h6>
-                                <p>檢查商品數量，填寫聯絡電話與選擇領取方式。</p>
+                                <p>購物車檢查商品數量，填寫聯絡電話與選擇領取方式。</p>
                             </div>
                         </div>
                         
@@ -489,7 +489,7 @@
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
     <script>
-        const { createApp, ref, computed, onMounted } = Vue;
+        const { createApp, ref, computed, onMounted, watch } = Vue;
         const API_URL = 'https://script.google.com/macros/s/AKfycbx2xdqkRoBGFibvgKRo05QtVcIWZlUjBq-rr_NRJ-8nK1BsFPSorQqnsNa89IPlG45aeA/exec';
         const NUMBERS = ['❶', '❷', '❸', '❹', '❺', '❻', '❼', '❽', '❾', '❿'];
         const BANK_INFO = `🏦 匯款資訊：\n將來銀行(823): 88658888888840\n中國信託(822): 864540221080\n台新銀行(812): 28881013072004\n街口支付: 901794346\n⚠️ 請於匯款後告知客服帳號末五碼，以便核對。`;
@@ -497,14 +497,15 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v178', liffId: '' });
+                const settings = ref({ version: 'v179', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
                 const guestName = ref(localStorage.getItem('mm_guest_name') || '');
                 const finalMsg = ref('');
                 const isLoadingData = ref(true);
-                const acceptTerms = ref(false);
+                // Initialize acceptTerms from local storage (default to false if not present)
+                const acceptTerms = ref(localStorage.getItem('mm_accept_terms') === 'true');
                 
                 const viewMode = ref(localStorage.getItem('mm_view_mode') || 'medium');
                 const showLayoutMenu = ref(false);
@@ -525,6 +526,11 @@
                     historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
                     guideModal = new bootstrap.Modal(document.getElementById('guideModal'));
                     alertModalInstance = new bootstrap.Modal(document.getElementById('alertModal'));
+                });
+
+                // Watch for changes in acceptTerms and save to localStorage
+                watch(acceptTerms, (newVal) => {
+                    localStorage.setItem('mm_accept_terms', newVal);
                 });
 
                 const initApp = async () => {
@@ -598,8 +604,23 @@
                     const errors = [];
                     if (!acceptTerms.value) errors.push("請先勾選「我已閱讀並同意購買需知」");
                     if (totalPrice.value < 50) errors.push("訂單金額需滿 $50 才能出貨");
-                    if (deliveryMethod.value === 'gift' && (!giftInfo.value.name || !giftInfo.value.phone)) {
-                        errors.push("momo 轉贈需填寫完整收件人姓名與電話");
+                    
+                    if (deliveryMethod.value === 'gift') {
+                        if (!giftInfo.value.name || !giftInfo.value.phone) {
+                            errors.push("momo 轉贈需填寫完整收件人姓名與電話");
+                        } else {
+                            // Validate Name: Must be Chinese characters
+                            const chineseNamePattern = /^[\u4e00-\u9fa5]+$/;
+                            if (!chineseNamePattern.test(giftInfo.value.name)) {
+                                errors.push("momo 轉贈姓名必須為中文全名");
+                            }
+
+                            // Validate Phone: Must be 10 digits starting with 09
+                            const phonePattern = /^09\d{8}$/;
+                            if (!phonePattern.test(giftInfo.value.phone)) {
+                                errors.push("momo 轉贈電話格式錯誤 (需為09開頭共10碼數字)");
+                            }
+                        }
                     }
                     
                     if (errors.length > 0) {
@@ -679,7 +700,12 @@
                     sendToLine(msg);
                 };
 
-                const resetCart = () => { cart.value = {}; acceptTerms.value = false; deliveryMethod.value = 'screenshot'; giftInfo.value = { name: '', phone: '' }; };
+                const resetCart = () => { 
+                    cart.value = {}; 
+                    // Do not reset acceptTerms here, keep it as is
+                    deliveryMethod.value = 'screenshot'; 
+                    giftInfo.value = { name: '', phone: '' }; 
+                };
 
                 return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, finalMsg, openCart: () => cartModal.show(), openHistory: () => historyModal.show(), showGuide: () => guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, sendToLine, alertMessages };
             }
