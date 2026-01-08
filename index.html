@@ -269,7 +269,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v185</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v186</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -320,7 +320,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v185</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v186</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -602,7 +602,7 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 rounded-4 shadow-lg">
                     <div class="modal-header border-0 pt-4 px-4 bg-light">
-                        <h5 class="fw-bold fs-4"><i class="fas fa-history me-2"></i>歷史購買紀錄</h5>
+                        <h5 class="fw-bold fs-4"><i class="fas fa-history me-2"></i>歷史訂單</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body px-4 py-3" style="max-height: 60vh; overflow-y: auto;">
@@ -710,7 +710,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v185', liffId: '' });
+                const settings = ref({ version: 'v186', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -873,6 +873,15 @@
                 const totalPrice = computed(() => cartItems.value.reduce((a, b) => a + (b.price * b.quantity), 0));
 
                 const updateCart = (p, d) => {
+                    // 如果是增加數量，檢查庫存上限
+                    if (d > 0) {
+                        const current = cart.value[p.id] || 0;
+                        if (current >= Number(p.stock)) {
+                            showToast('已達庫存上限');
+                            return;
+                        }
+                    }
+                
                     const next = (cart.value[p.id] || 0) + d;
                     if (next <= 0) delete cart.value[p.id];
                     else if (next <= Number(p.stock)) cart.value[p.id] = next;
