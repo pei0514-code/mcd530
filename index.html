@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>麥麥電子票券商城</title>
     
+    <!-- Speed Optimization: Preconnect to CDNs -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://static.line-scdn.net">
+    
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js" as="script">
     <link rel="preload" href="https://static.line-scdn.net/liff/edge/2/sdk.js" as="script">
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" as="style">
@@ -236,7 +240,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v182</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v183</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -276,7 +280,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v182</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v183</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -604,7 +608,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v182', liffId: '' });
+                const settings = ref({ version: 'v183', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -644,14 +648,20 @@
                     // Simple pull-to-refresh logic
                     let startY = 0;
                     window.addEventListener('touchstart', e => {
-                        if (window.scrollY === 0) startY = e.touches[0].pageY;
+                        // Safer touch handling
+                        if (e.touches && e.touches.length > 0 && window.scrollY === 0) {
+                            startY = e.touches[0].pageY;
+                        }
                     }, {passive: true});
                     
                     window.addEventListener('touchmove', e => {
-                         const y = e.touches[0].pageY;
-                         // Pulling down more than 150px at the top
-                         if (window.scrollY === 0 && (y - startY) > 150) {
-                             window.location.reload();
+                         // Safer touch handling
+                         if (e.touches && e.touches.length > 0) {
+                             const y = e.touches[0].pageY;
+                             // Pulling down more than 150px at the top
+                             if (window.scrollY === 0 && (y - startY) > 150) {
+                                 window.location.reload();
+                             }
                          }
                     }, {passive: true});
                 });
