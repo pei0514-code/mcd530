@@ -157,10 +157,11 @@
         .toast-msg.show { opacity: 1; transform: translateY(0); }
 
         /* Custom Checkbox for Payment */
-        .payment-option { cursor: pointer; border: 1.5px solid #eee; border-radius: 12px; padding: 10px; transition: 0.2s; background: #fff; margin-bottom: 8px; display: flex; align-items: center; }
+        .payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .payment-option { cursor: pointer; border: 1.5px solid #eee; border-radius: 12px; padding: 10px; transition: 0.2s; background: #fff; margin-bottom: 0; display: flex; align-items: center; }
         .payment-option:hover { background: #f9f9f9; }
         .payment-option.active { border-color: var(--brand-red); background: #fff5f5; color: var(--brand-red); font-weight: 700; }
-        .payment-icon { width: 24px; height: 24px; margin-right: 10px; object-fit: contain; }
+        .payment-icon { width: 20px; height: 20px; margin-right: 8px; object-fit: contain; flex-shrink: 0; }
 
         [v-cloak] { display: none; }
     </style>
@@ -178,7 +179,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v188</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v191</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -225,7 +226,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v188</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v191</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -352,19 +353,19 @@
                             </div>
                         </div>
 
-                        <!-- 3. 付款方式 (新增) -->
+                        <!-- 3. 付款方式 (新增: Grid Layout) -->
                         <label class="form-label-small">付款方式 (可複選)</label>
-                        <div class="mb-3">
+                        <div class="mb-3 payment-grid">
                              <div v-for="bank in bankAccounts" :key="bank.code" 
                                   class="payment-option" 
                                   :class="{ active: selectedPayments.includes(bank.code) }"
                                   @click="togglePayment(bank.code)">
                                   <i class="fas fa-university text-muted payment-icon"></i>
-                                  <div class="flex-grow-1">
-                                      <div class="small fw-bold">{{ bank.name }}</div>
+                                  <div class="flex-grow-1" style="overflow: hidden;">
+                                      <div class="small fw-bold text-truncate">{{ bank.name }}</div>
                                   </div>
-                                  <i class="fas fa-check-circle text-danger" v-if="selectedPayments.includes(bank.code)"></i>
-                                  <i class="far fa-circle text-muted" v-else></i>
+                                  <i class="fas fa-check-circle text-danger ms-1" v-if="selectedPayments.includes(bank.code)"></i>
+                                  <i class="far fa-circle text-muted ms-1" v-else></i>
                              </div>
                         </div>
 
@@ -603,10 +604,10 @@
         
         // Bank Information
         const BANK_ACCOUNTS = [
-            { code: '823', name: '將來銀行 (823)', account: '88658888888840' },
-            { code: '822', name: '中國信託 (822)', account: '864540221080' },
-            { code: '812', name: '台新銀行 (812)', account: '28881013072004' },
-            { code: '396', name: '街口支付 (396)', account: '901794346' }
+            { code: '823', name: '將來銀行(823)', account: '88658888888840' },
+            { code: '822', name: '中國信託(822)', account: '864540221080' },
+            { code: '812', name: '台新銀行(812)', account: '28881013072004' },
+            { code: '396', name: '街口支付', account: '901794346' }
         ];
 
         createApp({
@@ -740,24 +741,29 @@
                     const orderId = `M${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
                     
                     const deliveryText = deliveryMethod.value === 'screenshot' ? '📸 截圖發送' : '🎁 momo 轉贈';
-                    const paymentNames = selectedBankInfos.value.map(b => b.name).join('、');
                     
                     // Construct Message
-                    let msg = `🛒【麥麥小舖訂單】\n🎫 單號：${orderId}\n💳 付款：${paymentNames}\n📦 領取：${deliveryText}\n`;
-                    if (deliveryMethod.value === 'gift') msg += `👤 收件人：${giftInfo.value.name}\n📞 電話：${giftInfo.value.phone}\n`;
+                    let msg = `🛒【麥麥小舖電子票券】\n🎫 訂單編號：${orderId}\n`;
                     if (userContact.value.phone) msg += `📱 聯絡手機：${userContact.value.phone}\n`;
-                    msg += `------------------\n`;
-                    cartItems.value.forEach((i, idx) => { 
-                        msg += `${NUMBERS[idx] || (idx+1)} ${i.name} x${i.quantity} ($${i.price*i.quantity})\n`;
-                    });
-                    msg += `------------------\n💰 應付總額：$${totalPrice.value}\n\n`;
+                    msg += `📦 領取方式：${deliveryText}\n`;
                     
-                    // Add Bank Info to Text
+                    if (deliveryMethod.value === 'gift') msg += `👤 收件人：${giftInfo.value.name}\n📞 電話：${giftInfo.value.phone}\n`;
+                    
+                    msg += `🍱 訂購商品：\n`;
+                    cartItems.value.forEach((i, idx) => { 
+                        msg += `${NUMBERS[idx] || (idx+1)} ${i.name}\n`;
+                        msg += `🔹數量：${i.quantity} 🔹小計：$${i.price*i.quantity}\n`;
+                        if(i.expiryDate) msg += `🔹效期：${i.expiryDate}\n`;
+                    });
+                    
+                    msg += `💰 應付總額：$${totalPrice.value}\n`;
+                    
+                    // Add Selected Bank Info to Text
                     msg += `🏦 匯款資訊：\n`;
                     selectedBankInfos.value.forEach(b => {
-                        msg += `${b.name}\n${b.account}\n`;
+                        msg += `${b.name}: ${b.account}\n`;
                     });
-                    msg += `\n⚠️ 匯款後請通知客服末五碼。`;
+                    msg += `⚠️ 請於匯款後告知客服匯款相關資訊`;
                     
                     const record = { id: orderId, timestamp: now.toLocaleString(), totalAmount: totalPrice.value, items: cartItems.value.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) };
                     
