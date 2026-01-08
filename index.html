@@ -33,6 +33,7 @@
             overflow-x: hidden;
             opacity: 0;
             animation: fadeInBody 0.15s forwards;
+            overscroll-behavior-y: contain; /* Prevent native pull-to-refresh conflict if we implemented custom one, but here we allow native mostly */
         }
         @keyframes fadeInBody { to { opacity: 1; } }
         
@@ -45,7 +46,7 @@
         .cat-btn { padding: 7px 18px; border-radius: 50px; font-size: 14px; font-weight: 700; white-space: nowrap; border: 1.5px solid #f0f0f0; background: #fff; color: #777; transition: 0.1s; }
         .cat-btn.active { background: var(--gradient-red); color: #fff; border-color: transparent; box-shadow: 0 4px 10px rgba(218, 41, 28, 0.2); }
 
-        .logo-m { width: 40px; height: 40px; background: var(--gradient-red); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-style: italic; font-size: 22px; }
+        .logo-m { width: 40px; height: 40px; background: var(--gradient-red); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-style: italic; font-size: 22px; cursor: pointer; }
         .ver-tag { font-weight: 900; font-size: 11px; color: var(--brand-red); opacity: 0.6; }
 
         .product-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.03); height: 100%; display: flex; flex-direction: column; border: 1px solid rgba(0,0,0,0.02); transition: transform 0.2s ease; }
@@ -182,6 +183,42 @@
             color: #555;
             width: 100%;
         }
+        
+        /* History Modal Images */
+        .history-imgs-container {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 4px 0;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        .history-imgs-container::-webkit-scrollbar { display: none; }
+        .h-thumb-box {
+            position: relative;
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+        }
+        .h-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+        .h-qty-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            background: #333;
+            color: white;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 4px;
+            border-radius: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
 
         [v-cloak] { display: none; }
     </style>
@@ -199,7 +236,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v181</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v182</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -236,10 +273,10 @@
     <div id="app" v-cloak>
         <div class="sticky-header">
             <div class="p-3 d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v181</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v182</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -526,13 +563,24 @@
                     </div>
                     <div class="modal-body px-4 py-3" style="max-height: 60vh; overflow-y: auto;">
                         <div v-if="orderHistory.length === 0" class="text-center py-5 text-muted">尚未有紀錄</div>
-                        <div v-for="h in orderHistory" :key="h.id" class="history-item">
-                            <div class="d-flex justify-content-between">
-                                <span class="fw-bold small">#{{ h.id }}</span>
+                        <div v-for="h in orderHistory" :key="h.id" class="history-item mb-4 border-bottom pb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <div>
+                                    <span class="fw-bold small me-2">#{{ h.id }}</span>
+                                    <span class="text-muted" style="font-size:10px">{{ h.timestamp }}</span>
+                                </div>
                                 <span class="text-danger fw-bold">${{ h.totalAmount }}</span>
                             </div>
-                            <div class="small mt-1 text-muted">{{ h.timestamp }}</div>
-                            <div class="d-flex gap-2 mt-2">
+                            
+                            <!-- 商品縮圖區 -->
+                            <div class="history-imgs-container mb-3">
+                                <div v-for="item in h.items" :key="item.name" class="h-thumb-box">
+                                    <img :src="getProductImage(item.name)" class="h-thumb" onerror="this.src='https://via.placeholder.com/48'">
+                                    <div class="h-qty-badge">x{{ item.quantity }}</div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
                                 <button class="btn btn-outline-success btn-sm flex-grow-1 rounded-pill" @click="resendHistory(h)">補傳訂單</button>
                                 <button class="btn btn-outline-danger btn-sm flex-grow-1 rounded-pill" @click="reBuy(h)">再次購買</button>
                             </div>
@@ -556,7 +604,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v181', liffId: '' });
+                const settings = ref({ version: 'v182', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -570,7 +618,13 @@
                 const showLayoutMenu = ref(false);
 
                 const deliveryMethod = ref('screenshot');
-                const giftInfo = ref({ name: '', phone: '' });
+                
+                // Initialize MOMO info from local storage
+                const giftInfo = ref({ 
+                    name: localStorage.getItem('mm_momo_name') || '', 
+                    phone: localStorage.getItem('mm_momo_phone') || '' 
+                });
+                
                 const userContact = ref({ phone: localStorage.getItem('mm_user_phone') || '' });
                 const orderHistory = ref(JSON.parse(localStorage.getItem('mm_order_history') || '[]'));
                 
@@ -586,6 +640,20 @@
                     guideModal = new bootstrap.Modal(document.getElementById('guideModal'));
                     alertModalInstance = new bootstrap.Modal(document.getElementById('alertModal'));
                     guestWarningModal = new bootstrap.Modal(document.getElementById('guestWarningModal'));
+                    
+                    // Simple pull-to-refresh logic
+                    let startY = 0;
+                    window.addEventListener('touchstart', e => {
+                        if (window.scrollY === 0) startY = e.touches[0].pageY;
+                    }, {passive: true});
+                    
+                    window.addEventListener('touchmove', e => {
+                         const y = e.touches[0].pageY;
+                         // Pulling down more than 150px at the top
+                         if (window.scrollY === 0 && (y - startY) > 150) {
+                             window.location.reload();
+                         }
+                    }, {passive: true});
                 });
 
                 // Watch for changes in acceptTerms and save to localStorage
@@ -623,6 +691,15 @@
                             setTimeout(() => { guideModal.show(); localStorage.setItem('mm_guided_v172', 'true'); }, 600);
                         }
                     }
+                };
+                
+                const reloadApp = () => {
+                    window.location.reload();
+                };
+                
+                const getProductImage = (name) => {
+                    const p = products.value.find(prod => prod.name === name);
+                    return p ? p.image : 'https://via.placeholder.com/48?text=No+Img';
                 };
 
                 const checkGuestStatus = () => {
@@ -710,8 +787,14 @@
                         showAlert(errors);
                         return;
                     }
-
+                    
+                    // Save info to LocalStorage
                     localStorage.setItem('mm_user_phone', userContact.value.phone);
+                    if (deliveryMethod.value === 'gift') {
+                        localStorage.setItem('mm_momo_name', giftInfo.value.name);
+                        localStorage.setItem('mm_momo_phone', giftInfo.value.phone);
+                    }
+
                     const now = new Date();
                     // FIX: Added Seconds to Order ID to prevent duplicates for same-minute orders
                     const orderId = `M${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
@@ -788,10 +871,11 @@
                     cart.value = {}; 
                     // Do not reset acceptTerms here, keep it as is
                     deliveryMethod.value = 'screenshot'; 
-                    giftInfo.value = { name: '', phone: '' }; 
+                    // Do not reset giftInfo so it persists in the session ref as well
+                    // giftInfo.value = { name: '', phone: '' }; 
                 };
 
-                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, finalMsg, openCart: () => cartModal.show(), openHistory: () => historyModal.show(), showGuide: () => guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, sendToLine, alertMessages };
+                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, finalMsg, openCart: () => cartModal.show(), openHistory: () => historyModal.show(), showGuide: () => guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, sendToLine, alertMessages, getProductImage, reloadApp };
             }
         }).mount('#app');
     </script>
