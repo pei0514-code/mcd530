@@ -106,7 +106,7 @@
 
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-2 ver-tag">v150 加載中...</div>
+        <div class="mt-2 ver-tag">v152 加載中...</div>
     </div>
 
     <div id="app" v-cloak>
@@ -115,7 +115,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v150</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v152</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -275,7 +275,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v150', bankInfo: '', liffId: '' });
+                const settings = ref({ version: 'v152', bankInfo: '', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -285,7 +285,6 @@
                 const isLineSending = ref(false);
                 const acceptTerms = ref(false);
                 
-                // 後台存檔用但不顯示於結帳
                 const userContact = ref({
                     phone: localStorage.getItem('mm_user_phone') || '',
                     email: localStorage.getItem('mm_user_email') || ''
@@ -309,10 +308,6 @@
                             liff.init({ liffId: res.liffId }).then(async () => {
                                 if (liff.isLoggedIn()) {
                                     userProfile.value = await liff.getProfile();
-                                    const idToken = liff.getDecodedIDToken();
-                                    if (idToken && idToken.email) {
-                                        userContact.value.email = idToken.email;
-                                    }
                                 }
                             }).catch(err => console.error("LIFF Error", err));
                         }
@@ -344,7 +339,6 @@
                     isSubmitting.value = true;
                     
                     const now = new Date();
-                    // 格式：M + YYYYMMDDHHmmss
                     const Y = now.getFullYear();
                     const M = String(now.getMonth() + 1).padStart(2, '0');
                     const D = String(now.getDate()).padStart(2, '0');
