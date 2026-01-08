@@ -37,7 +37,7 @@
             overflow-x: hidden;
             opacity: 0;
             animation: fadeInBody 0.15s forwards;
-            overscroll-behavior-y: contain; /* Prevent native pull-to-refresh conflict if we implemented custom one, but here we allow native mostly */
+            overscroll-behavior-y: contain;
         }
         @keyframes fadeInBody { to { opacity: 1; } }
         
@@ -223,6 +223,35 @@
             border-radius: 6px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
+        
+        /* Toast Notification */
+        #toast-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            pointer-events: none;
+            width: 90%;
+            max-width: 400px;
+        }
+        .toast-msg {
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 50px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .toast-msg.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
 
         [v-cloak] { display: none; }
     </style>
@@ -240,7 +269,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v183</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v184</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -271,7 +300,18 @@
                    ⚠️ 如遇商品缺貨，請與客服聯絡
                 </span>
             </div>
+            
+            <!-- Force Retry Button (Hidden initially) -->
+            <div id="force-load-btn" style="display:none; margin-top:20px; text-align:center;">
+                 <button onclick="window.location.reload()" class="btn btn-outline-danger btn-sm rounded-pill fw-bold px-4">
+                    <i class="fas fa-redo me-1"></i> 點此重新整理
+                 </button>
+            </div>
         </div>
+    </div>
+    
+    <div id="toast-container">
+        <div id="toast-msg" class="toast-msg"></div>
     </div>
 
     <div id="app" v-cloak>
@@ -280,7 +320,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v183</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v184</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -485,7 +525,7 @@
                              <a href="https://lin.ee/ejXmXDl" target="_blank" class="btn btn-line-custom rounded-pill fw-bold">
                                 <i class="fab fa-line me-2"></i>加入官方 LINE 帳號
                             </a>
-                            <button class="btn btn-outline-secondary rounded-pill fw-bold" onclick="navigator.clipboard.writeText('https://lin.ee/ejXmXDl').then(()=>alert('連結已複製！請至瀏覽器開啟。'))">
+                            <button class="btn btn-outline-secondary rounded-pill fw-bold" onclick="copyGuestLink()">
                                 <i class="fas fa-copy me-2"></i>複製 LINE 連結
                             </button>
                         </div>
@@ -600,6 +640,68 @@
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
     <script>
+        // Global Error Handler for Android WebViews
+        window.onerror = function(msg, url, line, col, error) {
+           const loader = document.getElementById('static-loader');
+           if(loader && loader.style.display !== 'none') {
+               // Show rudimentary error UI
+               const div = document.createElement('div');
+               div.style.color = 'red';
+               div.style.fontSize = '12px';
+               div.style.padding = '10px';
+               div.innerHTML = '啟動錯誤: ' + msg + '<br>請嘗試重新整理';
+               loader.appendChild(div);
+               document.getElementById('force-load-btn').style.display = 'block';
+           }
+           return false;
+        };
+
+        // Safety Timeout: Force hide loader after 8 seconds if app hangs
+        setTimeout(() => {
+            const loader = document.getElementById('static-loader');
+            if(loader && loader.style.display !== 'none') {
+                document.getElementById('force-load-btn').style.display = 'block';
+            }
+        }, 8000);
+
+        // Safe LocalStorage Helper
+        function safeGetStorage(key, defaultVal) {
+            try {
+                const val = localStorage.getItem(key);
+                return val !== null ? val : defaultVal;
+            } catch (e) {
+                console.warn('localStorage read failed', e);
+                return defaultVal;
+            }
+        }
+
+        function safeSetStorage(key, val) {
+            try {
+                localStorage.setItem(key, val);
+            } catch (e) {
+                console.warn('localStorage write failed', e);
+            }
+        }
+        
+        // Toast Function
+        function showToast(msg) {
+            const toast = document.getElementById('toast-msg');
+            if(toast) {
+                toast.innerText = msg;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 3000);
+            }
+        }
+        
+        // Copy Link for Guest
+        window.copyGuestLink = function() {
+            navigator.clipboard.writeText('https://lin.ee/ejXmXDl').then(() => {
+                showToast('複製成功！請切換至 Chrome/Safari 貼上開啟');
+            }).catch(() => {
+                showToast('複製失敗，請長按按鈕自行複製');
+            });
+        };
+
         const { createApp, ref, computed, onMounted, watch } = Vue;
         const API_URL = 'https://script.google.com/macros/s/AKfycbx2xdqkRoBGFibvgKRo05QtVcIWZlUjBq-rr_NRJ-8nK1BsFPSorQqnsNa89IPlG45aeA/exec';
         const NUMBERS = ['❶', '❷', '❸', '❹', '❺', '❻', '❼', '❽', '❾', '❿'];
@@ -608,29 +710,33 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v183', liffId: '' });
+                const settings = ref({ version: 'v184', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
-                const guestName = ref(localStorage.getItem('mm_guest_name') || '');
+                const guestName = ref(safeGetStorage('mm_guest_name', ''));
                 const finalMsg = ref('');
                 const isLoadingData = ref(true);
-                // Initialize acceptTerms from local storage (default to false if not present)
-                const acceptTerms = ref(localStorage.getItem('mm_accept_terms') === 'true');
+                // Initialize acceptTerms from local storage
+                const acceptTerms = ref(safeGetStorage('mm_accept_terms', 'false') === 'true');
                 
-                const viewMode = ref(localStorage.getItem('mm_view_mode') || 'medium');
+                const viewMode = ref(safeGetStorage('mm_view_mode', 'medium'));
                 const showLayoutMenu = ref(false);
 
                 const deliveryMethod = ref('screenshot');
                 
-                // Initialize MOMO info from local storage
+                // Initialize MOMO info
                 const giftInfo = ref({ 
-                    name: localStorage.getItem('mm_momo_name') || '', 
-                    phone: localStorage.getItem('mm_momo_phone') || '' 
+                    name: safeGetStorage('mm_momo_name', ''), 
+                    phone: safeGetStorage('mm_momo_phone', '') 
                 });
                 
-                const userContact = ref({ phone: localStorage.getItem('mm_user_phone') || '' });
-                const orderHistory = ref(JSON.parse(localStorage.getItem('mm_order_history') || '[]'));
+                const userContact = ref({ phone: safeGetStorage('mm_user_phone', '') });
+                let hist = [];
+                try {
+                    hist = JSON.parse(safeGetStorage('mm_order_history', '[]'));
+                } catch(e){ hist = []; }
+                const orderHistory = ref(hist);
                 
                 const alertMessages = ref([]);
 
@@ -638,12 +744,14 @@
 
                 onMounted(() => {
                     initApp();
-                    cartModal = new bootstrap.Modal(document.getElementById('cartModal'));
-                    successModal = new bootstrap.Modal(document.getElementById('successModal'));
-                    historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
-                    guideModal = new bootstrap.Modal(document.getElementById('guideModal'));
-                    alertModalInstance = new bootstrap.Modal(document.getElementById('alertModal'));
-                    guestWarningModal = new bootstrap.Modal(document.getElementById('guestWarningModal'));
+                    try {
+                        cartModal = new bootstrap.Modal(document.getElementById('cartModal'));
+                        successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                        historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
+                        guideModal = new bootstrap.Modal(document.getElementById('guideModal'));
+                        alertModalInstance = new bootstrap.Modal(document.getElementById('alertModal'));
+                        guestWarningModal = new bootstrap.Modal(document.getElementById('guestWarningModal'));
+                    } catch(e) { console.error('Bootstrap modal init error', e); }
                     
                     // Simple pull-to-refresh logic
                     let startY = 0;
@@ -668,7 +776,7 @@
 
                 // Watch for changes in acceptTerms and save to localStorage
                 watch(acceptTerms, (newVal) => {
-                    localStorage.setItem('mm_accept_terms', newVal);
+                    safeSetStorage('mm_accept_terms', newVal);
                 });
 
                 const initApp = async () => {
@@ -684,11 +792,9 @@
                                 if (liff.isLoggedIn()) {
                                     userProfile.value = await liff.getProfile();
                                 } else {
-                                    // Not logged in (GUEST)
                                     checkGuestStatus();
                                 }
                             } catch (e) {
-                                // LIFF init failed (External browser/FB)
                                 console.warn("LIFF init failed", e);
                                 checkGuestStatus();
                             }
@@ -697,8 +803,11 @@
                     finally {
                         isLoadingData.value = false;
                         hideStaticLoader();
-                        if (!localStorage.getItem('mm_guided_v172')) {
-                            setTimeout(() => { guideModal.show(); localStorage.setItem('mm_guided_v172', 'true'); }, 600);
+                        if (!safeGetStorage('mm_guided_v172', '')) {
+                            setTimeout(() => { 
+                                if(guideModal) guideModal.show(); 
+                                safeSetStorage('mm_guided_v172', 'true'); 
+                            }, 600);
                         }
                     }
                 };
@@ -716,11 +825,9 @@
                     // Detect Facebook Browser or if not in LIFF client
                     const ua = navigator.userAgent || navigator.vendor || window.opera;
                     const isFacebook = (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1);
-                    const isLine = (ua.indexOf("Line") > -1);
                     
-                    // If not in LINE client (e.g. Chrome, Safari, FB) OR explicitly in FB
                     if (!liff.isInClient() || isFacebook) {
-                        setTimeout(() => guestWarningModal.show(), 1000);
+                        setTimeout(() => { if(guestWarningModal) guestWarningModal.show(); }, 1000);
                     }
                 };
 
@@ -734,12 +841,13 @@
                 
                 const showAlert = (msgs) => {
                     alertMessages.value = Array.isArray(msgs) ? msgs : [msgs];
-                    alertModalInstance.show();
+                    if(alertModalInstance) alertModalInstance.show();
+                    else alert(msgs.join('\n'));
                 };
 
                 const setViewMode = (mode) => {
                     viewMode.value = mode;
-                    localStorage.setItem('mm_view_mode', mode);
+                    safeSetStorage('mm_view_mode', mode);
                     showLayoutMenu.value = false;
                 };
 
@@ -779,13 +887,10 @@
                         if (!giftInfo.value.name || !giftInfo.value.phone) {
                             errors.push("momo 轉贈需填寫完整收件人姓名與電話");
                         } else {
-                            // Validate Name: Must be Chinese characters
                             const chineseNamePattern = /^[\u4e00-\u9fa5]+$/;
                             if (!chineseNamePattern.test(giftInfo.value.name)) {
                                 errors.push("momo 轉贈姓名必須為中文全名");
                             }
-
-                            // Validate Phone: Must be 10 digits starting with 09
                             const phonePattern = /^09\d{8}$/;
                             if (!phonePattern.test(giftInfo.value.phone)) {
                                 errors.push("momo 轉贈電話格式錯誤 (需為09開頭共10碼數字)");
@@ -798,21 +903,18 @@
                         return;
                     }
                     
-                    // Save info to LocalStorage
-                    localStorage.setItem('mm_user_phone', userContact.value.phone);
+                    safeSetStorage('mm_user_phone', userContact.value.phone);
                     if (deliveryMethod.value === 'gift') {
-                        localStorage.setItem('mm_momo_name', giftInfo.value.name);
-                        localStorage.setItem('mm_momo_phone', giftInfo.value.phone);
+                        safeSetStorage('mm_momo_name', giftInfo.value.name);
+                        safeSetStorage('mm_momo_phone', giftInfo.value.phone);
                     }
 
                     const now = new Date();
-                    // FIX: Added Seconds to Order ID to prevent duplicates for same-minute orders
                     const orderId = `M${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
                     
                     const deliveryText = deliveryMethod.value === 'screenshot' ? '📸 截圖發送' : '🎁 momo 轉贈';
                     const deliveryBackend = deliveryMethod.value === 'screenshot' ? '截圖發送' : 'momo 轉贈';
 
-                    // CHANGED: Moved Phone Number to a new line
                     let msg = `🛒【麥麥小舖電子票券】\n🎫 訂單編號：${orderId}\n📱 聯絡手機：${userContact.value.phone || '未提供'}\n📦 領取方式：${deliveryText}\n`;
                     if (deliveryMethod.value === 'gift') msg += `👤 收件人：${giftInfo.value.name}\n📞 收件電話：${giftInfo.value.phone}\n`;
                     msg += `🍱 訂購商品：\n`;
@@ -828,7 +930,7 @@
                     finalMsg.value = msg;
                     const record = { id: orderId, timestamp: now.toLocaleString(), totalAmount: totalPrice.value, items: cartItems.value.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) };
                     orderHistory.value = [record, ...orderHistory.value].slice(0, 30);
-                    localStorage.setItem('mm_order_history', JSON.stringify(orderHistory.value));
+                    safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
                     
                     fetch(API_URL, { 
                       method: 'POST', mode: 'no-cors', 
@@ -838,13 +940,13 @@
                           deliveryMethod: deliveryBackend, 
                           momoName: giftInfo.value.name, 
                           momoPhone: giftInfo.value.phone, 
-                          userName: userProfile.value.displayName || 'GUEST', 
-                          userId: userProfile.value.userId || 'GUEST' 
+                          userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', 
+                          userId: (userProfile.value && userProfile.value.userId) || 'GUEST' 
                       }) 
                     }).catch(e => console.error(e));
                     
-                    cartModal.hide(); 
-                    successModal.show();
+                    if(cartModal) cartModal.hide(); 
+                    if(successModal) successModal.show();
                 };
 
                 const sendToLine = (txt) => {
@@ -852,11 +954,9 @@
                     if (liff.isInClient()) {
                         liff.sendMessages([{ type: 'text', text: txt }])
                           .then(() => {
-                              console.log('Message sent via LIFF');
                               liff.closeWindow();
                           })
                           .catch((err) => {
-                              console.warn('LIFF sendMessages failed, using fallback', err);
                               window.location.href = fallbackUrl;
                           });
                     } else {
@@ -867,7 +967,8 @@
                 const reBuy = (h) => {
                     cart.value = {};
                     h.items.forEach(it => { const p = products.value.find(x => x.name === it.name); if (p) cart.value[p.id] = it.quantity; });
-                    historyModal.hide(); cartModal.show();
+                    if(historyModal) historyModal.hide(); 
+                    if(cartModal) cartModal.show();
                 };
 
                 const resendHistory = (h) => {
@@ -879,13 +980,10 @@
 
                 const resetCart = () => { 
                     cart.value = {}; 
-                    // Do not reset acceptTerms here, keep it as is
                     deliveryMethod.value = 'screenshot'; 
-                    // Do not reset giftInfo so it persists in the session ref as well
-                    // giftInfo.value = { name: '', phone: '' }; 
                 };
 
-                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, finalMsg, openCart: () => cartModal.show(), openHistory: () => historyModal.show(), showGuide: () => guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, sendToLine, alertMessages, getProductImage, reloadApp };
+                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, finalMsg, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, sendToLine, alertMessages, getProductImage, reloadApp };
             }
         }).mount('#app');
     </script>
