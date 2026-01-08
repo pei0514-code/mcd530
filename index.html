@@ -199,7 +199,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v180</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v181</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -239,7 +239,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v180</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v181</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -423,6 +423,40 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Guest/External Browser Warning Modal -->
+        <div class="modal fade" id="guestWarningModal" tabindex="-1" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+                    <div class="modal-header border-0 bg-warning text-dark py-3">
+                        <h5 class="fw-bold fs-5 mb-0"><i class="fas fa-user-shield me-2"></i>訪客模式提示</h5>
+                    </div>
+                    <div class="modal-body p-4">
+                        <p class="fw-bold mb-2">您目前使用外部瀏覽器 (Facebook/Chrome...)</p>
+                        <p class="small text-muted mb-3">系統無法辨識您的身分，下單將顯示為 GUEST。為了您的權益，請務必加入官方 LINE 確認訂單。</p>
+                        
+                        <div class="p-3 bg-light rounded-3 border mb-3">
+                            <div class="small fw-bold text-danger mb-1">⚠️ Facebook 用戶注意：</div>
+                            <div class="small text-muted">若點擊下方按鈕無反應，請點選螢幕右上角「...」並選擇「在瀏覽器開啟」，或複製連結自行加入。</div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                             <a href="https://lin.ee/ejXmXDl" target="_blank" class="btn btn-line-custom rounded-pill fw-bold">
+                                <i class="fab fa-line me-2"></i>加入官方 LINE 帳號
+                            </a>
+                            <button class="btn btn-outline-secondary rounded-pill fw-bold" onclick="navigator.clipboard.writeText('https://lin.ee/ejXmXDl').then(()=>alert('連結已複製！請至瀏覽器開啟。'))">
+                                <i class="fas fa-copy me-2"></i>複製 LINE 連結
+                            </button>
+                        </div>
+                        <div class="text-center mt-3">
+                            <button class="btn btn-link text-muted small text-decoration-none" data-bs-dismiss="modal">
+                                我已知悉，繼續以訪客瀏覽
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="modal fade" id="guideModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
@@ -522,7 +556,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v180', liffId: '' });
+                const settings = ref({ version: 'v181', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -542,7 +576,7 @@
                 
                 const alertMessages = ref([]);
 
-                let cartModal, successModal, historyModal, guideModal, alertModalInstance;
+                let cartModal, successModal, historyModal, guideModal, alertModalInstance, guestWarningModal;
 
                 onMounted(() => {
                     initApp();
@@ -551,6 +585,7 @@
                     historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
                     guideModal = new bootstrap.Modal(document.getElementById('guideModal'));
                     alertModalInstance = new bootstrap.Modal(document.getElementById('alertModal'));
+                    guestWarningModal = new bootstrap.Modal(document.getElementById('guestWarningModal'));
                 });
 
                 // Watch for changes in acceptTerms and save to localStorage
@@ -566,8 +601,19 @@
                         const setRes = await fetch(`${API_URL}?action=getSettings`).then(r => r.json());
                         settings.value = setRes;
                         if (setRes.liffId) {
-                            await liff.init({ liffId: setRes.liffId });
-                            if (liff.isLoggedIn()) userProfile.value = await liff.getProfile();
+                            try {
+                                await liff.init({ liffId: setRes.liffId });
+                                if (liff.isLoggedIn()) {
+                                    userProfile.value = await liff.getProfile();
+                                } else {
+                                    // Not logged in (GUEST)
+                                    checkGuestStatus();
+                                }
+                            } catch (e) {
+                                // LIFF init failed (External browser/FB)
+                                console.warn("LIFF init failed", e);
+                                checkGuestStatus();
+                            }
                         }
                     } catch (err) { console.error(err); } 
                     finally {
@@ -576,6 +622,18 @@
                         if (!localStorage.getItem('mm_guided_v172')) {
                             setTimeout(() => { guideModal.show(); localStorage.setItem('mm_guided_v172', 'true'); }, 600);
                         }
+                    }
+                };
+
+                const checkGuestStatus = () => {
+                    // Detect Facebook Browser or if not in LIFF client
+                    const ua = navigator.userAgent || navigator.vendor || window.opera;
+                    const isFacebook = (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1);
+                    const isLine = (ua.indexOf("Line") > -1);
+                    
+                    // If not in LINE client (e.g. Chrome, Safari, FB) OR explicitly in FB
+                    if (!liff.isInClient() || isFacebook) {
+                        setTimeout(() => guestWarningModal.show(), 1000);
                     }
                 };
 
@@ -661,8 +719,8 @@
                     const deliveryText = deliveryMethod.value === 'screenshot' ? '📸 截圖發送' : '🎁 momo 轉贈';
                     const deliveryBackend = deliveryMethod.value === 'screenshot' ? '截圖發送' : 'momo 轉贈';
 
-                    // Combine Order ID and Phone on the same line to save space
-                    let msg = `🛒【麥麥小舖電子票券】\n🎫 訂單編號：${orderId} 📱 聯絡手機：${userContact.value.phone || '未提供'}\n📦 領取方式：${deliveryText}\n`;
+                    // CHANGED: Moved Phone Number to a new line
+                    let msg = `🛒【麥麥小舖電子票券】\n🎫 訂單編號：${orderId}\n📱 聯絡手機：${userContact.value.phone || '未提供'}\n📦 領取方式：${deliveryText}\n`;
                     if (deliveryMethod.value === 'gift') msg += `👤 收件人：${giftInfo.value.name}\n📞 收件電話：${giftInfo.value.phone}\n`;
                     msg += `🍱 訂購商品：\n`;
                     
