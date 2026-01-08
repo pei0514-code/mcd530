@@ -172,7 +172,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v200</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v201</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -219,7 +219,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v200</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v201</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -331,33 +331,31 @@
                             </div>
                         </div>
 
-                        <!-- Mixed Cart Warning -->
-                        <div v-if="isMixedCart" class="alert alert-warning d-flex align-items-center p-2 mb-3" style="font-size: 12px; font-weight: 700;">
-                            <i class="fas fa-exclamation-triangle me-2 text-warning fs-5"></i>
-                            <div>
-                                您的購物車包含<br>
-                                「僅截圖」與「僅轉贈」商品，<br>
-                                請移除其中一種後分開結帳。
+                        <label class="form-label-small">領取方式優先順序</label>
+                        <div class="option-group d-flex gap-2 mb-3">
+                            <div class="option-btn btn btn-outline-danger flex-grow-1 rounded-pill" 
+                                 :class="{ active: deliveryMethod === 'screenshot' }" 
+                                 @click="deliveryMethod = 'screenshot'">
+                                 📸 優先截圖
+                            </div>
+                            <div class="option-btn btn btn-outline-danger flex-grow-1 rounded-pill" 
+                                 :class="{ active: deliveryMethod === 'gift' }" 
+                                 @click="deliveryMethod = 'gift'">
+                                 🎁 優先轉贈
                             </div>
                         </div>
 
-                        <label class="form-label-small">領取方式</label>
-                        <div class="option-group d-flex gap-2 mb-3">
-                            <div class="option-btn btn btn-outline-danger flex-grow-1 rounded-pill" 
-                                 :class="{ active: deliveryMethod === 'screenshot', disabled: !isScreenshotAvailable }" 
-                                 @click="deliveryMethod = 'screenshot'">
-                                 📸 截圖發送
-                                 <div v-if="!isScreenshotAvailable" style="font-size:9px">庫存不足</div>
-                            </div>
-                            <div class="option-btn btn btn-outline-danger flex-grow-1 rounded-pill" 
-                                 :class="{ active: deliveryMethod === 'gift', disabled: !isGiftAvailable }" 
-                                 @click="deliveryMethod = 'gift'">
-                                 🎁 momo 轉贈
-                                 <div v-if="!isGiftAvailable" style="font-size:9px">庫存不足</div>
-                            </div>
+                        <!-- Mixed Split Warning -->
+                        <div v-if="deliveryMethod === 'gift' && hasDriveOnlyItems" class="alert alert-warning d-flex align-items-center p-2 mb-3" style="font-size: 12px; font-weight: 700;">
+                             <i class="fas fa-info-circle me-2 text-warning fs-5"></i>
+                             <div>注意：部分商品僅支援截圖發送，系統將自動為您拆分為兩筆訂單。</div>
+                        </div>
+                        <div v-if="deliveryMethod === 'screenshot' && hasGiftOnlyItems" class="alert alert-warning d-flex align-items-center p-2 mb-3" style="font-size: 12px; font-weight: 700;">
+                             <i class="fas fa-info-circle me-2 text-warning fs-5"></i>
+                             <div>注意：部分商品僅支援轉贈，系統將自動為您拆分為兩筆訂單。</div>
                         </div>
                         
-                        <div v-if="deliveryMethod === 'gift'" class="mb-3 p-3 bg-light rounded-4 border">
+                        <div v-if="deliveryMethod === 'gift' || hasGiftOnlyItems" class="mb-3 p-3 bg-light rounded-4 border">
                             <div class="mb-2">
                                 <label class="form-label-small text-danger">momo 姓名 (必填)</label>
                                 <input type="text" v-model="giftInfo.name" class="form-control rounded-pill" placeholder="請輸入收件人姓名">
@@ -365,9 +363,6 @@
                             <div>
                                 <label class="form-label-small text-danger">momo 電話 (必填)</label>
                                 <input type="tel" v-model="giftInfo.phone" class="form-control rounded-pill" placeholder="請輸入收件人電話">
-                            </div>
-                            <div class="text-danger small fw-bold mt-2" v-if="!isScreenshotAvailable && isGiftAvailable">
-                                <i class="fas fa-info-circle me-1"></i>部分商品雲端庫存不足，僅能選擇轉贈
                             </div>
                         </div>
 
@@ -409,7 +404,7 @@
 
                     </div>
                     <div class="modal-footer border-0 p-4">
-                        <button class="btn btn-line-custom w-100 rounded-pill py-3 fw-bold shadow" @click="handleCheckout" :disabled="isSubmitting || (isMixedCart)">
+                        <button class="btn btn-line-custom w-100 rounded-pill py-3 fw-bold shadow" @click="handleCheckout" :disabled="isSubmitting">
                             <span v-if="isSubmitting"><i class="fas fa-spinner fa-spin me-2"></i>訂單傳送中...</span>
                             <span v-else><i class="fab fa-line me-2"></i>送出訂單並傳至 LINE</span>
                         </button>
@@ -639,7 +634,7 @@
                 const acceptTerms = ref(safeGetStorage('mm_accept_terms', 'false') === 'true');
                 const viewMode = ref(safeGetStorage('mm_view_mode', 'medium'));
                 const showLayoutMenu = ref(false);
-                const deliveryMethod = ref('screenshot');
+                const deliveryMethod = ref('screenshot'); // 'screenshot' or 'gift' (preference)
                 
                 const selectedPayments = ref([]);
                 const bankAccounts = ref(BANK_ACCOUNTS);
@@ -683,7 +678,6 @@
                         } catch (err) {
                             retryCount.value = i + 1;
                             console.warn(`Attempt ${i + 1} failed: ${err.message}`);
-                            // Exponential backoff: 1s, 2s, 4s...
                             if (i === retries - 1) throw err;
                             const delay = 1000 * Math.pow(2, i);
                             await new Promise(r => setTimeout(r, delay)); 
@@ -707,7 +701,6 @@
                         }
                     } catch (err) { 
                         console.error(err); 
-                        // Error is handled by global error handler eventually, showing reload button
                     } 
                     finally {
                         isLoadingData.value = false;
@@ -741,47 +734,20 @@
                     return bankAccounts.value.filter(b => selectedPayments.value.includes(b.code));
                 });
 
-                // Computed availability for delivery methods
-                const isScreenshotAvailable = computed(() => {
-                    return cartItems.value.every(item => item.driveStock >= item.quantity);
+                // Computed checkers for warnings
+                const hasGiftOnlyItems = computed(() => {
+                    // Check if there are items that MUST be gift (no drive stock but has gift stock)
+                    return cartItems.value.some(item => item.driveStock < item.quantity && item.giftStock >= item.quantity);
                 });
                 
-                const isGiftAvailable = computed(() => {
-                    return cartItems.value.every(item => item.giftStock >= item.quantity);
-                });
-
-                const isMixedCart = computed(() => {
-                     if (cartItems.value.length === 0) return false;
-                     // If both main methods are unavailable
-                     if (!isScreenshotAvailable.value && !isGiftAvailable.value) {
-                         // Check if it's because of conflicting items
-                         // Some items support screenshot
-                         const hasScreenshot = cartItems.value.some(i => i.driveStock >= i.quantity);
-                         // Some items support gift
-                         const hasGift = cartItems.value.some(i => i.giftStock >= i.quantity);
-                         return hasScreenshot && hasGift;
-                     }
-                     return false;
-                });
-
-                // Watch availability to auto-switch delivery method
-                watch([isScreenshotAvailable, isGiftAvailable, cartItems], () => {
-                    if (cartItems.value.length === 0) {
-                        deliveryMethod.value = 'screenshot';
-                        return;
-                    }
-                    // If current method is invalid, try to switch
-                    if (deliveryMethod.value === 'screenshot' && !isScreenshotAvailable.value) {
-                         if (isGiftAvailable.value) deliveryMethod.value = 'gift';
-                    } else if (deliveryMethod.value === 'gift' && !isGiftAvailable.value) {
-                         if (isScreenshotAvailable.value) deliveryMethod.value = 'screenshot';
-                    }
+                const hasDriveOnlyItems = computed(() => {
+                    // Check if there are items that MUST be drive (no gift stock but has drive stock)
+                    return cartItems.value.some(item => item.giftStock < item.quantity && item.driveStock >= item.quantity);
                 });
 
                 const updateCart = (p, d) => {
                     if (d > 0) { 
                         const current = cart.value[p.id] || 0; 
-                        // Check against max combined stock or fallback
                         if (current >= Number(p.stock)) { showToast('已達庫存上限'); return; } 
                     }
                     const next = (cart.value[p.id] || 0) + d;
@@ -792,8 +758,11 @@
                     const errors = [];
                     if (!acceptTerms.value) errors.push("請先勾選「我已閱讀並同意購買需知」");
                     if (totalPrice.value < 50) errors.push("訂單金額需滿 $50 才能出貨");
-                    if (deliveryMethod.value === 'gift') {
-                        if (!giftInfo.value.name || !giftInfo.value.phone) errors.push("momo 轉贈需填寫完整收件人姓名與電話");
+                    
+                    const requiresGiftInfo = deliveryMethod.value === 'gift' || hasGiftOnlyItems.value;
+                    
+                    if (requiresGiftInfo) {
+                        if (!giftInfo.value.name || !giftInfo.value.phone) errors.push("選擇轉贈需填寫完整收件人姓名與電話");
                         else {
                             if (!/^[\u4e00-\u9fa5]+$/.test(giftInfo.value.name)) errors.push("momo 轉贈姓名必須為中文全名");
                             if (!/^09\d{8}$/.test(giftInfo.value.phone)) errors.push("momo 轉贈電話格式錯誤");
@@ -806,63 +775,134 @@
                         if(cartModal) cartModal.hide(); showToast("訪客模式需填寫手機號碼才能購買");
                         setTimeout(() => { if(guestWarningModal) guestWarningModal.show(); }, 300); return;
                     }
-
-                    // Double check stocks before submitting
-                    if (deliveryMethod.value === 'screenshot' && !isScreenshotAvailable.value) errors.push("目前選擇的商品雲端庫存不足，請改選 momo 轉贈");
-                    if (deliveryMethod.value === 'gift' && !isGiftAvailable.value) errors.push("目前選擇的商品轉贈庫存不足");
                     
                     if (errors.length > 0) { showAlert(errors); return; }
                     
                     isSubmitting.value = true;
                     safeSetStorage('mm_user_phone', userContact.value.phone);
-                    if (deliveryMethod.value === 'gift') { safeSetStorage('mm_momo_name', giftInfo.value.name); safeSetStorage('mm_momo_phone', giftInfo.value.phone); }
+                    if (requiresGiftInfo) { safeSetStorage('mm_momo_name', giftInfo.value.name); safeSetStorage('mm_momo_phone', giftInfo.value.phone); }
+
+                    // Determine Split
+                    const driveItems = [];
+                    const giftItems = [];
+                    
+                    // Allocation Logic
+                    cartItems.value.forEach(item => {
+                        let allocated = false;
+                        
+                        // Try preferred method first
+                        if (deliveryMethod.value === 'gift') {
+                             if (item.giftStock >= item.quantity) {
+                                 giftItems.push(item); allocated = true;
+                             } else if (item.driveStock >= item.quantity) {
+                                 driveItems.push(item); allocated = true;
+                             }
+                        } else {
+                             // Preference Screenshot
+                             if (item.driveStock >= item.quantity) {
+                                 driveItems.push(item); allocated = true;
+                             } else if (item.giftStock >= item.quantity) {
+                                 giftItems.push(item); allocated = true;
+                             }
+                        }
+                        
+                        if (!allocated) {
+                             errors.push(`商品【${item.name}】庫存不足，無法結帳`);
+                        }
+                    });
+                    
+                    if (errors.length > 0) {
+                        showAlert(errors); isSubmitting.value = false; return;
+                    }
 
                     const now = new Date();
-                    const orderId = `M${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+                    const baseOrderId = `M${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
                     
-                    const deliveryText = deliveryMethod.value === 'screenshot' ? '📸 截圖發送' : '🎁 momo 轉贈';
+                    const orderPromises = [];
+                    const lineMessages = [];
+                    const records = [];
+
+                    // Create Screenshot Order Payload
+                    if (driveItems.length > 0) {
+                         const oid = giftItems.length > 0 ? `${baseOrderId}-1` : baseOrderId;
+                         const total = driveItems.reduce((a,b) => a + (b.price*b.quantity), 0);
+                         const record = { 
+                             id: oid, timestamp: now.toLocaleString(), totalAmount: total, 
+                             items: driveItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) 
+                         };
+                         records.push(record);
+                         
+                         orderPromises.push(
+                             fetch(API_URL, { 
+                                method: 'POST', mode: 'no-cors', 
+                                body: JSON.stringify({ 
+                                    ...record, 
+                                    phone: userContact.value.phone, 
+                                    deliveryMethod: '截圖發送', 
+                                    momoName: '', momoPhone: '', 
+                                    userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', 
+                                    userId: (userProfile.value && userProfile.value.userId) || 'GUEST' 
+                                }) 
+                             })
+                         );
+                         
+                         let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：📸 截圖發送\n🍱 內容：\n`;
+                         driveItems.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${i.name} x${i.quantity}\n`; });
+                         msg += `💰 小計：$${total}`;
+                         lineMessages.push(msg);
+                    }
+
+                    // Create Gift Order Payload
+                    if (giftItems.length > 0) {
+                         const oid = driveItems.length > 0 ? `${baseOrderId}-2` : baseOrderId;
+                         const total = giftItems.reduce((a,b) => a + (b.price*b.quantity), 0);
+                         const record = { 
+                             id: oid, timestamp: now.toLocaleString(), totalAmount: total, 
+                             items: giftItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) 
+                         };
+                         records.push(record);
+                         
+                         orderPromises.push(
+                             fetch(API_URL, { 
+                                method: 'POST', mode: 'no-cors', 
+                                body: JSON.stringify({ 
+                                    ...record, 
+                                    phone: userContact.value.phone, 
+                                    deliveryMethod: 'momo 轉贈', 
+                                    momoName: giftInfo.value.name, 
+                                    momoPhone: giftInfo.value.phone, 
+                                    userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', 
+                                    userId: (userProfile.value && userProfile.value.userId) || 'GUEST' 
+                                }) 
+                             })
+                         );
+                         
+                         let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：🎁 momo 轉贈\n👤 收件：${giftInfo.value.name} / ${giftInfo.value.phone}\n🍱 內容：\n`;
+                         giftItems.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${i.name} x${i.quantity}\n`; });
+                         msg += `💰 小計：$${total}`;
+                         lineMessages.push(msg);
+                    }
                     
-                    let msg = `🛒【麥麥小舖電子票券】\n🎫 訂單編號：${orderId}\n`;
-                    if (userContact.value.phone) msg += `📱 聯絡手機：${userContact.value.phone}\n`;
-                    msg += `📦 領取方式：${deliveryText}\n`;
-                    
-                    if (deliveryMethod.value === 'gift') msg += `👤 收件人：${giftInfo.value.name}\n📞 電話：${giftInfo.value.phone}\n`;
-                    
-                    msg += `🍱 訂購商品：\n`;
-                    cartItems.value.forEach((i, idx) => { 
-                        msg += `${NUMBERS[idx] || (idx+1)} ${i.name}\n`;
-                        msg += `🔹數量：${i.quantity} 🔹小計：$${i.price*i.quantity}\n`;
-                        if(i.expiryDate) msg += `🔹效期：${i.expiryDate}\n`;
-                    });
-                    
-                    msg += `💰 應付總額：$${totalPrice.value}\n`;
-                    
-                    msg += `🏦 匯款資訊：\n`;
-                    selectedBankInfos.value.forEach(b => {
-                        msg += `${b.name}: ${b.account}\n`;
-                    });
-                    msg += `⚠️ 請於匯款後告知客服匯款相關資訊`;
-                    
-                    const record = { id: orderId, timestamp: now.toLocaleString(), totalAmount: totalPrice.value, items: cartItems.value.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) };
-                    
-                    fetch(API_URL, { 
-                      method: 'POST', mode: 'no-cors', 
-                      body: JSON.stringify({ 
-                          ...record, 
-                          phone: userContact.value.phone, 
-                          deliveryMethod: deliveryMethod.value === 'screenshot' ? '截圖發送' : 'momo 轉贈', 
-                          momoName: giftInfo.value.name, 
-                          momoPhone: giftInfo.value.phone, 
-                          userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', 
-                          userId: (userProfile.value && userProfile.value.userId) || 'GUEST' 
-                      }) 
-                    }).then(() => {
+                    Promise.all(orderPromises).then(() => {
+                         let finalMsg = `🎉 訂單已送出！\n\n`;
+                         if (lineMessages.length > 1) finalMsg += `⚠️ 因商品屬性不同，已自動拆分為兩筆訂單：\n\n`;
+                         finalMsg += lineMessages.join('\n\n----------------\n\n');
+                         
+                         finalMsg += `\n\n💰 應付總額：$${totalPrice.value}\n`;
+                         finalMsg += `🏦 匯款資訊：\n`;
+                         selectedBankInfos.value.forEach(b => {
+                            finalMsg += `${b.name}: ${b.account}\n`;
+                         });
+                         finalMsg += `⚠️ 請於匯款後告知客服匯款相關資訊`;
+                         
                          if (liff.isInClient()) {
-                            liff.sendMessages([{ type: 'text', text: msg }]).catch(e => console.error(e));
+                            liff.sendMessages([{ type: 'text', text: finalMsg }]).catch(e => console.error(e));
                          }
                          
-                         orderHistory.value = [record, ...orderHistory.value].slice(0, 30);
+                         // Update History (Add all new records)
+                         orderHistory.value = [...records, ...orderHistory.value].slice(0, 30);
                          safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
+                         
                          isSubmitting.value = false;
                          if(cartModal) cartModal.hide(); 
                          if(successModal) successModal.show();
@@ -895,7 +935,7 @@
 
                 const resetCart = () => { cart.value = {}; deliveryMethod.value = 'screenshot'; selectedPayments.value = []; };
 
-                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayments, togglePayment, isSubmitting, selectedBankInfos, copyText, isScreenshotAvailable, isGiftAvailable, retryCount, isMixedCart };
+                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayments, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems };
             }
         }).mount('#app');
     </script>
