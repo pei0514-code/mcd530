@@ -85,24 +85,40 @@
         .btn-line-custom:active { transform: scale(0.98); opacity: 0.9; }
 
         /* 不同模式下的調整 */
-        .mode-small .product-card { border-radius: 12px; }
-        .mode-small .p-body { padding: 8px; }
-        .mode-small .p-title { font-size: 11px; min-height: 32px; -webkit-line-clamp: 2; margin-bottom: 4px; }
-        .mode-small .p-price { font-size: 15px; }
-        .mode-small .p-original { font-size: 9px; margin-left: 2px; }
-        .mode-small .btn-buy { font-size: 10px; padding: 6px 0; }
-        .mode-small .qty-ctrl { padding: 2px; }
-        .mode-small .qty-btn { width: 24px; height: 24px; font-size: 10px; }
-        .mode-small .qty-ctrl span { font-size: 11px; }
-        .mode-small .stock-tag { font-size: 8px; padding: 0 4px; }
-        .mode-small .p-info { margin-bottom: 4px; }
+        /* Mode Small = 4 columns (Very small) */
+        .mode-small .product-card { border-radius: 10px; }
+        .mode-small .p-body { padding: 5px; }
+        .mode-small .p-title { font-size: 10px; min-height: 28px; line-height: 1.2; -webkit-line-clamp: 2; margin-bottom: 2px; }
+        .mode-small .p-price { font-size: 13px; margin-right: 0; }
+        .mode-small .p-original { font-size: 8px; margin-left: 2px; display: none; } /* Hide original price in tiny mode */
+        .mode-small .btn-buy { font-size: 9px; padding: 4px 0; border-radius: 4px; }
+        .mode-small .qty-ctrl { padding: 1px; border-radius: 4px; }
+        .mode-small .qty-btn { width: 18px; height: 18px; font-size: 9px; }
+        .mode-small .qty-ctrl span { font-size: 10px; }
+        .mode-small .stock-tag { display: none; } /* Hide stock tag in tiny mode */
+        .mode-small .p-info { display: none; }
 
-        .mode-large .p-title { font-size: 18px; min-height: auto; margin-bottom: 12px; }
-        .mode-large .p-price { font-size: 26px; }
-        .mode-large .btn-buy { font-size: 16px; padding: 14px 0; }
+        /* Mode Medium = 3 columns (Like the old Small) */
+        .mode-medium .product-card { border-radius: 12px; }
+        .mode-medium .p-body { padding: 8px; }
+        .mode-medium .p-title { font-size: 11px; min-height: 32px; -webkit-line-clamp: 2; margin-bottom: 4px; }
+        .mode-medium .p-price { font-size: 15px; }
+        .mode-medium .p-original { font-size: 9px; margin-left: 2px; }
+        .mode-medium .btn-buy { font-size: 10px; padding: 6px 0; }
+        .mode-medium .qty-ctrl { padding: 2px; }
+        .mode-medium .qty-btn { width: 24px; height: 24px; font-size: 10px; }
+        .mode-medium .qty-ctrl span { font-size: 11px; }
+        .mode-medium .stock-tag { font-size: 8px; padding: 0 4px; }
 
+        /* Mode Large = 2 columns (Like the old Medium) */
+        .mode-large .p-title { font-size: 14px; min-height: 40px; margin-bottom: 8px; }
+        .mode-large .p-price { font-size: 20px; }
+        .mode-large .btn-buy { font-size: 13px; padding: 10px 0; }
+        
         .terms-box { background: #fff8f8; border: 1px solid #ffebeb; border-radius: 12px; padding: 12px; font-size: 13px; color: #444; line-height: 1.6; height: 120px; overflow-y: auto; margin-bottom: 15px; scrollbar-width: thin; }
         .terms-title { font-weight: 900; color: var(--brand-red); margin-bottom: 5px; font-size: 14px; position: sticky; top: 0; background: #fff8f8; }
+
+        .cart-item-img { width: 40px; height: 40px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; flex-shrink: 0; }
 
         [v-cloak] { display: none; }
     </style>
@@ -111,7 +127,11 @@
   "imports": {
     "react": "https://esm.sh/react@^19.2.3",
     "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "react/": "https://esm.sh/react@^19.2.3/"
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+    "react-markdown": "https://esm.sh/react-markdown@^10.1.0",
+    "remark-gfm": "https://esm.sh/remark-gfm@^4.0.1"
   }
 }
 </script>
@@ -194,13 +214,13 @@
         <div class="layout-switcher">
             <div class="layout-options" :class="{ show: showLayoutMenu }">
                 <div class="opt-item" :class="{ active: viewMode === 'large' }" @click="setViewMode('large')">
-                    <span>大圖示</span><i class="fas fa-square"></i>
+                    <span>大圖示</span><i class="fas fa-th-large"></i>
                 </div>
                 <div class="opt-item" :class="{ active: viewMode === 'medium' }" @click="setViewMode('medium')">
-                    <span>中 (預設)</span><i class="fas fa-th-large"></i>
+                    <span>中圖示</span><i class="fas fa-th"></i>
                 </div>
                 <div class="opt-item" :class="{ active: viewMode === 'small' }" @click="setViewMode('small')">
-                    <span>小圖示</span><i class="fas fa-th"></i>
+                    <span>小圖示</span><i class="fas fa-border-all"></i>
                 </div>
             </div>
             <div class="btn-layout" @click="showLayoutMenu = !showLayoutMenu">
@@ -214,7 +234,7 @@
                 <div class="fw-bold fs-4">${{ totalPrice }}</div>
             </div>
             <div class="fw-bold fs-6">
-                <i class="fas fa-shopping-cart me-2"></i>結帳 <i class="fas fa-arrow-right ms-2"></i>
+                <i class="fas fa-shopping-cart me-2"></i>查看購物車 <i class="fas fa-arrow-right ms-2"></i>
             </div>
         </div>
 
@@ -224,7 +244,7 @@
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 rounded-4 shadow-lg">
                     <div class="modal-header border-0 pt-4 px-4">
-                        <h5 class="fw-bold fs-4"><i class="fas fa-shopping-cart me-2"></i>結帳確認</h5>
+                        <h5 class="fw-bold fs-4"><i class="fas fa-shopping-cart me-2"></i>確認購物車</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body px-4">
@@ -265,8 +285,12 @@
                             <input type="checkbox" v-model="acceptTerms">
                             <span class="small fw-bold">我已閱讀並同意「購買需知」</span>
                         </label>
-                        <div v-for="item in cartItems" :key="item.id" class="d-flex justify-content-between py-2 border-bottom small">
-                            <span>{{ item.name }} x{{ item.quantity }}</span>
+                        <div v-for="item in cartItems" :key="item.id" class="d-flex align-items-center py-2 border-bottom small">
+                            <img :src="item.image" class="cart-item-img me-2">
+                            <div class="flex-grow-1">
+                                <div>{{ item.name }}</div>
+                                <div class="text-muted" style="font-size: 11px;">x{{ item.quantity }}</div>
+                            </div>
                             <span class="fw-bold">${{ item.price * item.quantity }}</span>
                         </div>
                         <div class="d-flex justify-content-between fw-bold fs-5 mt-3">
@@ -433,14 +457,14 @@
 
                 const gridModeClass = computed(() => `mode-${viewMode.value}`);
                 const gridRowClass = computed(() => {
-                    if (viewMode.value === 'small') return 'g-1';
-                    if (viewMode.value === 'large') return 'g-3';
-                    return 'g-2';
+                    if (viewMode.value === 'small') return 'g-1'; // 4 cols
+                    if (viewMode.value === 'medium') return 'g-1'; // 3 cols
+                    return 'g-2'; // Large 2 cols
                 });
                 const gridColClass = computed(() => {
-                    if (viewMode.value === 'large') return 'col-12';
-                    if (viewMode.value === 'small') return 'col-4';
-                    return 'col-6';
+                    if (viewMode.value === 'large') return 'col-6'; // 2 cols
+                    if (viewMode.value === 'medium') return 'col-4'; // 3 cols
+                    return 'col-3'; // 4 cols
                 });
 
                 const categories = computed(() => [...new Set(products.value.map(p => p.category))]);
@@ -463,11 +487,23 @@
                     localStorage.setItem('mm_user_phone', userContact.value.phone);
                     const now = new Date();
                     const orderId = `M${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
-                    let msg = `🛒【麥麥小舖電子票券】\n單號：#${orderId}\n手機：${userContact.value.phone || '未提供'}\n領取：${deliveryMethod.value === 'screenshot' ? '📸 截圖發送' : '🎁 momo 轉贈'}\n`;
-                    if (deliveryMethod.value === 'gift') msg += `收件：${giftInfo.value.name} / ${giftInfo.value.phone}\n`;
-                    msg += `🍱 品項：\n`;
-                    cartItems.value.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${i.name} x${i.quantity} ($${i.price*i.quantity})\n`; });
-                    msg += `💰 總額：$${totalPrice.value}\n🏦 請匯款至指定帳戶後告知末五碼核對。`;
+                    
+                    const deliveryText = deliveryMethod.value === 'screenshot' ? '📸 截圖發送' : '🎁 momo 轉贈';
+                    // Backend expects Chinese text for spreadsheet readability as requested
+                    const deliveryBackend = deliveryMethod.value === 'screenshot' ? '截圖發送' : 'momo 轉贈';
+
+                    let msg = `🛒【麥麥小舖電子票券】\n🎫 訂單編號：${orderId}\n📱 聯絡手機：${userContact.value.phone || '未提供'}\n📦 領取方式：${deliveryText}\n`;
+                    if (deliveryMethod.value === 'gift') msg += `👤 收件人：${giftInfo.value.name}\n📞 收件電話：${giftInfo.value.phone}\n`;
+                    msg += `🍱 訂購商品：\n`;
+                    
+                    cartItems.value.forEach((i, idx) => { 
+                        msg += `${NUMBERS[idx] || (idx+1)} ${i.name}\n`;
+                        msg += `🔹數量：${i.quantity} 🔹小計：$${i.price*i.quantity}\n`;
+                        msg += `🔹效期：${i.expiryDate}\n`;
+                    });
+                    
+                    msg += `💰 應付總額：$${totalPrice.value}\n🏦 匯款資訊：\n將來銀行(823): 88658888888840\n中國信託(822): 864540221080\n台新銀行(812): 28881013072004\n街口支付: 901794346\n⚠️ 請於匯款後告知客服帳號末五碼，以便核對。`;
+                    
                     finalMsg.value = msg;
                     const record = { id: orderId, timestamp: now.toLocaleString(), totalAmount: totalPrice.value, items: cartItems.value.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })) };
                     orderHistory.value = [record, ...orderHistory.value].slice(0, 30);
@@ -475,7 +511,15 @@
                     
                     fetch(API_URL, { 
                       method: 'POST', mode: 'no-cors', 
-                      body: JSON.stringify({ ...record, phone: userContact.value.phone, deliveryMethod: deliveryMethod.value, momoName: giftInfo.value.name, momoPhone: giftInfo.value.phone, userName: userProfile.value.displayName || 'GUEST', userId: userProfile.value.userId || 'GUEST' }) 
+                      body: JSON.stringify({ 
+                          ...record, 
+                          phone: userContact.value.phone, 
+                          deliveryMethod: deliveryBackend, 
+                          momoName: giftInfo.value.name, 
+                          momoPhone: giftInfo.value.phone, 
+                          userName: userProfile.value.displayName || 'GUEST', 
+                          userId: userProfile.value.userId || 'GUEST' 
+                      }) 
                     }).catch(e => console.error(e));
                     
                     cartModal.hide(); 
