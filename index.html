@@ -37,7 +37,7 @@
         }
         @keyframes fadeInBody { to { opacity: 1; } }
         
-        #static-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s ease; }
+        #static-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.4s ease; }
         .spinner { width: 45px; height: 45px; border: 5px solid #f3f3f3; border-top-color: var(--brand-red); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -84,6 +84,10 @@
 
         .checkout-img { width: 40px; height: 40px; object-fit: cover; border-radius: 8px; margin-right: 12px; background: #eee; }
 
+        .form-label-small { font-size: 13px; font-weight: 700; color: #666; margin-bottom: 5px; }
+        .form-control-pill { border-radius: 50px; padding: 10px 20px; border: 1px solid #eee; background: #f8f9fa; font-size: 14px; }
+        .form-control-pill:focus { border-color: var(--brand-red); box-shadow: none; background: #fff; }
+
         [v-cloak] { display: none; }
     </style>
 <script type="importmap">
@@ -100,7 +104,7 @@
 
     <div id="static-loader">
         <div class="spinner"></div>
-        <div class="mt-3 fw-bold text-muted" style="font-size: 15px;">麥麥商城 v157 加載中...</div>
+        <div class="mt-3 fw-bold text-muted" style="font-size: 15px;">麥麥商城 v158 加載中...</div>
     </div>
 
     <div id="app" v-cloak>
@@ -109,7 +113,7 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v157</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v158</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -175,6 +179,11 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body px-4">
+                        <div class="mb-4">
+                            <label class="form-label-small">聯絡手機 (選填)</label>
+                            <input type="tel" v-model="userContact.phone" class="form-control form-control-pill" placeholder="方便核對訂單 (選填)">
+                        </div>
+
                         <div class="terms-box">
                             <div class="terms-title">📜 購買需知</div>
                             <div>
@@ -184,8 +193,7 @@
                                 4. 麥當勞每次交易最多兌換 5 張，可重複多次兌換。<br>
                                 5. 取消兌換後序號會鎖定 5 分鐘。<br>
                                 6. 自備環保杯可依店家規定折抵 5-10 元。<br>
-                                7. 系統將於發貨 28 天後自動發送效期提醒。<br>
-                                8. 效期以客服提供之圖片或說明為主。
+                                7. 效期以客服提供之圖片或說明為主。
                             </div>
                         </div>
 
@@ -223,7 +231,7 @@
                 <div class="modal-content text-center p-4 border-0 rounded-4 shadow-lg">
                     <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
                     <h4 class="fw-bold">訂單已成功成立！</h4>
-                    <p class="small text-muted">官方帳號將於發貨後 28 天自動發 LINE 訊息提醒效期喔！</p>
+                    <p class="small text-muted">請點擊下方按鈕將訂單發送給客服進行核對。</p>
                     <div class="p-3 bg-light rounded-4 text-start mb-4 small overflow-auto" style="max-height: 250px;">
                         <pre class="m-0" style="white-space: pre-wrap; font-family: inherit; font-weight: 600; line-height: 1.5; color: #444; font-size: 13px;">{{ finalMsg }}</pre>
                     </div>
@@ -274,7 +282,7 @@
         createApp({
             setup() {
                 const products = ref([]);
-                const settings = ref({ version: 'v157', bankInfo: '', liffId: '' });
+                const settings = ref({ version: 'v158', bankInfo: '', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
                 const userProfile = ref({});
@@ -321,7 +329,7 @@
                     } finally {
                         isLoadingData.value = false;
                         const elapsed = Date.now() - startTime;
-                        const minWait = 2500; 
+                        const minWait = 1000; // 縮短至 1 秒，讓加載感更輕快
                         const waitTime = Math.max(0, minWait - elapsed);
                         setTimeout(hideStaticLoader, waitTime);
                     }
@@ -331,7 +339,7 @@
                     const loader = document.getElementById('static-loader');
                     if (loader) {
                         loader.style.opacity = '0';
-                        setTimeout(() => loader.style.display = 'none', 500);
+                        setTimeout(() => loader.style.display = 'none', 400);
                     }
                 };
 
@@ -354,6 +362,9 @@
                     if (!acceptTerms.value) return;
                     isSubmitting.value = true;
                     
+                    // 保存手機資訊
+                    localStorage.setItem('mm_user_phone', userContact.value.phone);
+
                     const now = new Date();
                     const Y = now.getFullYear();
                     const M = String(now.getMonth() + 1).padStart(2, '0');
@@ -363,7 +374,7 @@
                     const s = String(now.getSeconds()).padStart(2, '0');
                     const orderId = `M${Y}${M}${D}${h}${m}${s}`;
                     
-                    let msg = `🛒【麥麥小舖電子票券】\n🎫 訂單編號：${orderId}\n🍱 訂購商品：\n`;
+                    let msg = `🛒【麥麥小舖電子票券】\n🎫 訂單編號：${orderId}\n📱 聯絡手機：${userContact.value.phone || '未提供'}\n🍱 訂購商品：\n`;
                     cartItems.value.forEach((i, idx) => {
                         const numIcon = NUMBERS[idx] || (idx + 1) + '.';
                         msg += `${numIcon} ${i.name}\n🔹數量：${i.qty} 🔹小計：$${i.price * i.qty}\n🔹效期：${i.expiryDate}\n`;
