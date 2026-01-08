@@ -1,191 +1,432 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>麥麥商城票券使用指南</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- LIFF SDK -->
-  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; }
-    .brand-btn { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
-    .brand-btn:active { transform: scale(0.92); }
-    .brand-btn.active { border-color: #ef4444; background-color: #fff; box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.1); }
-    .fade-in { animation: fadeIn 0.3s ease-out forwards; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-  </style>
-</head>
-<body class="antialiased select-none">
-  <div class="max-w-md mx-auto min-h-screen bg-slate-50 shadow-2xl flex flex-col">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>麥麥電子票券商城</title>
     
-    <!-- 頁首：招呼語 -->
-    <header class="bg-gradient-to-br from-red-600 to-orange-500 text-white p-8 pt-10 pb-16 rounded-b-[3.5rem] shadow-lg relative overflow-hidden">
-      <div class="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-      <div class="relative z-10">
-        <p class="text-xs font-bold tracking-[0.2em] opacity-70 mb-2 uppercase">Mai Mai Store Guide</p>
-        <h1 class="text-xl font-medium">
-          親愛的 LINE 會員 <span id="user-name" class="font-black border-b-2 border-yellow-300 pb-0.5">○○○</span> 您好
-        </h1>
-        <h2 class="text-2xl font-black mt-4 leading-tight">請選擇您購買的商品種類</h2>
-      </div>
-    </header>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js" as="script">
+    <link rel="preload" href="https://static.line-scdn.net/liff/edge/2/sdk.js" as="script">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" as="style">
 
-    <main class="px-6 -mt-8 flex-grow relative z-20">
-      <!-- 品牌選擇按鈕區 -->
-      <div class="grid grid-cols-2 gap-4 mb-8">
-        <div onclick="selectBrand('mcd')" id="btn-mcd" class="brand-btn p-5 rounded-[2.5rem] bg-white border-2 border-transparent flex flex-col items-center justify-center gap-2 shadow-sm">
-          <span class="text-4xl">🍔</span>
-          <span class="text-sm font-bold text-slate-600">麥當勞</span>
-        </div>
-        <div onclick="selectBrand('kfc')" id="btn-kfc" class="brand-btn p-5 rounded-[2.5rem] bg-white border-2 border-transparent flex flex-col items-center justify-center gap-2 shadow-sm">
-          <span class="text-4xl">🍗</span>
-          <span class="text-sm font-bold text-slate-600">肯德基</span>
-        </div>
-        <div onclick="selectBrand('pzh')" id="btn-pzh" class="brand-btn p-5 rounded-[2.5rem] bg-white border-2 border-transparent flex flex-col items-center justify-center gap-2 shadow-sm">
-          <span class="text-4xl">🍕</span>
-          <span class="text-sm font-bold text-slate-600">必勝客</span>
-        </div>
-        <div onclick="selectBrand('sbx')" id="btn-sbx" class="brand-btn p-5 rounded-[2.5rem] bg-white border-2 border-transparent flex flex-col items-center justify-center gap-2 shadow-sm">
-          <span class="text-4xl">☕</span>
-          <span class="text-sm font-bold text-slate-600">星巴克</span>
-        </div>
-      </div>
-
-      <!-- 動態內容區 -->
-      <div id="content-area" class="min-h-[200px]">
-        <div class="text-center py-16 bg-white/50 rounded-[3rem] border-2 border-dashed border-slate-200 mb-8">
-          <p class="text-slate-400 font-medium text-sm">點擊上方圖標<br>查看詳細兌換教學</p>
-        </div>
-      </div>
-
-      <!-- 注意事項 -->
-      <section class="bg-amber-50 rounded-[2.5rem] p-7 border border-amber-100 shadow-sm mb-12">
-        <h3 class="text-amber-800 font-black mb-4 flex items-center gap-2">
-          <span class="bg-amber-200 w-8 h-8 flex items-center justify-center rounded-full text-base">📝</span>
-          注意事項
-        </h3>
-        <ul class="text-[13px] text-amber-900/80 space-y-4 pl-5 list-decimal font-medium leading-relaxed">
-          <li>請將截圖<span class="text-red-600 font-bold underline">保存下來</span>，期限為取得後約 <span class="font-bold underline">30天內</span> 兌換，請儘速使用。</li>
-          <li>兌換時再開啟截圖畫面給櫃台人員或機台使用即可。</li>
-          <li>請在<span class="text-red-700 font-bold">使用期限內</span>兌換完畢，逾期將失效恕無法補發或退款。</li>
-          <li>本憑證每次交易可兌換 5 張，可多次重複使用。</li>
-          <li>若於兌換前查詢或取消使用，序號將被鎖定 5 分鐘，請稍候再試。</li>
-        </ul>
-      </section>
-    </main>
-
-    <footer class="text-center pb-8 opacity-20 text-[10px] tracking-widest font-bold">
-      MAI MAI STORE • TICKET GUIDE 2025
-    </footer>
-  </div>
-
-  <script>
-    // 品牌資料定義
-    const brandData = {
-      mcd: {
-        title: '麥當勞 使用說明',
-        icon: '🍔',
-        html: `
-          <div class="bg-white rounded-[2.5rem] p-7 shadow-sm border border-slate-100 mb-6 fade-in">
-            <div class="space-y-5 text-[14px] text-slate-600">
-              <section>
-                <h4 class="font-bold text-red-600 mb-1 underline underline-offset-4">一、櫃檯/得來速方式</h4>
-                <p>告知店員欲使用電子商品卷，提供截圖掃描條碼即可。</p>
-              </section>
-              <section class="bg-red-50 p-5 rounded-2xl border border-red-100">
-                <h4 class="font-bold text-red-700 mb-3 flex items-center gap-2"><span>🖥️</span> 二、自助點餐機流程</h4>
-                <div class="space-y-2 pl-6 border-l-2 border-red-200 ml-1">
-                  <p>1. 點選開始 → 選擇用餐方式</p>
-                  <p>2. 左上角選「<span class="font-bold">電子商品卷</span>」</p>
-                  <p>3. 打開截圖放在掃描區感應</p>
-                  <p>4. 確認餐點 (<span class="text-red-600 italic">1次最多5張</span>)</p>
-                </div>
-              </section>
-            </div>
-          </div>
-        `
-      },
-      kfc: {
-        title: '肯德基 使用說明',
-        icon: '🍗',
-        html: `
-          <div class="bg-white rounded-[2.5rem] p-7 shadow-sm border border-slate-100 mb-6 fade-in">
-            <div class="space-y-5 text-[14px] text-slate-600">
-              <section>
-                <h4 class="font-bold text-red-800 mb-2 underline">1. 官網兌換 (推薦)</h4>
-                <p>至肯德基官網【優惠券】區輸入序號。建議使用【預訂快取】專屬通道取餐最快速。</p>
-                <a href="https://www.kfcclub.com.tw/Coupon" target="_blank" class="inline-block mt-2 px-4 py-1.5 bg-red-700 text-white text-xs rounded-full font-bold shadow-sm">前往官網兌換 →</a>
-              </section>
-              <section>
-                <h4 class="font-bold text-red-800 mb-2 underline">2. 門市/自助機兌換</h4>
-                <p>告知人員選擇「兌換掃券」按鍵。不接受手抄或口說序號。</p>
-              </section>
-              <a href="https://www.edenred.com.tw/index.php/store/kfc/" target="_blank" class="block text-center py-3 bg-slate-50 text-slate-400 rounded-xl text-[11px] border border-slate-100 italic">查看不適用門市清單</a>
-            </div>
-          </div>
-        `
-      },
-      pzh: {
-        title: '必勝客 使用說明',
-        icon: '🍕',
-        html: `
-          <div class="bg-white rounded-[2.5rem] p-7 shadow-sm border border-slate-100 mb-6 fade-in">
-            <div class="space-y-4 text-[14px] text-slate-600">
-              <p>● <span class="font-bold text-orange-600">官網/APP：</span>點選「優惠券兌換」→ 輸入 <span class="font-mono bg-slate-100 px-1 border border-slate-200">VP</span> 開頭 20 碼序號。</p>
-              <p>● <span class="font-bold text-orange-600">門市現場：</span>告知人員選「兌換掃券」按鍵並出示截圖。</p>
-              <p>● <span class="font-bold text-orange-600">電話訂餐：</span>撥打 412-9889 報 20 碼序號。取餐時出示截圖。</p>
-            </div>
-          </div>
-        `
-      },
-      sbx: {
-        title: '星巴克 使用說明',
-        icon: '☕',
-        html: `
-          <div class="bg-white rounded-[2.5rem] p-7 shadow-sm border border-slate-100 mb-6 fade-in">
-            <div class="space-y-4 text-[14px] text-slate-600">
-              <p>● <span class="font-bold text-green-800">櫃檯使用：</span>告知店員欲使用電子商品卷，提供截圖掃描條碼即可。</p>
-              <p class="bg-green-50 p-4 rounded-xl text-[12px] text-green-700 italic border border-green-100 leading-relaxed">※ 兌換前請務必確認您的商品規格(冰/熱、容量)是否與券面相符。</p>
-            </div>
-          </div>
-        `
-      }
-    };
-
-    // 切換品牌邏輯
-    function selectBrand(id) {
-      // 更新按鈕樣式
-      document.querySelectorAll('.brand-btn').forEach(btn => btn.classList.remove('active', 'border-red-500', 'ring-4', 'ring-red-100'));
-      const activeBtn = document.getElementById('btn-' + id);
-      activeBtn.classList.add('active', 'border-red-500', 'ring-4', 'ring-red-100');
-
-      // 更新內容
-      const contentArea = document.getElementById('content-area');
-      contentArea.innerHTML = brandData[id].html;
-      
-      // 平滑滾動到內容區
-      window.scrollTo({ top: activeBtn.offsetTop - 20, behavior: 'smooth' });
-    }
-
-    // 初始化 LIFF
-    async function initLiff() {
-      try {
-        await liff.init({ liffId: 'YOUR_LIFF_ID' }); // 之後可自行填入 ID
-        if (liff.isLoggedIn()) {
-          const profile = await liff.getProfile();
-          document.getElementById('user-name').innerText = profile.displayName;
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <style>
+        :root { 
+            --brand-red: #DA291C; 
+            --brand-dark: #27251F; 
+            --brand-yellow: #FFC72C; 
+            --line-green: #06C755; 
+            --copy-blue: #34495e;
+            --gradient-red: linear-gradient(135deg, #DA291C 0%, #FF5E52 100%);
+            --app-bg: #FDFDFD;
+            --glass: rgba(255, 255, 255, 0.95);
         }
-      } catch (e) {
-        console.log("LIFF initialization failed, maybe not in LINE browser.");
-      }
-    }
+        
+        body { 
+            background: var(--app-bg); 
+            min-height: 100vh;
+            padding-bottom: 110px; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            color: var(--brand-dark);
+            overflow-x: hidden;
+            opacity: 0;
+            animation: fadeInBody 0.2s forwards;
+        }
+        @keyframes fadeInBody { to { opacity: 1; } }
+        
+        #static-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.2s ease; }
+        .spinner { width: 32px; height: 32px; border: 3px solid #f3f3f3; border-top-color: var(--brand-red); border-radius: 50%; animation: spin 0.6s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-    // 啟動
-    window.onload = initLiff;
-  </script>
+        .sticky-header { position: sticky; top: 0; z-index: 1000; background: var(--glass); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .category-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 12px 15px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+        .category-scroll::-webkit-scrollbar { display: none; }
+        
+        .cat-btn { padding: 7px 18px; border-radius: 50px; font-size: 14px; font-weight: 700; white-space: nowrap; border: 1.5px solid #f0f0f0; background: #fff; color: #777; transition: 0.15s; }
+        .cat-btn.active { background: var(--gradient-red); color: #fff; border-color: transparent; box-shadow: 0 4px 10px rgba(218, 41, 28, 0.2); }
+
+        .logo-m { width: 40px; height: 40px; background: var(--gradient-red); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-style: italic; font-size: 22px; }
+        .ver-tag { font-weight: 900; font-size: 11px; color: var(--brand-red); opacity: 0.6; }
+
+        .product-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.03); height: 100%; display: flex; flex-direction: column; border: 1px solid rgba(0,0,0,0.02); }
+        .p-img-box { position: relative; width: 100%; aspect-ratio: 1/1; background: #fdfdfd; overflow: hidden; }
+        .p-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        
+        .p-body { padding: 14px; flex: 1; display: flex; flex-direction: column; }
+        .p-title { font-weight: 800; font-size: 14px; color: #333; line-height: 1.4; min-height: 40px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px; }
+        .p-info { font-size: 10px; color: #999; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .stock-tag { background: #fff1f0; color: #ff4d4f; padding: 1px 6px; border-radius: 4px; font-weight: 800; }
+        .stock-tag.none { background: #f5f5f5; color: #bfbfbf; }
+        
+        .p-price { color: var(--brand-red); font-weight: 900; font-size: 20px; }
+        .btn-buy { background: var(--brand-dark); color: white; border: none; padding: 10px 0; border-radius: 50px; font-size: 13px; font-weight: 800; width: 100%; margin-top: auto; transition: 0.2s; }
+        .btn-buy:active { transform: scale(0.96); }
+        .btn-buy:disabled { background: #e0e0e0; color: #aaa; }
+        
+        .qty-ctrl { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; border-radius: 50px; padding: 3px; border: 1px solid #eee; }
+        .qty-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--gradient-red); color: white; padding: 18px 25px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 -8px 20px rgba(218, 41, 28, 0.2); cursor: pointer; transition: 0.2s; }
+        
+        .line-float { position: fixed; bottom: 85px; right: 20px; width: 54px; height: 54px; background: var(--line-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 26px; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.3); z-index: 1001; text-decoration: none; border: 2px solid white; transition: 0.2s; }
+
+        .btn-line-custom { background-color: var(--line-green) !important; color: white !important; border: none !important; }
+        .history-item { background: #fff; border-radius: 18px; padding: 15px; margin-bottom: 15px; border: 1px solid #f0f0f0; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+
+        .form-control-custom { border-radius: 12px; border: 1px solid #eee; padding: 10px 15px; font-size: 14px; margin-bottom: 10px; width: 100%; outline: none; transition: 0.2s; }
+        .form-control-custom:focus { border-color: var(--brand-red); box-shadow: 0 0 0 3px rgba(218, 41, 28, 0.1); }
+        .form-control-custom:disabled { background-color: #f8f9fa; color: #6c757d; cursor: not-allowed; }
+        .form-label-small { font-size: 12px; font-weight: 800; color: #666; margin-bottom: 5px; display: flex; justify-content: space-between; }
+        .sync-tag { color: var(--line-green); font-size: 10px; }
+
+        /* 購買需知樣式 */
+        .terms-box { background: #fff8f8; border: 1px solid #ffebeb; border-radius: 12px; padding: 12px; font-size: 12px; color: #666; line-height: 1.6; max-height: 150px; overflow-y: auto; margin-bottom: 15px; }
+        .terms-title { font-weight: 800; color: var(--brand-red); margin-bottom: 5px; font-size: 13px; }
+        .terms-check-container { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none; }
+        .terms-check-container input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--brand-red); }
+        .terms-check-label { font-size: 14px; font-weight: 800; color: var(--brand-dark); }
+
+        [v-cloak] { display: none; }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
+</head>
+<body>
+
+    <div id="static-loader">
+        <div class="spinner"></div>
+        <div class="mt-2 ver-tag">v148 加載中...</div>
+    </div>
+
+    <div id="app" v-cloak>
+        <div class="sticky-header">
+            <div class="p-3 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="logo-m">M</div>
+                    <div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v148</span></div>
+                        <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
+                    </div>
+                </div>
+                <div class="text-muted p-2" @click="openHistory" style="cursor: pointer;"><i class="fas fa-history fa-lg"></i></div>
+            </div>
+            
+            <div class="category-scroll">
+                <button class="cat-btn" :class="{ active: currentCat === 'ALL' }" @click="currentCat = 'ALL'">🌟 全部商品</button>
+                <button v-for="cat in categories" :key="cat" class="cat-btn" :class="{ active: currentCat === cat }" @click="currentCat = cat">{{ cat }}</button>
+            </div>
+        </div>
+
+        <div class="container-fluid px-3 py-3">
+            <div class="row g-3">
+                <div class="col-6 col-md-4" v-for="p in filteredProducts" :key="p.id">
+                    <div class="product-card">
+                        <div class="p-img-box"><img :src="p.image || 'https://via.placeholder.com/300'" class="p-img" loading="lazy"></div>
+                        <div class="p-body">
+                            <div class="p-title">{{ p.name }}</div>
+                            <div class="p-info">
+                                <span class="fw-bold"><i class="far fa-calendar-alt me-1"></i>{{ p.expiryDate }}</span>
+                                <span class="stock-tag" :class="{ none: Number(p.stock) <= 0 }">剩 {{ p.stock }}</span>
+                            </div>
+                            <div class="mb-3">
+                                <span class="p-price">${{ p.price }}</span>
+                            </div>
+                            <div v-if="cart[p.id]" class="qty-ctrl">
+                                <button class="qty-btn" @click.stop="updateCart(p, -1)"><i class="fas fa-minus"></i></button>
+                                <span class="fw-bold">{{ cart[p.id] }}</span>
+                                <button class="qty-btn" @click.stop="updateCart(p, 1)" :disabled="cart[p.id] >= Number(p.stock)"><i class="fas fa-plus"></i></button>
+                            </div>
+                            <button v-else class="btn-buy" @click.stop="updateCart(p, 1)" :disabled="Number(p.stock) <= 0">
+                                {{ Number(p.stock) <= 0 ? '已售完' : '加入購物車' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="cart-bar shadow-lg" v-if="totalQty > 0" @click="openCart">
+            <div class="d-flex align-items-center">
+                <div class="me-3" style="background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 10px; font-size: 13px; font-weight: 800;">{{ totalQty }} 件</div>
+                <div class="fw-bold fs-4">${{ totalPrice }}</div>
+            </div>
+            <div class="fw-bold fs-6">
+                <i class="fas fa-shopping-cart me-2"></i>購物車 <i class="fas fa-arrow-right ms-2"></i>
+            </div>
+        </div>
+
+        <a class="line-float" href="https://lin.ee/ejXmXDl" target="_blank"><i class="fab fa-line"></i></a>
+
+        <div class="modal fade" id="cartModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 rounded-4 shadow-lg">
+                    <div class="modal-header border-0 pt-4 px-4">
+                        <h5 class="fw-bold fs-4"><i class="fas fa-shopping-cart me-2"></i>訂單結帳</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body px-4">
+                        <!-- 購買需知區塊 -->
+                        <div class="terms-box">
+                            <div class="terms-title">📜 購買需知</div>
+                            <div class="small">
+                                1、電子票券履約期限為取得後約30天內兌換，為免遺忘權益受損，購買後請儘速兌換(最好是現買現用)。<br>
+                                2、票券兌換依商家不同，請參考使用說明或客服傳送之訊息，一般可提供截圖畫面給櫃台人員或機台使用即可。<br>
+                                3、取得票券後務必在使用期限內兌換完畢，逾期將失效恕無法補發或退款。<br>
+                                4、本商品電子兌換憑證在麥當勞每次交易可兌換5張，可多次使用。<br>
+                                5、若於兌換前查詢或取消使用，序號將被鎖定5分鐘，請於5分鐘之後再進行兌換。<br>
+                                6、飲料之品項，如自行攜帶環保杯，星巴克每杯可退費10元，其餘店家每杯退5元。<br>
+                                7、使用本系統傳送並結帳成功後，官方帳號將於 28 天後自動提醒。<br>
+                                8、票券可能以截圖或轉贈形式發送，效期依圖片上或客服說明為主。
+                            </div>
+                        </div>
+
+                        <label class="terms-check-container mb-4">
+                            <input type="checkbox" v-model="acceptTerms">
+                            <span class="terms-check-label">我已閱讀並同意上述「購買需知」</span>
+                        </label>
+
+                        <div class="mb-3 p-3 bg-light rounded-4">
+                            <label class="form-label-small">
+                                聯絡電話 (必填)
+                                <span v-if="isLiffPhone" class="sync-tag"><i class="fas fa-check-circle"></i> 已從 LINE 同步</span>
+                            </label>
+                            <input type="tel" class="form-control-custom" v-model="userContact.phone" placeholder="例如: 0912345678">
+                            
+                            <label class="form-label-small">
+                                電子郵件 (選填)
+                                <span v-if="isLiffEmail" class="sync-tag"><i class="fas fa-check-circle"></i> 已從 LINE 同步</span>
+                            </label>
+                            <input type="email" class="form-control-custom" v-model="userContact.email" :disabled="isLiffEmail" placeholder="例如: user@example.com">
+                        </div>
+
+                        <div v-for="item in cartItems" :key="item.id" class="d-flex justify-content-between py-2 border-bottom small">
+                            <div class="text-truncate me-3">{{ item.name }} x{{ item.qty }}</div>
+                            <div class="fw-bold text-danger flex-shrink-0">${{ item.price * item.qty }}</div>
+                        </div>
+                        <div class="d-flex justify-content-between fw-bold fs-4 p-3 bg-light rounded-4 mt-3">
+                            <span>應付金額</span><span class="text-danger">${{ totalPrice }}</span>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-4">
+                        <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold fs-5 shadow" 
+                                style="background: var(--gradient-red); border: none;" 
+                                @click="handleCheckout" 
+                                :disabled="isSubmitting || totalPrice < 50 || !userContact.phone || !acceptTerms">
+                            <i class="fas fa-paper-plane me-2"></i>
+                            <span v-if="!acceptTerms">請勾選購買需知</span>
+                            <span v-else-if="!userContact.phone">請填寫電話</span>
+                            <span v-else-if="totalPrice < 50">滿 $50 才能出貨</span>
+                            <span v-else>確認並送出訂單</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content text-center p-4 border-0 rounded-4 shadow-lg">
+                    <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
+                    <h4 class="fw-bold">訂單已成功成立！</h4>
+                    <p class="small text-muted">官方帳號將於發貨後 28 天自動發 LINE 訊息提醒效期喔！</p>
+                    <div class="p-3 bg-light rounded-4 text-start mb-4 small">
+                        <pre class="m-0" style="white-space: pre-wrap; font-family: inherit; font-weight: 600; line-height: 1.5; color: #444;">{{ finalMsg }}</pre>
+                    </div>
+                    <button class="btn btn-line-custom w-100 rounded-pill py-3 fw-bold mb-2 shadow-sm" @click="sendToLine(finalMsg)" :disabled="isLineSending">
+                        <i class="fab fa-line me-2"></i>傳送訂單到 LINE
+                    </button>
+                    <button class="btn btn-link text-muted" data-bs-dismiss="modal" @click="resetCart">回商城首頁</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="historyModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 rounded-4 shadow-lg">
+                    <div class="modal-header border-0 pt-4 px-4 bg-light">
+                        <h5 class="fw-bold fs-4"><i class="fas fa-history me-2"></i>歷史購買紀錄</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body px-4 py-3" style="max-height: 60vh; overflow-y: auto;">
+                        <div v-if="orderHistory.length === 0" class="text-center py-5 text-muted small">尚未有購買紀錄</div>
+                        <div v-for="h in orderHistory" :key="h.id" class="history-item">
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-bold small text-muted">單號: #{{ h.id }}</span>
+                                <span class="text-danger fw-bold">${{ h.totalAmount }}</span>
+                            </div>
+                            <div class="small mt-2">
+                                <div v-for="it in h.items" :key="it.name">• {{ it.name }} x{{ it.qty }}</div>
+                            </div>
+                            <button class="btn btn-outline-success btn-sm w-100 rounded-pill fw-bold mt-2" @click="resendHistory(h)">
+                                <i class="fab fa-line me-1"></i>重新傳送訂單
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+    <script>
+        const { createApp, ref, computed, onMounted, watch } = Vue;
+        const API_URL = 'https://script.google.com/macros/s/AKfycbx2xdqkRoBGFibvgKRo05QtVcIWZlUjBq-rr_NRJ-8nK1BsFPSorQqnsNa89IPlG45aeA/exec';
+
+        createApp({
+            setup() {
+                const products = ref([]);
+                const settings = ref({ version: 'v148', bankInfo: '', liffId: '' });
+                const cart = ref({});
+                const currentCat = ref('ALL');
+                const userProfile = ref({});
+                const guestName = ref(localStorage.getItem('mm_guest_name') || '');
+                const finalMsg = ref('');
+                const isSubmitting = ref(false);
+                const isLineSending = ref(false);
+                const acceptTerms = ref(false);
+                
+                const isLiffEmail = ref(false);
+                const isLiffPhone = ref(false);
+
+                const userContact = ref({
+                    phone: localStorage.getItem('mm_user_phone') || '',
+                    email: localStorage.getItem('mm_user_email') || ''
+                });
+
+                watch(userContact, (val) => {
+                    localStorage.setItem('mm_user_phone', val.phone);
+                    localStorage.setItem('mm_user_email', val.email);
+                }, { deep: true });
+
+                const orderHistory = ref(JSON.parse(localStorage.getItem('mm_order_history') || '[]'));
+                let cartModal, successModal, historyModal;
+
+                onMounted(() => {
+                    initApp();
+                    cartModal = new bootstrap.Modal(document.getElementById('cartModal'));
+                    successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                    historyModal = new bootstrap.Modal(document.getElementById('historyModal'));
+                });
+
+                const initApp = async () => {
+                    fetch(`${API_URL}?action=getInitData`).then(r => r.json()).then(res => products.value = res.products);
+                    fetch(`${API_URL}?action=getSettings`).then(r => r.json()).then(res => {
+                        settings.value = res;
+                        if (res.liffId) {
+                            liff.init({ liffId: res.liffId }).then(async () => {
+                                if (liff.isLoggedIn()) {
+                                    userProfile.value = await liff.getProfile();
+                                    const idToken = liff.getDecodedIDToken();
+                                    if (idToken && idToken.email) {
+                                        userContact.value.email = idToken.email;
+                                        isLiffEmail.value = true;
+                                    }
+                                }
+                            }).catch(err => console.error("LIFF Error", err));
+                        }
+                    });
+                    
+                    setTimeout(() => {
+                        const loader = document.getElementById('static-loader');
+                        if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 200); }
+                    }, 500);
+                };
+
+                const categories = computed(() => [...new Set(products.value.map(p => p.category))]);
+                const filteredProducts = computed(() => currentCat.value === 'ALL' ? products.value : products.value.filter(p => p.category === currentCat.value));
+                const cartItems = computed(() => Object.keys(cart.value).map(id => {
+                    const p = products.value.find(x => x.id === id);
+                    return p ? { ...p, qty: cart.value[id] } : null;
+                }).filter(x => x));
+                const totalQty = computed(() => cartItems.value.reduce((a, b) => a + b.qty, 0));
+                const totalPrice = computed(() => cartItems.value.reduce((a, b) => a + (b.price * b.qty), 0));
+
+                const updateCart = (p, d) => {
+                    const next = (cart.value[p.id] || 0) + d;
+                    if (next <= 0) delete cart.value[p.id];
+                    else if (next <= Number(p.stock)) cart.value[p.id] = next;
+                };
+
+                const handleCheckout = async () => {
+                    if (!acceptTerms.value) return;
+                    isSubmitting.value = true;
+                    const now = new Date();
+                    const orderId = 'M' + now.getTime().toString().slice(-8);
+                    const giftText = totalPrice.value >= 999 ? '滿福堡加蛋套餐' : (totalPrice.value >= 500 ? '大蛋捲冰淇淋' : '');
+                    
+                    let msg = `🛒【麥麥小舖電子票券】\n🎫 訂單編號：${orderId}\n👤 訂購人：${userProfile.value.displayName || guestName.value || 'GUEST'}\n📱 電話：${userContact.value.phone}\n📧 Email：${userContact.value.email || '未填寫'}\n------------------------\n`;
+                    cartItems.value.forEach((i, idx) => {
+                        msg += `${idx+1}. ${i.name} x${i.qty} ($${i.price*i.qty})\n`;
+                    });
+                    msg += `------------------------\n💰 應付總額：$${totalPrice.value}\n🎁 滿額贈：${giftText || '無'}\n------------------------\n🏦 將來銀行(823): 88658888888840`;
+                    
+                    finalMsg.value = msg;
+
+                    const record = {
+                        id: orderId, timestamp: now.toLocaleString(), totalAmount: totalPrice.value, gift: giftText,
+                        items: cartItems.value.map(i => ({ name: i.name, qty: i.qty, price: i.price }))
+                    };
+                    orderHistory.value = [record, ...orderHistory.value].slice(0, 30);
+                    localStorage.setItem('mm_order_history', JSON.stringify(orderHistory.value));
+
+                    fetch(API_URL, {
+                        method: 'POST', mode: 'no-cors',
+                        body: JSON.stringify({
+                            id: orderId, timestamp: now.toLocaleString(), 
+                            items: cartItems.value.map(i => ({name: i.name, qty: i.qty, price: i.price, subtotal: i.price*i.qty})), 
+                            totalAmount: totalPrice.value, 
+                            userId: userProfile.value.userId || 'GUEST', 
+                            userName: userProfile.value.displayName || guestName.value || 'GUEST',
+                            email: userContact.value.email,
+                            phone: userContact.value.phone
+                        })
+                    }).catch(() => {});
+
+                    isSubmitting.value = false;
+                    cartModal.hide();
+                    successModal.show();
+                };
+
+                const sendToLine = (txt) => {
+                    isLineSending.value = true;
+                    if (liff.isInClient()) {
+                        liff.sendMessages([{ type: 'text', text: txt }]).then(() => liff.closeWindow()).catch(() => {
+                            window.location.href = `https://line.me/R/msg/text/?${encodeURIComponent(txt)}`;
+                        });
+                    } else {
+                        window.open(`https://line.me/R/msg/text/?${encodeURIComponent(txt)}`, '_blank');
+                    }
+                    isLineSending.value = false;
+                };
+
+                const resendHistory = (h) => {
+                    let msg = `🛒【麥麥小舖】歷史訂單補傳\n🎫 訂單編號：${h.id}\n時間：${h.timestamp}\n------------------------\n`;
+                    h.items.forEach((it, idx) => msg += `${idx+1}. ${it.name} x${it.qty}\n`);
+                    msg += `------------------------\n總金額：$${h.totalAmount}`;
+                    sendToLine(msg);
+                };
+
+                const resetCart = () => {
+                    cart.value = {};
+                    acceptTerms.value = false;
+                };
+
+                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, finalMsg, isLineSending, sendToLine, openCart: () => cartModal.show(), openHistory: () => historyModal.show(), orderHistory, userProfile, guestName, userContact, isLiffEmail, isLiffPhone, resendHistory, acceptTerms, resetCart };
+            }
+        }).mount('#app');
+    </script>
 </body>
 </html>
