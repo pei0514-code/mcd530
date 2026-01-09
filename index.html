@@ -982,6 +982,14 @@
                                 accountInfo: paymentForm.value.accountInfo
                             })
                         });
+                        
+                        if (liff.isInClient()) {
+                             const msg = `💰【付款回報】\n單號：${lastOrderIds.value.join(', ')}\n銀行：${bankName}\n帳號/名稱：${paymentForm.value.accountInfo}`;
+                             liff.sendMessages([{ type: 'text', text: msg }])
+                                 .then(() => console.log('Message sent'))
+                                 .catch(err => console.error('LIFF Send Error', err));
+                        }
+
                         showToast('回報成功！我們會盡快處理');
                         if(successModal) successModal.hide();
                         resetCart();
