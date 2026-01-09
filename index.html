@@ -204,7 +204,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v230</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.31</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -251,7 +251,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v230</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.31</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -436,16 +436,19 @@
                     <div class="p-2 d-flex justify-content-center bg-white border-bottom">
                         <div class="btn-group w-100 px-2" role="group">
                             <input type="radio" class="btn-check" name="walletFilter" id="filterAvailable" autocomplete="off" :checked="walletFilter === 'available'" @change="walletFilter = 'available'">
-                            <label class="btn btn-outline-danger fw-bold rounded-start-pill" for="filterAvailable">可使用</label>
+                            <!-- v231: Added Count -->
+                            <label class="btn btn-outline-danger fw-bold rounded-start-pill" for="filterAvailable">可使用 ({{ availableTickets.length }})</label>
+                            
                             <input type="radio" class="btn-check" name="walletFilter" id="filterUsed" autocomplete="off" :checked="walletFilter === 'used'" @change="walletFilter = 'used'">
-                            <label class="btn btn-outline-secondary fw-bold rounded-end-pill" for="filterUsed">已核銷</label>
+                            <!-- v231: Added Count -->
+                            <label class="btn btn-outline-secondary fw-bold rounded-end-pill" for="filterUsed">已核銷 ({{ usedTickets.length }})</label>
                         </div>
                     </div>
                     <div class="modal-body p-3">
-                        <div v-if="walletItems.length === 0" class="text-center py-5 text-muted">
+                        <div v-if="currentDisplayTickets.length === 0" class="text-center py-5 text-muted">
                             <i class="fas fa-ticket-alt fa-3x mb-3 text-secondary"></i><br>目前沒有{{ walletFilter === 'available' ? '可用' : '已核銷' }}的票券
                         </div>
-                        <div v-for="(item, idx) in walletItems" :key="idx" class="ticket-card" :class="{ redeemed: item.isRedeemed }">
+                        <div v-for="(item, idx) in currentDisplayTickets" :key="idx" class="ticket-card" :class="{ redeemed: item.isRedeemed }">
                             <div class="ticket-img-box" @click="showTicketImage(item)">
                                 <img :src="item.url" class="ticket-img" loading="lazy" onerror="this.src='https://via.placeholder.com/300?text=Image+Error'">
                                 <div v-if="item.isRedeemed" class="ticket-badge-used">已核銷</div>
@@ -453,8 +456,11 @@
                             </div>
                             <div class="ticket-body">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <div class="fw-bold text-truncate" style="max-width: 70%;">{{ item.name || '商品票券' }}</div>
-                                    <span class="badge bg-dark rounded-pill">{{ item.orderId }}</span>
+                                    <div class="fw-bold text-truncate" style="max-width: 65%;">{{ item.name || '商品票券' }}</div>
+                                    <div class="d-flex flex-column align-items-end">
+                                        <span class="badge bg-dark rounded-pill mb-1">{{ item.orderId }}</span>
+                                        <span class="text-muted" style="font-size: 10px;">購買: {{ item.purchaseDate }}</span>
+                                    </div>
                                 </div>
                                 <!-- v230: Added Vendor Guide Button -->
                                 <div v-if="!item.isRedeemed" class="d-grid gap-2">
@@ -1145,56 +1151,77 @@
                 };
                 
                 // v228: Ticket Wallet Logic
-                const walletItems = computed(() => {
+                // v231 Refactor: Extracted ticket logic for counting and sorting
+                const allTickets = computed(() => {
                     const items = [];
                     orderHistory.value.forEach(order => {
-                        // Ensure only shipped orders (Status: Shipped) with fulfillment links
                         if ((order.isShipped === true || String(order.isShipped) === 'true') && order.fulfillment) {
                             const links = order.fulfillment.split('\n').filter(l => l.trim().length > 0);
                             
-                            // v230: Split and map links to items
                             links.forEach((url, i) => {
                                 const isRedeemed = !!redeemedStatus.value[url];
                                 const redeemedAt = isRedeemed ? redeemedStatus.value[url] : null;
                                 
-                                // Try to match the link to a specific item if order has multiple items
-                                // If 3 links and 1 item quantity 3, it's just index based.
-                                // If multiple different products, it's trickier, but usually ordered.
-                                // We'll just generic label if complex, or try to guess.
                                 let pName = '商品票券';
                                 let vendorName = '';
                                 
-                                // Simple guess: If we have item details
                                 if (order.items && order.items.length > 0) {
-                                     // Flatten the items list based on quantity to match link index
                                      const expandedItems = [];
                                      order.items.forEach(it => {
                                          for(let k=0; k<it.quantity; k++) expandedItems.push(it.name);
                                      });
-                                     
                                      if(expandedItems[i]) pName = expandedItems[i];
                                      else pName = order.items[0].name + (order.items.length > 1 ? ' 等' : '');
                                 }
                                 
-                                // Lookup Vendor Name for Guide
                                 const product = products.value.find(p => p.name === pName);
                                 if(product) vendorName = product.vendor;
 
-                                const ticket = {
+                                // Extract date only for display
+                                const purchaseDate = order.timestamp ? order.timestamp.split(' ')[0] : '';
+
+                                items.push({
                                     url: url,
                                     orderId: order.id,
                                     name: pName,
-                                    vendor: vendorName, // Store vendor for guide lookup
+                                    vendor: vendorName,
                                     isRedeemed: isRedeemed,
-                                    redeemedAt: redeemedAt
-                                };
-                                
-                                if (walletFilter.value === 'available' && !isRedeemed) items.push(ticket);
-                                else if (walletFilter.value === 'used' && isRedeemed) items.push(ticket);
+                                    redeemedAt: redeemedAt,
+                                    purchaseDate: purchaseDate, // v231: Added for sorting/display
+                                    fullTimestamp: order.timestamp // For sorting
+                                });
                             });
                         }
                     });
                     return items;
+                });
+
+                const availableTickets = computed(() => {
+                    // v231: Sort Available by Newest First (Order Timestamp)
+                    return allTickets.value.filter(t => !t.isRedeemed).sort((a, b) => {
+                         // Simple string comparison for standard format YYYY/MM/DD works reasonably well
+                         // or just rely on orderId descending
+                         return b.orderId.localeCompare(a.orderId);
+                    });
+                });
+
+                const usedTickets = computed(() => {
+                    // v231: Sort Used by Redemption Time (Newest First) if available, else OrderId
+                    return allTickets.value.filter(t => t.isRedeemed).sort((a, b) => {
+                        if (a.redeemedAt && b.redeemedAt) {
+                            return new Date(b.redeemedAt).getTime() - new Date(a.redeemedAt).getTime();
+                        }
+                        return b.orderId.localeCompare(a.orderId);
+                    });
+                });
+
+                const walletItems = computed(() => {
+                     // Keep this for backward compat if needed, but UI uses currentDisplayTickets
+                     return [...availableTickets.value, ...usedTickets.value];
+                });
+                
+                const currentDisplayTickets = computed(() => {
+                    return walletFilter.value === 'available' ? availableTickets.value : usedTickets.value;
                 });
                 
                 const openWallet = () => {
@@ -1207,8 +1234,11 @@
                 
                 const confirmRedeem = (item) => {
                     if(confirm("確定要核銷此票券嗎？\n核銷後票券將標示為「已使用」，方便您管理。")) {
-                        const now = new Date().toLocaleString();
-                        redeemedStatus.value[item.url] = now;
+                        // v231: Improved Timestamp Format
+                        const now = new Date();
+                        const timeStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+                        
+                        redeemedStatus.value[item.url] = timeStr;
                         // Force update
                         redeemedStatus.value = { ...redeemedStatus.value };
                         safeSetStorage('mm_redeemed_map', JSON.stringify(redeemedStatus.value));
@@ -1234,7 +1264,9 @@
                 // v228 Exports
                 openWallet, walletItems, walletFilter, confirmRedeem, showTicketImage,
                 // v230 Exports
-                openVendorGuide, currentVendorGuide };
+                openVendorGuide, currentVendorGuide,
+                // v231 Exports
+                availableTickets, usedTickets, currentDisplayTickets };
             }
         }).mount('#app');
     </script>
