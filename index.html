@@ -457,7 +457,6 @@
                             <i class="fas fa-ticket-alt fa-3x mb-3 text-secondary"></i><br>目前沒有{{ walletFilter === 'available' ? '可用' : '已核銷' }}的票券
                         </div>
                         <div v-for="(item, idx) in currentDisplayTickets" :key="idx" class="ticket-card" :class="{ redeemed: item.isRedeemed }">
-                            <!-- v2.33: Revert to Product Image -->
                             <div class="ticket-img-box" @click="showTicketImage(item)">
                                 <img :src="item.image || 'https://via.placeholder.com/300?text=No+Image'" class="ticket-img" loading="lazy">
                                 <div v-if="item.isRedeemed" class="ticket-badge-used">已核銷</div>
@@ -472,7 +471,6 @@
                                     </div>
                                 </div>
                                 
-                                <!-- v2.33: Enhanced Action Buttons -->
                                 <div v-if="!item.isRedeemed">
                                     <button class="btn btn-danger w-100 rounded-pill py-2 fw-bold mb-2 shadow-sm" @click="showTicketImage(item)">
                                         <i class="fas fa-search me-2"></i>點擊開啟票券 (顯示條碼)
@@ -1363,9 +1361,12 @@
                     if (h.items && h.items.length > 0) {
                          const expandedItems = [];
                          h.items.forEach(it => {
-                             for(let k=0; k<it.quantity; k++) expandedItems.push(it.name); 
+                             // Handle string quantity safely
+                             const qty = parseInt(it.quantity) || 1;
+                             for(let k=0; k<qty; k++) expandedItems.push(it.name); 
                          });
-                         if(expandedItems[idx]) pName = expandedItems[idx];
+                         // Safety index access
+                         if(idx < expandedItems.length) pName = expandedItems[idx];
                          else pName = h.items[0].name;
                     }
                     return getProductImage(pName);
