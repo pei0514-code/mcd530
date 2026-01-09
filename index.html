@@ -245,7 +245,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.46</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.47</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -292,7 +292,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.46</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.47</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -443,7 +443,7 @@
                         </div>
                         <div v-if="deliveryMethod === 'gift' && driveOnlyItemsNames.length > 0" class="alert alert-warning d-flex align-items-center p-2 mb-3" style="font-size: 12px; font-weight: 700;">
                              <i class="fas fa-exclamation-circle me-2 text-warning fs-5"></i>
-                             <div>⚠️ {{ driveOnlyItemsNames.join(', ') }} 僅支援截圖發送。</div>
+                             <div>⚠️ {{ driveOnlyItemsNames.join('、') }} 僅支援截圖發送，系統將自動分成2個訂單，並各別進行發貨。</div>
                         </div>
 
                         <div class="alert alert-danger d-flex align-items-center p-2 mb-3" style="font-size: 13px; font-weight: 700;">
@@ -573,15 +573,16 @@
                      <div class="modal-header border-0 pb-0 justify-content-end"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                     <div class="modal-body px-4 pb-4">
                         <div class="mb-3 text-warning"><i class="fas fa-stamp fa-4x"></i></div>
-                        <h5 class="fw-bold mb-2">確認核銷票券？</h5>
-                        <p class="text-muted small mb-4" style="line-height: 1.6;">請確定該張電子票券已經完成使用。<br>一經核銷將無法復原，是否繼續？</p>
+                        <h5 class="fw-bold mb-2">是否已完成使用？</h5>
+                        <p class="text-muted small mb-2">請確認您已向店家出示畫面。</p>
+                        <p class="text-danger fw-bold mb-4 fs-5" style="letter-spacing: 1px; text-shadow: 0px 0px 1px rgba(218, 41, 28, 0.2);">⚠️ 一經核銷將無法復原</p>
                         
                         <div class="d-grid gap-2">
                             <button class="btn btn-warning rounded-pill fw-bold shadow-sm" @click="confirmRedeemAction" :disabled="isRedeeming">
                                 <span v-if="isRedeeming"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</span>
                                 <span v-else>確認核銷</span>
                             </button>
-                            <button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">取消</button>
+                            <button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">還沒使用</button>
                         </div>
                     </div>
                 </div>
@@ -641,6 +642,7 @@
                                <div class="small fw-bold text-success mb-2"><i class="fas fa-gift me-1"></i>發貨內容 (點擊開啟)：</div>
                                <div v-for="(link, idx) in h.fulfillment.split('\n')" :key="idx" class="mb-2">
                                    <a v-if="link.trim().length > 0" :href="link" target="_blank" class="btn btn-sm btn-outline-primary w-100 text-truncate fw-bold rounded-pill" style="font-size:11px;"><i class="fas fa-external-link-alt me-1"></i>開啟商品連結 {{ idx + 1 }}</a>
+                                   <div class="text-center text-muted fw-bold mt-1" style="font-size: 10px;">{{ getHistoryItemName(h, idx) }}</div>
                                </div>
                             </div>
                             <div class="d-flex gap-2 flex-wrap">
@@ -1290,6 +1292,17 @@
                     requestManualScreenshot.value = false;
                 };
                 
+                // Helper to map link index to product name in History (v2.47)
+                const getHistoryItemName = (order, idx) => {
+                    if (!order.items) return '';
+                    const expanded = [];
+                    order.items.forEach(it => {
+                        const qty = Number(it.quantity) || 1;
+                        for(let k=0; k<qty; k++) expanded.push(it.name);
+                    });
+                    return expanded[idx] || '商品項';
+                };
+
                 // v228: Ticket Wallet Logic
                 // v231 Refactor: Extracted ticket logic for counting and sorting
                 const allTickets = computed(() => {
@@ -1298,6 +1311,10 @@
                         if ((order.isShipped === true || String(order.isShipped) === 'true') && order.fulfillment) {
                             const links = order.fulfillment.split('\n').filter(l => l.trim().length > 0);
                             
+                            // v2.47: Detect Merged Order (Total Items > Total Links)
+                            const totalItemQty = order.items ? order.items.reduce((sum, it) => sum + (Number(it.quantity)||0), 0) : 0;
+                            const isMergedOrder = totalItemQty > links.length;
+
                             // v2.32: Use Server Log for Redemption status (Column V)
                             const serverLog = order.redemptionLog || "";
                             
@@ -1364,7 +1381,8 @@
                                     redeemedAt: redeemedAt,
                                     purchaseDate: purchaseDate, 
                                     expiryDate: expiryDate, // v2.32
-                                    fullTimestamp: order.timestamp 
+                                    fullTimestamp: order.timestamp,
+                                    isMergedOrder: isMergedOrder // v2.47
                                 });
                             });
                         }
@@ -1402,7 +1420,18 @@
                 };
                 
                 const showTicketImage = (item) => {
+                    // v2.47: Alert for merged tickets before opening
+                    if (item.isMergedOrder && !item.isRedeemed) {
+                        alert("⚠️【多張合併提醒】\n\n此畫面包含兩張(或以上)票券！\n\n請務必「放大」要兌換的 QRCODE，或用手遮擋不使用的部分，避免店家掃描設備重複掃到同一張。");
+                    }
+
                     window.open(item.url, '_blank');
+                    // v2.47: Auto-trigger redemption confirm modal after viewing ticket
+                    if (!item.isRedeemed) {
+                        setTimeout(() => {
+                            openRedeemConfirm(item);
+                        }, 800);
+                    }
                 };
                 
                 // v2.32: Replaced confirm() with Modal
@@ -1481,7 +1510,9 @@
                 // v2.33 Exports
                 linkifiedGuideInstruction,
                 // v2.42 Exports
-                giftOnlyItemsNames, driveOnlyItemsNames };
+                giftOnlyItemsNames, driveOnlyItemsNames,
+                // v2.47 Exports
+                getHistoryItemName };
             }
         }).mount('#app');
     </script>
