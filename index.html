@@ -42,10 +42,7 @@
         
         #static-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.2s ease; text-align: center; padding: 20px; }
 
-        /* v2.42 Fix: Changed from sticky to fixed for better z-index handling */
-        .fixed-header { position: fixed; top: 0; left: 0; right: 0; z-index: 2000; background: var(--glass); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(0,0,0,0.05); }
-        .content-spacer { padding-top: 125px; } /* Adjusted for header height */
-
+        .sticky-header { position: sticky; top: 0; z-index: 1000; background: var(--glass); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(0,0,0,0.05); }
         .category-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 12px 15px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
         .category-scroll::-webkit-scrollbar { display: none; }
         
@@ -207,7 +204,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.42</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.41</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -249,13 +246,12 @@
     </div>
 
     <div id="app" v-cloak>
-        <!-- v2.42: Updated to fixed-header class -->
-        <div class="fixed-header">
+        <div class="sticky-header">
             <div class="p-3 d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.42</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.41</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -274,8 +270,7 @@
             </div>
         </div>
 
-        <!-- v2.42: Added content-spacer class -->
-        <div class="container-fluid px-2 py-3 content-spacer" :class="gridModeClass">
+        <div class="container-fluid px-2 py-3" :class="gridModeClass">
             <div v-if="isLoadingData" class="text-center py-5">
                 <div class="spinner-border text-danger mb-3" role="status"></div>
                 <div class="text-muted fw-bold">品項獲取中...</div>
@@ -409,8 +404,7 @@
                         <div class="alert alert-danger d-flex align-items-center p-2 mb-3" style="font-size: 13px; font-weight: 700;">
                              <i class="fas fa-stopwatch me-2 fs-4"></i><div>⚠️ 為保障庫存權益，訂單成立後請於 <span class="text-decoration-underline">30 分鐘內</span> 完成付款，逾時系統將自動取消訂單。</div>
                         </div>
-                        <!-- v2.42: Updated condition: Hide if deliveryMethod is screenshot (Screenshot Priority implies no Momo info needed even if gift items exist) -->
-                        <div v-if="deliveryMethod === 'gift'" class="mb-3 p-3 bg-light rounded-4 border">
+                        <div v-if="deliveryMethod === 'gift' || hasGiftOnlyItems" class="mb-3 p-3 bg-light rounded-4 border">
                             <div class="form-check mb-3" v-if="!canSelectDrive">
                                 <input class="form-check-input" type="checkbox" v-model="requestManualScreenshot" id="manualScreenshotCheck">
                                 <label class="form-check-label small fw-bold text-dark" for="manualScreenshotCheck">
@@ -471,6 +465,7 @@
                             </div>
                         </div>
                         <div v-if="walletFilter === 'available'" class="alert alert-warning p-2 mb-0 mx-2" style="border-left: 5px solid #ffc107;">
+                             <!-- v2.41 Update: Text reorder -->
                              <div class="text-danger fw-bold mb-1" style="font-size: 15px;">
                                  <i class="fas fa-exclamation-circle me-1"></i>票券一經使用後非自動核銷，需手動自行點擊「核銷」功能
                              </div>
@@ -986,15 +981,11 @@
                     safeSetStorage('mm_cart_storage', JSON.stringify(cart.value));
                 };
 
-                // v2.42: Updated logic
                 const handleCheckout = async () => {
                     const errors = [];
                     if (!acceptTerms.value) errors.push("請先勾選「我已閱讀並同意購買需知」");
                     if (totalPrice.value < 50) errors.push("訂單金額需滿 $50 才能出貨");
-                    
-                    // v2.42: Only require gift info if 'gift' selected explicitly AND not manual screenshot
-                    const requiresGiftInfo = deliveryMethod.value === 'gift' && !requestManualScreenshot.value;
-                    
+                    const requiresGiftInfo = (deliveryMethod.value === 'gift' || hasGiftOnlyItems.value) && !requestManualScreenshot.value;
                     if (requiresGiftInfo) {
                         if (!giftInfo.value.name || !giftInfo.value.phone) errors.push("選擇轉贈需填寫完整收件人姓名與電話");
                         else {
@@ -1022,8 +1013,6 @@
                              if (item.giftStock >= item.quantity) { giftItems.push(item); allocated = true; } 
                              else if (item.driveStock >= item.quantity) { driveItems.push(item); allocated = true; }
                         } else {
-                             // v2.42: Even in screenshot mode, allocate to giftItems if no drive stock,
-                             // but treat it as "manual screenshot" later
                              if (item.driveStock >= item.quantity) { driveItems.push(item); allocated = true; } 
                              else if (item.giftStock >= item.quantity) { giftItems.push(item); allocated = true; }
                         }
@@ -1055,16 +1044,14 @@
                          const record = { id: oid, timestamp: now.toLocaleString(), totalAmount: total, items: giftItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) };
                          records.push(record);
                          
-                         // v2.42: Logic update
-                         const isManual = requestManualScreenshot.value || deliveryMethod.value === 'screenshot';
-                         const methodStr = isManual ? '轉贈(手動截圖)' : 'momo 轉贈';
-                         const mName = isManual ? '' : giftInfo.value.name;
-                         const mPhone = isManual ? '' : giftInfo.value.phone;
+                         const methodStr = requestManualScreenshot.value ? '轉贈(手動截圖)' : 'momo 轉贈';
+                         const mName = requestManualScreenshot.value ? '' : giftInfo.value.name;
+                         const mPhone = requestManualScreenshot.value ? '' : giftInfo.value.phone;
 
                          orderPromises.push(fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ ...record, phone: userContact.value.phone, email: userProfile.value.email || '', deliveryMethod: methodStr, momoName: mName, momoPhone: mPhone, userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', userId: (userProfile.value && userProfile.value.userId) || 'GUEST' }) }));
                          
-                         let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：${isManual ? '📸 轉贈(手動截圖)' : '🎁 momo 轉贈'}\n`;
-                         if(!isManual) msg += `👤 收件：${giftInfo.value.name} / ${giftInfo.value.phone}\n`;
+                         let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：${requestManualScreenshot.value ? '📸 轉贈(手動截圖)' : '🎁 momo 轉贈'}\n`;
+                         if(!requestManualScreenshot.value) msg += `👤 收件：${giftInfo.value.name} / ${giftInfo.value.phone}\n`;
                          msg += `🍱 內容：\n`;
                          giftItems.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${i.name} x${i.quantity}\n`; });
                          msg += `💰 小計：$${total}`;
@@ -1101,9 +1088,6 @@
                     if (selectedBankInfos.value.length === 1) { paymentForm.value.bankCode = selectedBankInfos.value[0].code; }
                     showPaymentForm.value = true;
                 };
-
-                const paymentFormPlaceholder = computed(() => { if (paymentForm.value.bankCode === '396') return '請輸入您的街口暱稱/名稱'; return '請輸入您帳號的後五碼'; });
-                const paymentFormLabel = computed(() => { if (paymentForm.value.bankCode === '396') return '街口名稱：'; return '帳號末五碼：'; });
 
                 const submitPayment = async () => {
                     if (!paymentForm.value.bankCode || !paymentForm.value.accountInfo) { showToast('請完整填寫資訊'); return; }
