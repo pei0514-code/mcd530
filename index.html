@@ -188,7 +188,7 @@
 
         /* v2.32.1: History Link Row Styles */
         .history-link-row { display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid #eee; border-radius: 10px; margin-bottom: 8px; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .history-link-thumb { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid #f0f0f0; flex-shrink: 0; }
+        /* Removed .history-link-thumb since image is removed */
 
         [v-cloak] { display: none; }
     </style>
@@ -206,7 +206,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.32.1</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.32.2</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -253,7 +253,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.32.1</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.32.2</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -636,11 +636,10 @@
                             <div class="history-imgs-container mb-3">
                                 <div v-for="item in h.items" :key="item.name" class="h-thumb-box"><img :src="getProductImage(item.name)" class="h-thumb" onerror="this.src='https://via.placeholder.com/48'"><div class="h-qty-badge">x{{ item.quantity }}</div></div>
                             </div>
-                            <!-- v2.32.1: Optimized Link Display -->
+                            <!-- v2.32.2: Removed Image, Kept Layout -->
                             <div v-if="h.fulfillment" class="mt-2 mb-3 p-2 bg-light rounded border">
                                <div class="small fw-bold text-success mb-2"><i class="fas fa-gift me-1"></i>發貨內容 (點擊開啟)：</div>
                                <div v-for="(link, idx) in h.fulfillment.split('\n')" :key="idx" v-if="link.trim().length > 0" class="history-link-row">
-                                   <img :src="getHistoryLinkImage(h, idx)" class="history-link-thumb" onerror="this.src='https://via.placeholder.com/40?text=?'">
                                    <div class="flex-grow-1">
                                        <div class="d-flex justify-content-between align-items-center mb-1">
                                             <span class="badge bg-secondary rounded-pill" style="font-size: 9px;">No. {{ idx + 1 }}</span>
@@ -1360,18 +1359,7 @@
                 };
 
                 // v2.32.1: Helper to get image for history links with safety check
-                const getHistoryLinkImage = (h, idx) => {
-                    try {
-                        if (!h.items || !Array.isArray(h.items)) return 'https://via.placeholder.com/40?text=M';
-                        let expandedNames = [];
-                        h.items.forEach(it => {
-                            const qty = parseInt(it.quantity) || 1;
-                            for(let k=0; k<qty; k++) expandedNames.push(it.name); 
-                        });
-                        const pName = expandedNames[idx] || (h.items[0] ? h.items[0].name : '');
-                        return getProductImage(pName);
-                    } catch(e) { return 'https://via.placeholder.com/40?text=Err'; }
-                };
+                // v2.32.2: Removed getHistoryLinkImage due to potential errors
 
                 return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayment, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, fetchOrderStatus, showToast, errorMsg, 
                 // v228 Exports
@@ -1381,9 +1369,8 @@
                 // v231 Exports
                 availableTickets, usedTickets, currentDisplayTickets,
                 // v2.32 Exports
-                openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery,
-                // v2.32.1 Exports
-                getHistoryLinkImage };
+                openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery 
+                };
             }
         }).mount('#app');
     </script>
