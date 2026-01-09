@@ -726,7 +726,7 @@
                 const deliveryMethod = ref('screenshot'); 
                 
                 // v212: Default selected payment to '822' (CTBC)
-                const selectedPayments = ref(['822']);
+                const selectedPayments = ref([]);
                 const bankAccounts = ref(BANK_ACCOUNTS);
 
                 const giftInfo = ref({ 
@@ -1218,7 +1218,7 @@
                     safeSetStorage('mm_cart_storage', '{}'); // Clear saved cart
                     deliveryMethod.value = 'screenshot'; 
                     // v212: Reset to default payment
-                    selectedPayments.value = ['822']; 
+                    selectedPayments.value = []; 
                     showPaymentForm.value = false; 
                 };
 
