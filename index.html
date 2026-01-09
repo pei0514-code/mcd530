@@ -175,7 +175,8 @@
         .status-pending { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffa39e; }
         .status-paid { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
 
-        .ticket-card { background: #fff; border: 1px solid #eee; border-radius: 15px; overflow: hidden; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); transition: 0.2s; }
+        /* v2.34 Update: Distinct Ticket Card Border */
+        .ticket-card { background: #fff; border: 2px solid #e0e0e0; border-radius: 15px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.06); transition: 0.2s; }
         .ticket-card.redeemed { opacity: 0.6; filter: grayscale(100%); border-color: #ddd; }
         .ticket-card.redeemed .ticket-body { background: #f9f9f9; }
         .ticket-img-box { position: relative; width: 100%; padding-bottom: 100%; background: #f0f0f0; cursor: pointer; }
@@ -201,7 +202,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.33</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.34</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -248,7 +249,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.33</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.34</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -465,7 +466,8 @@
                         </div>
                         <div v-for="(item, idx) in currentDisplayTickets" :key="idx" class="ticket-card" :class="{ redeemed: item.isRedeemed }">
                             <div class="ticket-img-box" @click="showTicketImage(item)">
-                                <img :src="item.isRedeemed ? 'https://i.ibb.co/jZsctfyk/S-35979275-0.jpg' : 'https://i.ibb.co/KxGkCs9K/S-35979276-0.jpg'" class="ticket-img" loading="lazy">
+                                <!-- v2.34: Use item.productImage instead of generic -->
+                                <img :src="item.productImage" class="ticket-img" loading="lazy">
                                 <div class="zoom-icon"><i class="fas fa-search"></i></div>
                             </div>
                             <div class="ticket-body">
@@ -477,13 +479,21 @@
                                         <span v-if="item.expiryDate" class="text-danger fw-bold" style="font-size: 10px;">效期: {{ item.expiryDate }}</span>
                                     </div>
                                 </div>
-                                <div v-if="!item.isRedeemed" class="d-grid gap-2">
-                                    <button class="btn btn-outline-secondary btn-sm fw-bold rounded-pill" @click="openVendorGuide(item)">
-                                        <i class="fas fa-book-open me-2"></i>使用說明
+                                <div v-if="!item.isRedeemed">
+                                    <!-- v2.34: Big View Button -->
+                                    <button class="btn btn-danger w-100 rounded-pill fw-bold mb-2 py-2" @click="showTicketImage(item)">
+                                        <i class="fas fa-qrcode me-2"></i>點擊出示票券
                                     </button>
-                                    <button class="btn btn-warning fw-bold rounded-pill" @click="openRedeemConfirm(item)">
-                                        <i class="fas fa-stamp me-2"></i>確認使用 (核銷)
-                                    </button>
+                                    
+                                    <!-- v2.34: Action Row (Same Line) -->
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-outline-secondary flex-grow-1 fw-bold rounded-pill" @click="openVendorGuide(item)">
+                                            <i class="fas fa-book-open me-1"></i>說明
+                                        </button>
+                                        <button class="btn btn-warning flex-grow-1 fw-bold rounded-pill" @click="openRedeemConfirm(item)">
+                                            <i class="fas fa-stamp me-1"></i>核銷
+                                        </button>
+                                    </div>
                                 </div>
                                 <div v-else class="text-center text-muted small fw-bold">
                                     <i class="fas fa-check-circle me-1"></i>於 {{ item.redeemedAt }} 核銷
@@ -1247,8 +1257,13 @@
                                      }
                                 }
                                 
+                                // v2.34: Get Product Image
                                 const product = products.value.find(p => p.name === pName);
-                                if(product) vendorName = product.vendor;
+                                let productImage = 'https://via.placeholder.com/150?text=No+Image';
+                                if(product) {
+                                    vendorName = product.vendor;
+                                    productImage = product.image;
+                                }
 
                                 // Extract date only for display
                                 const purchaseDate = order.timestamp ? order.timestamp.split(' ')[0] : '';
@@ -1264,6 +1279,7 @@
                                     ticketIndex: i, // Track index for redemption
                                     name: pName,
                                     vendor: vendorName,
+                                    productImage: productImage, // v2.34
                                     isRedeemed: isRedeemed,
                                     redeemedAt: redeemedAt,
                                     purchaseDate: purchaseDate, 
