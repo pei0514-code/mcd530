@@ -171,10 +171,10 @@
         .status-pending { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffa39e; }
         .status-paid { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
 
-        /* v233: Ticket Wallet Styles Enhanced */
+        /* v234: Ticket Wallet Styles Enhanced */
         .ticket-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 16px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); transition: 0.2s; position: relative; }
         .ticket-card.redeemed { border-color: #eee; }
-        /* v233: Grayscale for redeemed images */
+        /* v234: Grayscale for redeemed images */
         .ticket-card.redeemed .ticket-img { filter: grayscale(100%); opacity: 0.7; }
         
         .ticket-img-box { position: relative; width: 100%; aspect-ratio: 1/1; background: #f8f9fa; cursor: pointer; overflow: hidden; }
@@ -192,9 +192,9 @@
 <script type="importmap">
 {
   "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
     "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
   }
 }
@@ -203,7 +203,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.33</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.34</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -250,7 +250,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.33</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.34</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -438,7 +438,7 @@
             </div>
         </div>
 
-        <!-- v233 Updated: Ticket Wallet Modal -->
+        <!-- v234 Updated: Ticket Wallet Modal -->
         <div class="modal fade" id="ticketModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 rounded-4 shadow-lg" style="background: #f8f9fa;">
@@ -469,7 +469,7 @@
                             <i class="fas fa-ticket-alt fa-3x mb-3 text-secondary"></i><br>目前沒有{{ walletFilter === 'available' ? '可用' : '已核銷' }}的票券
                         </div>
                         <div v-for="(item, idx) in currentDisplayTickets" :key="idx" class="ticket-card" :class="{ redeemed: item.isRedeemed }">
-                            <!-- v2.33: Revert to Product Image -->
+                            <!-- v2.34: Revert to Product Image -->
                             <div class="ticket-img-box" @click="showTicketImage(item)">
                                 <img :src="item.image || 'https://via.placeholder.com/300?text=No+Image'" class="ticket-img" loading="lazy">
                                 <div v-if="item.isRedeemed" class="ticket-badge-used">已核銷</div>
@@ -484,7 +484,7 @@
                                     </div>
                                 </div>
                                 
-                                <!-- v2.33: Enhanced Action Buttons -->
+                                <!-- v2.34: Enhanced Action Buttons -->
                                 <div v-if="!item.isRedeemed">
                                     <button class="btn btn-danger w-100 rounded-pill py-2 fw-bold mb-2 shadow-sm" @click="showTicketImage(item)">
                                         <i class="fas fa-search me-2"></i>點擊開啟票券 (顯示條碼)
@@ -544,7 +544,7 @@
                         </div>
                         <div class="p-4">
                             <h5 class="fw-bold mb-3 text-danger">{{ currentVendorGuide.name }}</h5>
-                            <!-- v2.33: Auto-linkify -->
+                            <!-- v2.34: Auto-linkify -->
                             <div class="text-muted small" style="white-space: pre-wrap; line-height: 1.6;" v-html="linkify(currentVendorGuide.instruction || '暫無詳細說明')"></div>
                         </div>
                     </div>
@@ -555,7 +555,6 @@
             </div>
         </div>
 
-        <!-- Keep other modals (Success, History, etc.) consistent with previous version -->
         <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content text-center p-4 border-0 rounded-4 shadow-lg">
@@ -661,7 +660,7 @@
                             </div>
                             <div v-if="h.fulfillment" class="mt-2 mb-3 p-2 bg-light rounded border">
                                <div class="small fw-bold text-success mb-2"><i class="fas fa-gift me-1"></i>發貨內容 (點擊開啟)：</div>
-                               <!-- v233: Added product thumbnails to links -->
+                               <!-- v234: Added product thumbnails to links -->
                                <div v-for="(link, idx) in h.fulfillment.split('\n')" :key="idx" class="mb-2 d-flex align-items-center gap-2" v-if="link.trim().length > 0">
                                    <img :src="getHistoryLinkImage(h, idx)" class="rounded border" style="width:30px; height:30px; object-fit:cover;">
                                    <a :href="link" target="_blank" class="btn btn-sm btn-outline-primary flex-grow-1 text-truncate fw-bold rounded-pill" style="font-size:11px;"><i class="fas fa-external-link-alt me-1"></i>開啟商品連結 {{ idx + 1 }}</a>
@@ -845,7 +844,7 @@
 
                 watch(acceptTerms, (newVal) => { safeSetStorage('mm_accept_terms', newVal); });
 
-                // v2.33 Checkout Logic
+                // v2.34 Checkout Logic
                 const cartItems = computed(() => Object.keys(cart.value).map(id => { const p = products.value.find(x => x.id === id); return p ? { ...p, quantity: cart.value[id] } : null; }).filter(x => x));
                 
                 const hasGiftOnlyItems = computed(() => cartItems.value.some(item => item.driveStock < item.quantity && item.giftStock >= item.quantity));
@@ -867,8 +866,6 @@
                     if(method === 'screenshot') manualScreenshot.value = false;
                 }
 
-                // ... (existing helper functions) ...
-                
                 const fetchWithRetry = async (url, retries = 3) => {
                     for (let i = 0; i < retries; i++) {
                         try {
@@ -1130,8 +1127,12 @@
                          const total = driveItems.reduce((a,b) => a + (b.price*b.quantity), 0);
                          const record = { id: oid, timestamp: now.toLocaleString(), totalAmount: total, items: driveItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) };
                          records.push(record);
-                         orderPromises.push(fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ ...record, phone: userContact.value.phone, email: userProfile.value.email || '', deliveryMethod: '截圖發送', momoName: '', momoPhone: '', userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', userId: (userProfile.value && userProfile.value.userId) || 'GUEST' }) }));
-                         let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：📸 截圖發送\n🍱 內容：\n`;
+                         
+                         // v2.34: Pass specific manual text if checked
+                         const methodText = manualScreenshot.value ? '截圖(人工處理)' : '截圖發送';
+                         
+                         orderPromises.push(fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ ...record, phone: userContact.value.phone, email: userProfile.value.email || '', deliveryMethod: methodText, momoName: '', momoPhone: '', userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', userId: (userProfile.value && userProfile.value.userId) || 'GUEST' }) }));
+                         let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：${manualScreenshot.value ? '📸 截圖(人工處理)' : '📸 截圖發送'}\n🍱 內容：\n`;
                          driveItems.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${i.name} x${i.quantity}\n`; });
                          msg += `💰 小計：$${total}`;
                          lineMessages.push(msg);
@@ -1257,7 +1258,7 @@
                                 let pName = '商品票券';
                                 let vendorName = '';
                                 let expiryDate = '';
-                                let image = ''; // v2.33: Add image prop
+                                let image = ''; // v2.34: Add image prop
 
                                 if (order.items && order.items.length > 0) {
                                      const expandedItems = [];
@@ -1278,7 +1279,7 @@
                                 const product = products.value.find(p => p.name === pName);
                                 if(product) {
                                     vendorName = product.vendor;
-                                    image = product.image; // v2.33
+                                    image = product.image; // v2.34
                                 }
 
                                 const purchaseDate = order.timestamp ? order.timestamp.split(' ')[0] : '';
@@ -1298,7 +1299,7 @@
                                     purchaseDate: purchaseDate, 
                                     expiryDate: expiryDate, 
                                     fullTimestamp: order.timestamp,
-                                    image: image // v2.33
+                                    image: image // v2.34
                                 });
                             });
                         }
@@ -1386,7 +1387,7 @@
                      }
                 };
                 
-                // v2.33: Helper to linkify text
+                // v2.34: Helper to linkify text
                 const linkify = (inputText) => {
                     if(!inputText) return '';
                     const replacedText = inputText.replace(
@@ -1396,7 +1397,7 @@
                     return replacedText;
                 };
 
-                // v2.33: Helper to get image for history links
+                // v2.34: Helper to get image for history links
                 const getHistoryLinkImage = (h, idx) => {
                     let pName = '商品';
                     if (h.items && h.items.length > 0) {
@@ -1418,7 +1419,7 @@
                 openVendorGuide, currentVendorGuide,
                 availableTickets, usedTickets, currentDisplayTickets,
                 openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery, 
-                linkify, getHistoryLinkImage, manualScreenshot, setDelivery }; // v2.33 exports
+                linkify, getHistoryLinkImage, manualScreenshot, setDelivery }; // v2.34 exports
             }
         }).mount('#app');
     </script>
