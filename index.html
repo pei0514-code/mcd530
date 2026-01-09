@@ -204,7 +204,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.41</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.42</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -251,7 +251,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.41</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.42</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -395,16 +395,22 @@
                         <div v-else-if="!canSelectGift" class="text-muted small text-center mb-2" style="font-size: 11px;">* 您選擇的商品目前無轉贈庫存，僅支援截圖發送</div>
                         <div v-else-if="!canSelectDrive" class="text-muted small text-center mb-2" style="font-size: 11px;">* 此商品目前截圖庫存不足，惟仍可改手動截圖發送(需人工處理)</div>
 
-                        <div v-if="deliveryMethod === 'gift' && hasDriveOnlyItems" class="alert alert-warning d-flex align-items-center p-2 mb-3" style="font-size: 12px; font-weight: 700;">
-                             <i class="fas fa-info-circle me-2 text-warning fs-5"></i><div>注意：部分商品僅支援截圖發送，系統將自動為您拆分為兩筆訂單。</div>
+                        <!-- v2.42 Logic Updates -->
+                        <div v-if="deliveryMethod === 'screenshot' && giftOnlyItemsNames.length > 0" class="alert alert-warning d-flex align-items-center p-2 mb-3" style="font-size: 12px; font-weight: 700;">
+                             <i class="fas fa-exclamation-triangle me-2 text-warning fs-5"></i>
+                             <div>⚠️ {{ giftOnlyItemsNames.join(', ') }} 為轉贈商品，截圖發送需等待客服人工處理，建議改選「優先轉贈」以加速領取。</div>
                         </div>
-                        <div v-if="deliveryMethod === 'screenshot' && hasGiftOnlyItems" class="alert alert-warning d-flex align-items-center p-2 mb-3" style="font-size: 12px; font-weight: 700;">
-                             <i class="fas fa-info-circle me-2 text-warning fs-5"></i><div>注意：部分商品無法自動發送。<br>僅有「轉贈庫存」之商品，若選擇截圖將由客服人工處理。</div>
+                        <div v-if="deliveryMethod === 'gift' && driveOnlyItemsNames.length > 0" class="alert alert-warning d-flex align-items-center p-2 mb-3" style="font-size: 12px; font-weight: 700;">
+                             <i class="fas fa-exclamation-circle me-2 text-warning fs-5"></i>
+                             <div>⚠️ {{ driveOnlyItemsNames.join(', ') }} 僅支援截圖發送。</div>
                         </div>
+
                         <div class="alert alert-danger d-flex align-items-center p-2 mb-3" style="font-size: 13px; font-weight: 700;">
                              <i class="fas fa-stopwatch me-2 fs-4"></i><div>⚠️ 為保障庫存權益，訂單成立後請於 <span class="text-decoration-underline">30 分鐘內</span> 完成付款，逾時系統將自動取消訂單。</div>
                         </div>
-                        <div v-if="deliveryMethod === 'gift' || hasGiftOnlyItems" class="mb-3 p-3 bg-light rounded-4 border">
+                        
+                        <!-- v2.42: Hide Momo info completely if Screenshot priority -->
+                        <div v-if="deliveryMethod === 'gift' || (deliveryMethod === 'screenshot' && giftOnlyItemsNames.length > 0 && false)" class="mb-3 p-3 bg-light rounded-4 border" :style="{ display: deliveryMethod === 'screenshot' ? 'none' : 'block' }">
                             <div class="form-check mb-3" v-if="!canSelectDrive">
                                 <input class="form-check-input" type="checkbox" v-model="requestManualScreenshot" id="manualScreenshotCheck">
                                 <label class="form-check-label small fw-bold text-dark" for="manualScreenshotCheck">
@@ -423,7 +429,12 @@
                         <div class="mb-3 payment-grid">
                              <div v-for="bank in bankAccounts" :key="bank.code" class="payment-option" :class="{ active: selectedPayment === bank.code }" @click="togglePayment(bank.code)">
                                   <i class="fas fa-university text-muted payment-icon"></i>
-                                  <div style="overflow: hidden; flex: 1;"><div class="small fw-bold text-truncate">{{ bank.name }}</div><div v-if="bank.code === '396'" class="text-muted" style="font-size: 10px;">戶名：sue</div></div>
+                                  <div style="overflow: hidden; flex: 1;">
+                                      <div class="small fw-bold text-truncate">{{ bank.name }}</div>
+                                      <!-- v2.42 Bank Note -->
+                                      <div v-if="bank.note" class="text-danger fw-bold" style="font-size: 10px;">{{ bank.note }}</div>
+                                      <div v-if="bank.code === '396'" class="text-muted" style="font-size: 10px;">戶名：sue</div>
+                                  </div>
                                   <i class="fas fa-dot-circle text-danger ms-1" v-if="selectedPayment === bank.code"></i><i class="far fa-circle text-muted ms-1" v-else></i>
                              </div>
                         </div>
@@ -465,7 +476,6 @@
                             </div>
                         </div>
                         <div v-if="walletFilter === 'available'" class="alert alert-warning p-2 mb-0 mx-2" style="border-left: 5px solid #ffc107;">
-                             <!-- v2.41 Update: Text reorder -->
                              <div class="text-danger fw-bold mb-1" style="font-size: 15px;">
                                  <i class="fas fa-exclamation-circle me-1"></i>票券一經使用後非自動核銷，需手動自行點擊「核銷」功能。
                              </div>
@@ -591,7 +601,7 @@
                                </div>
                             </div>
                             <div class="d-flex gap-2 flex-wrap">
-                                <button class="btn btn-outline-success btn-sm flex-grow-1 rounded-pill" @click="resendHistory(h)">補傳訂單</button><button class="btn btn-outline-danger btn-sm flex-grow-1 rounded-pill" @click="reBuy(h)">再次購買</button><button v-if="getStatusBadge(h).canReport" class="btn btn-warning btn-sm flex-grow-1 rounded-pill fw-bold text-dark" @click="openReportForHistory(h)">回報付款</button><button v-if="getStatusBadge(h).canCancel" class="btn btn-secondary btn-sm flex-grow-1 rounded-pill fw-bold" @click="openCancelModal(h)">取消訂單</button>
+                                <button class="btn btn-outline-success btn-sm flex-grow-1 rounded-pill" @click="resendHistory(h)">補傳訂單</button><button class="btn btn-outline-danger btn-sm flex-grow-1 rounded-pill" @click="reBuy(h)">再次購買</button><button v-if="getStatusBadge(h).canReport" class="btn btn-warning btn-sm flex-grow-1 rounded-pill fw-bold text-dark" @click="openReportForHistory(h)">{{ h.paymentNote ? '修改回報' : '回報付款' }}</button><button v-if="getStatusBadge(h).canCancel" class="btn btn-secondary btn-sm flex-grow-1 rounded-pill fw-bold" @click="openCancelModal(h)">取消訂單</button>
                             </div>
                         </div>
                     </div>
@@ -754,7 +764,7 @@
                                </div>
                             </div>
                             <div class="d-flex gap-2 flex-wrap">
-                                <button class="btn btn-outline-success btn-sm flex-grow-1 rounded-pill" @click="resendHistory(h)">補傳訂單</button><button class="btn btn-outline-danger btn-sm flex-grow-1 rounded-pill" @click="reBuy(h)">再次購買</button><button v-if="getStatusBadge(h).canReport" class="btn btn-warning btn-sm flex-grow-1 rounded-pill fw-bold text-dark" @click="openReportForHistory(h)">回報付款</button><button v-if="getStatusBadge(h).canCancel" class="btn btn-secondary btn-sm flex-grow-1 rounded-pill fw-bold" @click="openCancelModal(h)">取消訂單</button>
+                                <button class="btn btn-outline-success btn-sm flex-grow-1 rounded-pill" @click="resendHistory(h)">補傳訂單</button><button class="btn btn-outline-danger btn-sm flex-grow-1 rounded-pill" @click="reBuy(h)">再次購買</button><button v-if="getStatusBadge(h).canReport" class="btn btn-warning btn-sm flex-grow-1 rounded-pill fw-bold text-dark" @click="openReportForHistory(h)">{{ h.paymentNote ? '修改回報' : '回報付款' }}</button><button v-if="getStatusBadge(h).canCancel" class="btn btn-secondary btn-sm flex-grow-1 rounded-pill fw-bold" @click="openCancelModal(h)">取消訂單</button>
                             </div>
                         </div>
                     </div>
@@ -772,6 +782,90 @@
                         <div class="guide-card"><div class="guide-icon-box"><i class="fab fa-line"></i></div><div class="guide-content"><h6>3. 訂單傳送</h6><p>按下送出後，系統會自動將訂單明細傳送至 LINE 聊天室，請勿關閉視窗。</p></div></div>
                         <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-file-invoice-dollar"></i></div><div class="guide-content"><h6>4. 付款與回報</h6><p>完成轉帳後，請點擊「回報付款」或至歷史訂單中回報您的帳號後五碼。</p></div></div>
                         <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-gift"></i></div><div class="guide-content"><h6>5. 領取商品</h6><p>選擇截圖發送請直接到我的票券中查看商品，選擇轉贈則請到您的momo會員票券區查看。</p></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="vendorGuideModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 rounded-4 shadow-lg">
+                    <div class="modal-header border-0 bg-light">
+                        <h5 class="fw-bold"><i class="fas fa-info-circle me-2"></i>使用說明</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-0" v-if="currentVendorGuide">
+                        <div v-if="currentVendorGuide.image" class="w-100 bg-dark position-relative" style="min-height:200px; cursor: pointer;" onclick="window.open(this.querySelector('img').src, '_blank')">
+                            <img :src="currentVendorGuide.image" class="w-100 object-fit-contain" style="max-height: 40vh;">
+                            <div class="position-absolute bottom-0 end-0 m-2 badge bg-dark opacity-75"><i class="fas fa-search-plus me-1"></i>點擊放大</div>
+                        </div>
+                        <div class="p-4">
+                            <h5 class="fw-bold mb-3 text-danger">{{ currentVendorGuide.name }}</h5>
+                            <div class="text-muted small" style="white-space: pre-wrap; line-height: 1.6;" v-html="linkifiedGuideInstruction"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 p-3">
+                        <button class="btn btn-dark w-100 rounded-pill fw-bold" data-bs-dismiss="modal">我瞭解了</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content text-center p-4 border-0 rounded-4 shadow-lg">
+                    <div v-if="!showPaymentForm">
+                        <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
+                        <h4 class="fw-bold">訂單已成功送出！</h4>
+                        <p class="small text-muted mb-4">請完成付款後，點擊下方按鈕回報。</p>
+                        <div class="bg-light rounded-3 p-3 text-start mb-4 border">
+                            <div class="fw-bold text-dark border-bottom pb-2 mb-2"><i class="fas fa-wallet me-2"></i>匯款帳號 (點擊複製)</div>
+                            <div v-for="bank in selectedBankInfos" :key="bank.code" class="mb-2 d-flex justify-content-between align-items-center bg-white p-2 rounded border" @click="copyText(bank.account)">
+                                <div><div class="small text-muted">{{ bank.name }}</div><div class="fw-bold text-danger">{{ bank.account }}</div><div v-if="bank.code === '396'" class="text-muted" style="font-size: 11px; margin-top:2px;">街口名稱：Sue</div></div><i class="far fa-copy text-secondary"></i>
+                            </div>
+                        </div>
+                        <button class="btn btn-warning w-100 rounded-pill py-2 fw-bold mb-2 shadow-sm text-dark" @click="openPaymentForm"><i class="fas fa-money-bill-wave me-2"></i>我已付款 (回報後五碼)</button>
+                        <button class="btn btn-outline-dark w-100 rounded-pill py-2 fw-bold" data-bs-dismiss="modal" @click="resetCart">稍後回報 / 關閉視窗</button>
+                    </div>
+                    <div v-else>
+                         <h5 class="fw-bold mb-3"><i class="fas fa-edit me-2"></i>回報付款資訊</h5>
+                         <div class="alert alert-primary fw-bold text-center fs-5 mb-3">本次回報總金額：<span class="text-danger">${{ reportingTotalAmount }}</span></div>
+                         <div class="text-start mb-3">
+                             <label class="form-label-small fw-bold">您匯入的帳戶：</label>
+                             <select v-model="paymentForm.bankCode" class="form-select rounded-pill mb-3" :disabled="selectedBankInfos.length === 1"><option v-for="bank in selectedBankInfos" :key="bank.code" :value="bank.code">{{ bank.name }}</option></select>
+                             <label class="form-label-small fw-bold">{{ paymentFormLabel }}</label><input type="text" v-model="paymentForm.accountInfo" class="form-control rounded-pill" :placeholder="paymentFormPlaceholder">
+                         </div>
+                         <button class="btn btn-success w-100 rounded-pill py-2 fw-bold mb-2 shadow" @click="submitPayment" :disabled="isSubmittingPayment"><span v-if="isSubmittingPayment"><i class="fas fa-spinner fa-spin me-2"></i>傳送中...</span><span v-else>送出回報</span></button>
+                         <button class="btn btn-link text-muted small" @click="showPaymentForm = false">返回上一頁</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="unreportedModal" tabindex="-1">
+             <div class="modal-dialog modal-dialog-centered">
+                 <div class="modal-content border-0 rounded-4 shadow-lg text-center p-4">
+                     <div class="mb-2 text-warning"><i class="fas fa-bell fa-4x"></i></div>
+                     <h5 class="fw-bold mb-2">您有待回報的訂單</h5>
+                     <p class="text-muted small mb-3">請勾選您已完成轉帳的訂單進行回報：</p>
+                     <div class="bg-light rounded-3 p-3 mb-4 text-start border" style="max-height: 200px; overflow-y: auto;">
+                         <div v-for="oid in unreportedOrders" :key="oid" class="form-check mb-2"><input class="form-check-input" type="checkbox" :value="oid" v-model="pendingSelection" :id="'chk-'+oid"><label class="form-check-label fw-bold text-dark" :for="'chk-'+oid">訂單 #{{ oid }}</label></div>
+                     </div>
+                     <div class="d-grid gap-2">
+                         <button class="btn btn-warning rounded-pill fw-bold" @click="openReportForPending" :disabled="pendingSelection.length === 0"><i class="fas fa-money-bill-wave me-2"></i>回報選取訂單</button>
+                         <button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">稍後再說</button>
+                     </div>
+                 </div>
+             </div>
+        </div>
+
+        <div class="modal fade" id="cancelConfirmModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+                    <div class="modal-header border-0 bg-secondary text-white py-3"><h5 class="fw-bold fs-5 mb-0"><i class="fas fa-times-circle me-2"></i>取消訂單確認</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                    <div class="modal-body p-4 text-center">
+                        <div class="mb-3 text-muted"><i class="far fa-sad-tear fa-4x"></i></div><h5 class="fw-bold mb-2">確定要取消這筆訂單嗎？</h5><p class="text-muted small">取消後庫存將會自動釋出，<br>若您已匯款請勿取消，請聯繫客服。</p>
+                        <div class="d-grid gap-2 mt-4"><button class="btn btn-danger rounded-pill fw-bold" @click="confirmCancel"><i class="fas fa-check me-2"></i>確認取消</button><button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">保留訂單</button></div>
                     </div>
                 </div>
             </div>
@@ -842,9 +936,10 @@
         const API_URL = 'https://script.google.com/macros/s/AKfycbx2xdqkRoBGFibvgKRo05QtVcIWZlUjBq-rr_NRJ-8nK1BsFPSorQqnsNa89IPlG45aeA/exec';
         const NUMBERS = ['❶', '❷', '❸', '❹', '❺', '❻', '❼', '❽', '❾', '❿'];
         
+        // v2.42: Added note to Bank 822
         const BANK_ACCOUNTS = [
             { code: '823', name: '將來銀行(823)', account: '88658888888840' },
-            { code: '822', name: '中國信託(822)', account: '864540221080' },
+            { code: '822', name: '中國信託(822)', account: '864540221080', note: '(優先截圖自動發貨)' },
             { code: '812', name: '台新銀行(812)', account: '28881013072004' },
             { code: '396', name: '街口支付', account: '901794346' }
         ];
@@ -893,17 +988,14 @@
                 const orderToCancel = ref(null);
                 const selectedProduct = ref(null);
                 
-                // v228: Ticket Wallet State
-                const walletFilter = ref('available'); // 'available' or 'used'
+                const walletFilter = ref('available');
                 let redeemedMap = {};
                 try { redeemedMap = JSON.parse(safeGetStorage('mm_redeemed_map', '{}')); } catch(e) { redeemedMap = {}; }
                 const redeemedStatus = ref(redeemedMap);
 
-                // v230: Vendor Settings for Guide
                 const vendorInfoMap = ref({});
                 const currentVendorGuide = ref(null);
 
-                // v2.32: Redemption State
                 const itemToRedeem = ref(null);
                 const isRedeeming = ref(false);
                 const ticketSearchQuery = ref('');
@@ -1080,6 +1172,10 @@
                 const hasGiftOnlyItems = computed(() => cartItems.value.some(item => item.driveStock < item.quantity && item.giftStock >= item.quantity));
                 const hasDriveOnlyItems = computed(() => cartItems.value.some(item => item.giftStock < item.quantity && item.driveStock >= item.quantity));
                 
+                // v2.42: Helper to get names of items that restrict the delivery method
+                const giftOnlyItemsNames = computed(() => cartItems.value.filter(item => item.driveStock < item.quantity && item.giftStock >= item.quantity).map(i => i.name));
+                const driveOnlyItemsNames = computed(() => cartItems.value.filter(item => item.giftStock < item.quantity && item.driveStock >= item.quantity).map(i => i.name));
+
                 const canSelectGift = computed(() => cartItems.value.some(i => i.giftStock > 0));
                 const canSelectDrive = computed(() => cartItems.value.some(i => i.driveStock > 0));
 
@@ -1087,10 +1183,16 @@
                     if (!val && deliveryMethod.value === 'gift') { deliveryMethod.value = 'screenshot'; }
                 });
                 
+                // v2.42: Updated Status Badge Logic to allow re-reporting
                 const getStatusBadge = (h) => {
                     if (h.isShipped === true || String(h.isShipped) === 'true') return { text: '✅ 已發貨', class: 'status-shipped', canReport: false, canCancel: false };
                     if (h.paymentNote && (String(h.paymentNote).includes('取消') || String(h.paymentNote).includes('失效'))) return { text: '❌ 已失效', class: 'status-invalid', canReport: false, canCancel: false };
-                    if ((h.isPaid === true || String(h.isPaid) === 'true') || (h.paymentNote && String(h.paymentNote).length > 1)) return { text: '💰 已回報', class: 'status-paid', canReport: false, canCancel: false };
+                    // If Paid is TRUE, user cannot report anymore.
+                    if (h.isPaid === true || String(h.isPaid) === 'true') return { text: '💰 已付款', class: 'status-paid', canReport: false, canCancel: false };
+                    
+                    // If Note exists but NOT Paid, user can "Modify Report"
+                    if (h.paymentNote && String(h.paymentNote).length > 1) return { text: '⏳ 待核對', class: 'status-pending', canReport: true, canCancel: true };
+                    
                     return { text: '⏳ 待回報', class: 'status-pending', canReport: true, canCancel: true };
                 };
                 
@@ -1147,7 +1249,9 @@
                     const errors = [];
                     if (!acceptTerms.value) errors.push("請先勾選「我已閱讀並同意購買需知」");
                     if (totalPrice.value < 50) errors.push("訂單金額需滿 $50 才能出貨");
-                    const requiresGiftInfo = (deliveryMethod.value === 'gift' || hasGiftOnlyItems.value) && !requestManualScreenshot.value;
+                    // v2.42: Updated condition - only require gift info if NOT screenshot priority
+                    const requiresGiftInfo = (deliveryMethod.value === 'gift') && !requestManualScreenshot.value;
+                    
                     if (requiresGiftInfo) {
                         if (!giftInfo.value.name || !giftInfo.value.phone) errors.push("選擇轉贈需填寫完整收件人姓名與電話");
                         else {
@@ -1206,14 +1310,16 @@
                          const record = { id: oid, timestamp: now.toLocaleString(), totalAmount: total, items: giftItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) };
                          records.push(record);
                          
-                         const methodStr = requestManualScreenshot.value ? '轉贈(手動截圖)' : 'momo 轉贈';
-                         const mName = requestManualScreenshot.value ? '' : giftInfo.value.name;
-                         const mPhone = requestManualScreenshot.value ? '' : giftInfo.value.phone;
+                         // v2.42: Logic refinement for manual vs auto gift
+                         const isManual = requestManualScreenshot.value || deliveryMethod.value === 'screenshot';
+                         const methodStr = isManual ? '轉贈(手動截圖)' : 'momo 轉贈';
+                         const mName = isManual ? '' : giftInfo.value.name;
+                         const mPhone = isManual ? '' : giftInfo.value.phone;
 
                          orderPromises.push(fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ ...record, phone: userContact.value.phone, email: userProfile.value.email || '', deliveryMethod: methodStr, momoName: mName, momoPhone: mPhone, userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', userId: (userProfile.value && userProfile.value.userId) || 'GUEST' }) }));
                          
-                         let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：${requestManualScreenshot.value ? '📸 轉贈(手動截圖)' : '🎁 momo 轉贈'}\n`;
-                         if(!requestManualScreenshot.value) msg += `👤 收件：${giftInfo.value.name} / ${giftInfo.value.phone}\n`;
+                         let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：${methodStr}\n`;
+                         if(!isManual) msg += `👤 收件：${giftInfo.value.name} / ${giftInfo.value.phone}\n`;
                          msg += `🍱 內容：\n`;
                          giftItems.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${i.name} x${i.quantity}\n`; });
                          msg += `💰 小計：$${total}`;
@@ -1493,7 +1599,9 @@
                 // v2.32 Exports
                 openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery, 
                 // v2.33 Exports
-                linkifiedGuideInstruction };
+                linkifiedGuideInstruction,
+                // v2.42 Exports
+                giftOnlyItemsNames, driveOnlyItemsNames };
             }
         }).mount('#app');
     </script>
