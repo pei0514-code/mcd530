@@ -186,7 +186,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v219</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v220</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -233,7 +233,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v219</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v220</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -616,103 +616,17 @@
             </div>
         </div>
 
-        <div class="modal fade" id="alertModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
-                    <div class="modal-header border-0 bg-danger text-white py-3">
-                        <h5 class="fw-bold fs-5 mb-0"><i class="fas fa-exclamation-circle me-2"></i>提示</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body p-4 text-center">
-                        <div v-if="alertMessages.length === 1" class="fw-bold text-dark fs-6">
-                            {{ alertMessages[0] }}
-                        </div>
-                        <div v-else class="text-start d-inline-block">
-                            <div v-for="(msg, index) in alertMessages" :key="index" class="mb-2 fw-bold text-dark">
-                                {{ index + 1 }}、{{ msg }}
-                            </div>
-                        </div>
-                        <button class="btn btn-dark w-100 rounded-pill py-2 mt-4 fw-bold" data-bs-dismiss="modal">我知道了</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="modal fade" id="guestWarningModal" tabindex="-1" data-bs-backdrop="static">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
-                    <div class="modal-header border-0 bg-warning text-dark py-3">
-                        <h5 class="fw-bold fs-5 mb-0"><i class="fas fa-user-shield me-2"></i>訪客模式提示</h5>
-                    </div>
-                    <div class="modal-body p-4">
-                        <p class="fw-bold mb-2">您目前使用外部瀏覽器 (Facebook/Chrome...)</p>
-                        <p class="small text-muted mb-3">系統無法辨識您的身分，下單將顯示為 GUEST。為了您的權益，請務必加入官方 LINE 確認訂單。</p>
-                        <div class="d-grid gap-2">
-                             <a href="https://lin.ee/ejXmXDl" target="_blank" class="btn btn-line-custom rounded-pill fw-bold">
-                                <i class="fab fa-line me-2"></i>加入官方 LINE 帳號
-                            </a>
-                            <button class="btn btn-outline-secondary rounded-pill fw-bold" onclick="copyGuestLink()">
-                                <i class="fas fa-copy me-2"></i>複製 LINE 連結
-                            </button>
-                        </div>
-                        <div class="text-center mt-3">
-                            <button class="btn btn-link text-muted small text-decoration-none" data-bs-dismiss="modal">
-                                我已知悉，繼續以訪客瀏覽
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="guideModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden bg-light">
-                    <div class="modal-body p-4">
-                        <div class="text-center mb-4">
-                            <div class="logo-m mx-auto mb-2">M</div>
-                            <h4 class="fw-bold">新手操作指南</h4>
-                            <p class="text-muted small">簡單三步驟，輕鬆享優惠</p>
-                        </div>
-                        
-                        <div class="guide-card">
-                            <div class="guide-icon-box"><i class="fas fa-store"></i></div>
-                            <div class="guide-content">
-                                <h6>1. 挑選票券</h6>
-                                <p>瀏覽商品列表，將喜歡的優惠券加入購物車。</p>
-                            </div>
-                        </div>
-                        
-                        <div class="guide-card">
-                            <div class="guide-icon-box"><i class="fas fa-shopping-basket"></i></div>
-                            <div class="guide-content">
-                                <h6>2. 確認訂單</h6>
-                                <p>購物車檢查商品數量，選擇付款與領取方式。</p>
-                            </div>
-                        </div>
-                        
-                        <div class="guide-card">
-                            <div class="guide-icon-box"><i class="fab fa-line"></i></div>
-                            <div class="guide-content">
-                                <h6>3. 發送訂單</h6>
-                                <p>一鍵發送至 LINE，完成轉帳後告知客服。</p>
-                            </div>
-                        </div>
-
-                        <button class="btn btn-danger w-100 rounded-pill py-3 fw-bold mt-2 shadow-sm" style="background: var(--gradient-red); border: none;" data-bs-dismiss="modal">
-                            我明白了，開始購物！
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div class="modal fade" id="historyModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 rounded-4 shadow-lg">
-                    <div class="modal-header border-0 pt-4 px-4 bg-light">
-                        <h5 class="fw-bold fs-4"><i class="fas fa-history me-2"></i>歷史訂單</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <div class="modal-header border-0 pt-4 px-4 bg-light d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold fs-4 mb-0"><i class="fas fa-history me-2"></i>歷史訂單</h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-outline-danger btn-sm rounded-pill fw-bold" @click="() => { fetchOrderStatus(userProfile.userId); showToast('已刷新訂單狀態'); }">
+                                <i class="fas fa-sync-alt me-1"></i>刷新
+                            </button>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
                     </div>
                     <div class="modal-body px-4 py-3" style="max-height: 60vh; overflow-y: auto;">
                         <div v-if="orderHistory.length === 0" class="text-center py-5 text-muted">尚未有紀錄</div>
@@ -733,6 +647,16 @@
                                     <img :src="getProductImage(item.name)" class="h-thumb" onerror="this.src='https://via.placeholder.com/48'">
                                     <div class="h-qty-badge">x{{ item.quantity }}</div>
                                 </div>
+                            </div>
+                            
+                            <!-- v220: Self-Check Fulfillment Links -->
+                            <div v-if="h.fulfillment" class="mt-2 mb-3 p-2 bg-light rounded border">
+                               <div class="small fw-bold text-success mb-2"><i class="fas fa-gift me-1"></i>發貨內容 (點擊開啟)：</div>
+                               <div v-for="(link, idx) in h.fulfillment.split('\n')" :key="idx" class="mb-2">
+                                   <a v-if="link.trim().length > 0" :href="link" target="_blank" class="btn btn-sm btn-outline-primary w-100 text-truncate fw-bold rounded-pill" style="font-size:11px;">
+                                       <i class="fas fa-external-link-alt me-1"></i>開啟商品連結 {{ idx + 1 }}
+                                   </a>
+                               </div>
                             </div>
                             
                             <div class="d-flex gap-2 flex-wrap">
@@ -1247,7 +1171,7 @@
                                 method: 'POST', mode: 'no-cors', 
                                 body: JSON.stringify({ 
                                     ...record, 
-                                    phone: userContact.value.phone,
+                                    phone: userContact.value.phone, 
                                     email: userProfile.value.email || '',
                                     deliveryMethod: 'momo 轉贈', 
                                     momoName: giftInfo.value.name, 
@@ -1396,7 +1320,7 @@
                     showPaymentForm.value = false; 
                 };
 
-                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayments, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail };
+                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayments, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, fetchOrderStatus, showToast };
             }
         }).mount('#app');
     </script>
