@@ -181,8 +181,10 @@
         .ticket-img-box { position: relative; width: 100%; padding-bottom: 100%; background: #f0f0f0; cursor: pointer; }
         .ticket-img { position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; } 
         .ticket-body { padding: 15px; }
-        /* v2.35: Updated Redeemed Badge Style for Watermark Effect */
         .ticket-badge-used { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); border: 4px solid #555; color: #555; padding: 8px 20px; font-size: 24px; font-weight: 900; border-radius: 12px; opacity: 0.85; background: rgba(255,255,255,0.9); pointer-events: none; white-space: nowrap; z-index: 10; }
+        
+        .ticket-badge-giftable { position: absolute; top: 10px; right: 10px; background: #ff4d4f; color: white; font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 5; pointer-events: none; }
+
         .btn-wallet { border: none; background: #fff5f5; color: var(--brand-red); font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 20px; transition: 0.2s; display: flex; align-items: center; cursor: pointer; }
         .btn-wallet:active { background: #ffe0e0; }
 
@@ -202,7 +204,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.35</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.37</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -249,7 +251,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.35</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.37</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -473,6 +475,8 @@
                         <div v-for="(item, idx) in currentDisplayTickets" :key="idx" class="ticket-card" :class="{ redeemed: item.isRedeemed }">
                             <div class="ticket-img-box" @click="showTicketImage(item)">
                                 <img :src="item.productImage" class="ticket-img" loading="lazy">
+                                <!-- v2.36: Giftable Badge -->
+                                <div v-if="!item.isRedeemed" class="ticket-badge-giftable">可轉贈</div>
                                 <div v-if="item.isRedeemed" class="ticket-badge-used">已核銷</div>
                                 <div class="zoom-icon"><i class="fas fa-search"></i></div>
                             </div>
@@ -486,8 +490,9 @@
                                     </div>
                                 </div>
                                 <div v-if="!item.isRedeemed">
+                                    <!-- v2.36: Updated button text -->
                                     <button class="btn btn-danger w-100 rounded-pill fw-bold mb-2 py-2" @click="showTicketImage(item)">
-                                        <i class="fas fa-qrcode me-2"></i>點擊出示票券
+                                        <i class="fas fa-qrcode me-2"></i>點擊出示票券 (可放大)
                                     </button>
                                     <div class="d-flex gap-2">
                                         <button class="btn btn-outline-secondary flex-grow-1 fw-bold rounded-pill" @click="openVendorGuide(item)">
@@ -509,7 +514,7 @@
         </div>
 
         <div class="modal fade" id="redeemConfirmModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered" style="max-width: 320px;">
+            <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;">
                 <div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden">
                      <div class="modal-header border-0 pb-0 justify-content-end"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                     <div class="modal-body px-4 pb-4">
@@ -687,7 +692,7 @@
         </div>
 
         <div class="modal fade" id="alertModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered" style="max-width: 320px;">
+            <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;">
                 <div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden">
                     <div class="modal-body p-4"><div class="mb-3 text-warning"><i class="fas fa-exclamation-circle fa-3x"></i></div><h5 class="fw-bold mb-3">溫馨提醒</h5><div class="text-muted text-start bg-light p-3 rounded-3 small" style="line-height:1.6;"><div v-for="(msg, idx) in alertMessages" :key="idx" class="mb-1"><i class="fas fa-caret-right me-2 text-warning"></i>{{ msg }}</div></div><div class="mt-4"><button type="button" class="btn btn-dark w-100 rounded-pill fw-bold" data-bs-dismiss="modal">我知道了</button></div></div>
                 </div>
@@ -695,7 +700,7 @@
         </div>
 
         <div class="modal fade" id="guestWarningModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered" style="max-width: 320px;">
+            <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;">
                  <div class="modal-content border-0 rounded-4 shadow-lg text-center p-4">
                      <div class="mb-2 text-danger"><i class="fas fa-user-secret fa-3x"></i></div><h5 class="fw-bold mb-2">訪客模式提醒</h5><p class="text-muted small mb-3">您目前未使用 LINE 登入，訂單將無法自動連結至您的帳號。</p><p class="text-muted small mb-4">建議您使用 LINE 開啟本商城，以享有完整服務與訂單查詢功能。</p><button class="btn btn-danger w-100 rounded-pill fw-bold" onclick="copyGuestLink()">複製商城連結去 LINE 開啟</button>
                  </div>
