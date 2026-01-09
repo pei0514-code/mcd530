@@ -201,7 +201,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.32</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.33</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -248,7 +248,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.32</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.33</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -530,7 +530,7 @@
                         </div>
                         <div class="p-4">
                             <h5 class="fw-bold mb-3 text-danger">{{ currentVendorGuide.name }}</h5>
-                            <div class="text-muted small" style="white-space: pre-wrap; line-height: 1.6;">{{ currentVendorGuide.instruction || '暫無詳細說明' }}</div>
+                            <div class="text-muted small" style="white-space: pre-wrap; line-height: 1.6;" v-html="linkifiedGuideInstruction"></div>
                         </div>
                     </div>
                     <div class="modal-footer border-0 p-3">
@@ -1366,6 +1366,13 @@
                      }
                 };
 
+                // v2.33: Linkify Vendor Instruction
+                const linkifiedGuideInstruction = computed(() => {
+                    if (!currentVendorGuide.value) return '';
+                    let text = currentVendorGuide.value.instruction || '暫無詳細說明';
+                    return text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="word-break:break-all; text-decoration:underline;">$1</a>');
+                });
+
                 return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayment, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, canSelectDrive, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, fetchOrderStatus, showToast, errorMsg, requestManualScreenshot,
                 // v228 Exports
                 openWallet, walletFilter, showTicketImage,
@@ -1374,7 +1381,9 @@
                 // v231 Exports
                 availableTickets, usedTickets, currentDisplayTickets,
                 // v2.32 Exports
-                openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery };
+                openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery, 
+                // v2.33 Exports
+                linkifiedGuideInstruction };
             }
         }).mount('#app');
     </script>
