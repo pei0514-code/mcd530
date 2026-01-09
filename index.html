@@ -245,7 +245,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.44</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.45</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -292,7 +292,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.44</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.45</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -1488,7 +1488,7 @@
 
 
 /**
- * 麥麥商城 v2.43-核銷同步版 + Gmail自動發貨
+ * 麥麥商城 v2.44-核銷同步版 + Gmail自動發貨
  * 
  * 資料結構 (共 22 欄)：
  * ...前20欄同前...
@@ -1534,17 +1534,43 @@ function doPost(e) {
   }
 }
 
-// v2.41: Automated Payment Check via Gmail
+// v2.44: Gmail Auto-Fulfillment (Amount + Time + Uniqueness Logic)
+// Since the bank email does NOT contain sender info, we rely on:
+// 1. Exact Amount Match
+// 2. Deposit Time is AFTER Order Time
+// 3. Deposit Time is within 40 mins of Order Time
+// 4. UNIQUENESS Check: If multiple unpaid orders match the amount in that window, DO NOT auto-fulfill.
 function checkGmailForPayments() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('訂單紀錄');
   if (!sheet) return;
   
-  // 1. Search for unread transfer notifications
-  const threads = GmailApp.search('subject:"匯款轉入通知" is:unread');
+  // 1. Search for unread deposit notifications
+  const threads = GmailApp.search('subject:"存款入帳通知" is:unread');
   if (threads.length === 0) return;
 
   const data = sheet.getDataRange().getValues();
+  // Get potential pending orders once to optimize (exclude header)
+  // Store them as objects with parsed dates
+  const pendingOrders = [];
+  for (let r = 1; r < data.length; r++) {
+      const deliveryMethod = String(data[r][11]);
+      const isPaid = (data[r][15] === true || String(data[r][15]).toLowerCase() === 'true');
+      const isShipped = (data[r][16] === true || String(data[r][16]).toLowerCase() === 'true');
+      
+      // Only check Unpaid & Unshipped orders with "Screenshot" delivery
+      if (!isPaid && !isShipped && deliveryMethod.includes('截圖發送')) {
+          const orderTime = new Date(data[r][0]); // Column A: Timestamp
+          const orderTotal = Number(data[r][5]); // Column F: Total Amount
+          pendingOrders.push({
+              rowIndex: r + 1,
+              orderId: data[r][1],
+              orderTime: orderTime,
+              amount: orderTotal
+          });
+      }
+  }
+
   // Loop through emails
   for (let i = 0; i < threads.length; i++) {
     const messages = threads[i].getMessages();
@@ -1552,52 +1578,64 @@ function checkGmailForPayments() {
       const msg = messages[j];
       if (msg.isUnread()) {
         const body = msg.getPlainBody();
-        // Regex to extract Amount and Last 5 Digits (Adapt regex based on exact CTBC format)
-        // Expected format variants: "轉入金額：1,000元" ... "轉出帳號末五碼：12345"
-        // Or "交易金額：$1,000" ... "摘要：12345"
-        const amountMatch = body.match(/[金額\$][：:]\s*[^\d]*([\d,]+)/) || body.match(/([\d,]+)\s*元/);
-        const accountMatch = body.match(/末五碼[：:]\s*(\d{5})/) || body.match(/帳號[：:]\s*.*(\d{5})/);
+        
+        // Parse Email Content
+        // Expected: "存入金額 69" or "存入金額 1,000"
+        // Expected: "存入日期 2026/01/10 02:56:58"
+        const amountMatch = body.match(/存入金額\s*([\d,]+)/);
+        const dateMatch = body.match(/存入日期\s*(\d{4}\/\d{2}\/\d{2}\s*\d{2}:\d{2}:\d{2})/);
 
-        if (amountMatch && accountMatch) {
-           let emailAmount = parseInt(amountMatch[1].replace(/,/g, ''), 10);
-           let emailLast5 = accountMatch[1];
+        if (amountMatch && dateMatch) {
+           const emailAmount = parseInt(amountMatch[1].replace(/,/g, ''), 10);
+           const emailDateStr = dateMatch[1].replace(/\//g, '-'); // convert 2026/01/10 to 2026-01-10 for safer parsing
+           const emailTime = new Date(emailDateStr);
            
-           // 2. Match against Pending Orders in Sheet
-           // Only check rows that are NOT paid/shipped yet
-           for (let r = 1; r < data.length; r++) {
-               const orderId = data[r][1];
-               const orderTotal = Number(data[r][5]);
-               const deliveryMethod = String(data[r][11]);
-               const paymentNote = String(data[r][14]); // User Report Column (Index 14, Col O)
-               const isPaid = (data[r][15] === true || String(data[r][15]).toLowerCase() === 'true');
-               const isShipped = (data[r][16] === true || String(data[r][16]).toLowerCase() === 'true');
+           if (isNaN(emailTime.getTime())) continue; // Invalid date parse
 
-               // Constraint: Only for Screenshot Delivery (截圖發送)
-               if (!deliveryMethod.includes('截圖發送')) continue;
+           // 2. Find Candidate Orders
+           const candidates = pendingOrders.filter(o => {
+               // A. Amount must match exactly
+               if (o.amount !== emailAmount) return false;
+               
+               // B. Order must be BEFORE Deposit (OrderTime < EmailTime)
+               //    And within 40 minutes (30 mins rule + buffer)
+               const diffMs = emailTime.getTime() - o.orderTime.getTime();
+               const diffMins = diffMs / (1000 * 60);
+               
+               return diffMins >= 0 && diffMins <= 40;
+           });
 
-               // If not processed yet
-               if (!isPaid && !isShipped) {
-                   // Check if Amount matches
-                   if (orderTotal === emailAmount) {
-                       // Check if User Reported Last 5 matches Email Last 5
-                       // Note: User report format is usually "[Bank] 12345"
-                       if (paymentNote.includes(emailLast5)) {
-                           // MATCH FOUND!
-                           const row = r + 1;
-                           // Mark Paid
-                           sheet.getRange(row, 16).setValue(true); 
-                           // Trigger Shipment Logic (Auto Push = true)
-                           processShipmentLogic(sheet, row, orderId, true);
-                           
-                           // Append note to payment column to indicate auto-match
-                           sheet.getRange(row, 15).setValue(paymentNote + " (自動對帳成功)");
-                           
-                           // Mark email as read to prevent double processing
-                           msg.markRead();
-                           break; // Move to next email
-                       }
-                   }
-               }
+           // 3. Logic Decision
+           if (candidates.length === 1) {
+               // SUCCESS: Only ONE person ordered this amount in this time window. Safe to fulfill.
+               const target = candidates[0];
+               const row = target.rowIndex;
+               
+               // Mark Paid
+               sheet.getRange(row, 16).setValue(true); 
+               // Trigger Shipment
+               processShipmentLogic(sheet, row, target.orderId, true);
+               
+               // Add Note
+               let currentNote = sheet.getRange(row, 15).getValue();
+               sheet.getRange(row, 15).setValue((currentNote ? currentNote + " " : "") + "(自動對帳成功)");
+               
+               // Mark email read
+               msg.markRead();
+               
+               // Remove from pending list to prevent double matching in same execution
+               const indexToRemove = pendingOrders.findIndex(x => x.orderId === target.orderId);
+               if(indexToRemove > -1) pendingOrders.splice(indexToRemove, 1);
+
+           } else if (candidates.length > 1) {
+               // AMBIGUOUS: Multiple people bought same amount recently.
+               // Do NOT auto-fulfill to prevent sending wrong item.
+               // Mark email as read? No, leave unread or label it? 
+               // Leaving unread might cause infinite loop processing if logic doesn't change.
+               // Better to mark read but log warning? Or just skip. 
+               // Here we skip marking read so human can see it, OR we mark read and notify admin.
+               // Simplest: Skip. Admin handles manually.
+               console.log("Ambiguous payment match for amount " + emailAmount);
            }
         }
       }
