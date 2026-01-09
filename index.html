@@ -52,7 +52,8 @@
         .logo-m { width: 40px; height: 40px; background: var(--gradient-red); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900; font-style: italic; font-size: 22px; cursor: pointer; }
         .ver-tag { font-weight: 900; font-size: 11px; color: var(--brand-red); opacity: 0.6; }
 
-        .product-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.03); height: 100%; display: flex; flex-direction: column; border: 1px solid rgba(0,0,0,0.02); transition: transform 0.2s ease; }
+        .product-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.03); height: 100%; display: flex; flex-direction: column; border: 1px solid rgba(0,0,0,0.02); transition: transform 0.2s ease; cursor: pointer; }
+        .product-card:active { transform: scale(0.98); }
         .p-img-box { position: relative; width: 100%; aspect-ratio: 1/1; background: #fdfdfd; overflow: hidden; }
         .p-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
         
@@ -173,7 +174,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v212</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v217</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -220,7 +221,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v216</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v217</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -245,7 +246,7 @@
 
             <div v-else class="row" :class="gridRowClass">
                 <div v-for="p in filteredProducts" :key="p.id" :class="gridColClass" class="mb-3 px-1">
-                    <div class="product-card">
+                    <div class="product-card" @click="showProductDetail(p)">
                         <div class="p-img-box"><img :src="p.image || 'https://via.placeholder.com/300'" class="p-img" loading="lazy"></div>
                         <div class="p-body">
                             <div class="p-title">[{{ p.vendor }}] {{ p.name }}</div>
@@ -549,6 +550,51 @@
             </div>
         </div>
 
+        <!-- v217: Product Detail Modal -->
+        <div class="modal fade" id="productDetailModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+                    <div class="modal-header border-0 pb-0">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" style="z-index: 10;"></button>
+                    </div>
+                    <div class="modal-body p-0" v-if="selectedProduct">
+                        <div class="ratio ratio-1x1 bg-light">
+                             <img :src="selectedProduct.image" class="w-100 h-100 object-fit-cover">
+                        </div>
+                        <div class="p-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge bg-dark me-2">{{ selectedProduct.vendor }}</span>
+                                <span class="badge bg-secondary">{{ selectedProduct.category }}</span>
+                            </div>
+                            <h5 class="fw-bold mb-3 text-dark" style="line-height: 1.5;">{{ selectedProduct.name }}</h5>
+                            
+                            <div class="d-flex justify-content-between align-items-end mb-4 border-bottom pb-3">
+                                <div>
+                                    <div class="text-danger fw-bold fs-2">${{ selectedProduct.price }}</div>
+                                    <div class="text-muted text-decoration-line-through small" v-if="selectedProduct.originalPrice > selectedProduct.price">${{ selectedProduct.originalPrice }}</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="mb-1"><span class="stock-tag" :class="{ none: Number(selectedProduct.stock) <= 0 }">剩 {{ selectedProduct.stock }} 組</span></div>
+                                    <div class="text-muted small"><i class="far fa-calendar-alt me-1"></i>{{ selectedProduct.expiryDate }}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                 <div v-if="cart[selectedProduct.id]" class="d-flex justify-content-between align-items-center bg-light rounded-pill p-2 border">
+                                    <button class="btn btn-light rounded-circle shadow-sm" style="width:40px;height:40px;" @click="updateCart(selectedProduct, -1)"><i class="fas fa-minus"></i></button>
+                                    <span class="fw-bold fs-5">{{ cart[selectedProduct.id] }}</span>
+                                    <button class="btn btn-light rounded-circle shadow-sm" style="width:40px;height:40px;" @click="updateCart(selectedProduct, 1)" :disabled="cart[selectedProduct.id] >= Number(selectedProduct.stock)"><i class="fas fa-plus"></i></button>
+                                 </div>
+                                 <button v-else class="btn btn-danger rounded-pill py-3 fw-bold shadow" @click="updateCart(selectedProduct, 1)" :disabled="Number(selectedProduct.stock) <= 0">
+                                     {{ Number(selectedProduct.stock) <= 0 ? '已售完' : '加入購物車' }}
+                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="modal fade" id="alertModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
@@ -782,8 +828,11 @@
 
                 // v216: Cancel Order State
                 const orderToCancel = ref(null);
+                
+                // v217: Product Detail
+                const selectedProduct = ref(null);
 
-                let cartModal, successModal, historyModal, guideModal, alertModalInstance, guestWarningModal, unreportedModal, cancelModal;
+                let cartModal, successModal, historyModal, guideModal, alertModalInstance, guestWarningModal, unreportedModal, cancelModal, productDetailModal;
 
                 onMounted(() => {
                     initApp();
@@ -796,6 +845,7 @@
                         guestWarningModal = new bootstrap.Modal(document.getElementById('guestWarningModal'));
                         unreportedModal = new bootstrap.Modal(document.getElementById('unreportedModal'));
                         cancelModal = new bootstrap.Modal(document.getElementById('cancelConfirmModal'));
+                        productDetailModal = new bootstrap.Modal(document.getElementById('productDetailModal'));
                     } catch(e) { console.error('Bootstrap modal init error', e); }
                     
                     let startY = 0;
@@ -1042,6 +1092,12 @@
                         showToast('取消失敗，請聯繫客服');
                         console.error(e);
                     }
+                };
+                
+                // v217: Show Product Detail
+                const showProductDetail = (p) => {
+                    selectedProduct.value = p;
+                    if (productDetailModal) productDetailModal.show();
                 };
                 
                 const openReportForPending = () => {
@@ -1307,7 +1363,7 @@
                     showPaymentForm.value = false; 
                 };
 
-                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayments, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, openCancelModal, confirmCancel, reportingTotalAmount };
+                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayments, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail };
             }
         }).mount('#app');
     </script>
