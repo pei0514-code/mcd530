@@ -182,7 +182,7 @@
         .ticket-card.redeemed { opacity: 0.6; filter: grayscale(100%); border-color: #ddd; }
         .ticket-card.redeemed .ticket-body { background: #f9f9f9; }
         .ticket-img-box { position: relative; width: 100%; padding-bottom: 100%; background: #f0f0f0; cursor: pointer; }
-        .ticket-img { position: absolute; top:0; left:0; width:100%; height:100%; object-fit: contain; }
+        .ticket-img { position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; } /* Updated to cover for generic images */
         .ticket-body { padding: 15px; }
         .ticket-badge-used { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); border: 3px solid #555; color: #555; padding: 5px 15px; font-size: 20px; font-weight: 900; border-radius: 10px; opacity: 0.8; background: rgba(255,255,255,0.8); pointer-events: none; }
         .btn-wallet { border: none; background: #fff5f5; color: var(--brand-red); font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 20px; transition: 0.2s; display: flex; align-items: center; cursor: pointer; }
@@ -204,7 +204,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.31</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.32</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -251,7 +251,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.31</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.32</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -429,9 +429,19 @@
         <div class="modal fade" id="ticketModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 rounded-4 shadow-lg" style="background: #f8f9fa;">
-                    <div class="modal-header border-0 bg-white shadow-sm">
-                        <h5 class="fw-bold"><i class="fas fa-wallet me-2 text-danger"></i>我的票券夾</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <div class="modal-header border-0 bg-white shadow-sm pb-2">
+                        <div class="w-100">
+                             <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="fw-bold mb-0"><i class="fas fa-wallet me-2 text-danger"></i>我的票券夾</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                             </div>
+                             <!-- v2.32: Search Bar & Refresh -->
+                             <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-3"><i class="fas fa-search text-muted"></i></span>
+                                <input type="text" class="form-control border-start-0" placeholder="搜尋商品名稱..." v-model="ticketSearchQuery">
+                                <button class="btn btn-outline-secondary border-start-0 rounded-end-pill pe-3" @click="() => { fetchOrderStatus(userProfile.userId); showToast('已刷新票券狀態'); }"><i class="fas fa-sync-alt"></i></button>
+                             </div>
+                        </div>
                     </div>
                     <div class="p-2 d-flex justify-content-center bg-white border-bottom">
                         <div class="btn-group w-100 px-2" role="group">
@@ -449,10 +459,10 @@
                             <i class="fas fa-ticket-alt fa-3x mb-3 text-secondary"></i><br>目前沒有{{ walletFilter === 'available' ? '可用' : '已核銷' }}的票券
                         </div>
                         <div v-for="(item, idx) in currentDisplayTickets" :key="idx" class="ticket-card" :class="{ redeemed: item.isRedeemed }">
+                            <!-- v2.32: Use Generic Image based on Status -->
                             <div class="ticket-img-box" @click="showTicketImage(item)">
-                                <img :src="item.url" class="ticket-img" loading="lazy" onerror="this.src='https://via.placeholder.com/300?text=Image+Error'">
-                                <div v-if="item.isRedeemed" class="ticket-badge-used">已核銷</div>
-                                <div v-else class="zoom-icon"><i class="fas fa-search"></i></div>
+                                <img :src="item.isRedeemed ? 'https://i.ibb.co/jZsctfyk/S-35979275-0.jpg' : 'https://i.ibb.co/KxGkCs9K/S-35979276-0.jpg'" class="ticket-img" loading="lazy">
+                                <div class="zoom-icon"><i class="fas fa-search"></i></div>
                             </div>
                             <div class="ticket-body">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -460,6 +470,8 @@
                                     <div class="d-flex flex-column align-items-end">
                                         <span class="badge bg-dark rounded-pill mb-1">{{ item.orderId }}</span>
                                         <span class="text-muted" style="font-size: 10px;">購買: {{ item.purchaseDate }}</span>
+                                        <!-- v2.32: Added Expiry Date Display -->
+                                        <span v-if="item.expiryDate" class="text-danger fw-bold" style="font-size: 10px;">效期: {{ item.expiryDate }}</span>
                                     </div>
                                 </div>
                                 <!-- v230: Added Vendor Guide Button -->
@@ -467,7 +479,7 @@
                                     <button class="btn btn-outline-secondary btn-sm fw-bold rounded-pill" @click="openVendorGuide(item)">
                                         <i class="fas fa-book-open me-2"></i>使用說明
                                     </button>
-                                    <button class="btn btn-warning fw-bold rounded-pill" @click="confirmRedeem(item)">
+                                    <button class="btn btn-warning fw-bold rounded-pill" @click="openRedeemConfirm(item)">
                                         <i class="fas fa-stamp me-2"></i>確認使用 (核銷)
                                     </button>
                                 </div>
@@ -475,6 +487,28 @@
                                     <i class="fas fa-check-circle me-1"></i>於 {{ item.redeemedAt }} 核銷
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- v2.32: New Redeem Confirm Modal -->
+        <div class="modal fade" id="redeemConfirmModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered" style="max-width: 320px;">
+                <div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden">
+                     <div class="modal-header border-0 pb-0 justify-content-end"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                    <div class="modal-body px-4 pb-4">
+                        <div class="mb-3 text-warning"><i class="fas fa-stamp fa-4x"></i></div>
+                        <h5 class="fw-bold mb-2">確認核銷票券？</h5>
+                        <p class="text-muted small mb-4">請向店員出示票券畫面後再點擊核銷。<br>核銷後將無法復原，是否繼續？</p>
+                        
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-warning rounded-pill fw-bold shadow-sm" @click="confirmRedeemAction" :disabled="isRedeeming">
+                                <span v-if="isRedeeming"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</span>
+                                <span v-else>確認核銷</span>
+                            </button>
+                            <button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">取消</button>
                         </div>
                     </div>
                 </div>
@@ -490,8 +524,10 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body p-0" v-if="currentVendorGuide">
-                        <div v-if="currentVendorGuide.image" class="w-100 bg-dark" style="min-height:200px;">
+                        <!-- v2.32: Click to open image -->
+                        <div v-if="currentVendorGuide.image" class="w-100 bg-dark position-relative" style="min-height:200px; cursor: pointer;" onclick="window.open(this.querySelector('img').src, '_blank')">
                             <img :src="currentVendorGuide.image" class="w-100 object-fit-contain" style="max-height: 40vh;">
+                            <div class="position-absolute bottom-0 end-0 m-2 badge bg-dark opacity-75"><i class="fas fa-search-plus me-1"></i>點擊放大</div>
                         </div>
                         <div class="p-4">
                             <h5 class="fw-bold mb-3 text-danger">{{ currentVendorGuide.name }}</h5>
@@ -764,7 +800,12 @@
                 const vendorInfoMap = ref({});
                 const currentVendorGuide = ref(null);
 
-                let cartModal, successModal, historyModal, guideModal, alertModalInstance, guestWarningModal, unreportedModal, cancelModal, productDetailModal, ticketModal, vendorGuideModal;
+                // v2.32: Redemption State
+                const itemToRedeem = ref(null);
+                const isRedeeming = ref(false);
+                const ticketSearchQuery = ref('');
+
+                let cartModal, successModal, historyModal, guideModal, alertModalInstance, guestWarningModal, unreportedModal, cancelModal, productDetailModal, ticketModal, vendorGuideModal, redeemConfirmModal;
 
                 onMounted(() => {
                     initApp();
@@ -780,6 +821,7 @@
                         productDetailModal = new bootstrap.Modal(document.getElementById('productDetailModal'));
                         ticketModal = new bootstrap.Modal(document.getElementById('ticketModal'));
                         vendorGuideModal = new bootstrap.Modal(document.getElementById('vendorGuideModal'));
+                        redeemConfirmModal = new bootstrap.Modal(document.getElementById('redeemConfirmModal'));
                     } catch(e) { console.error('Bootstrap modal init error', e); }
                 });
 
@@ -1158,20 +1200,43 @@
                         if ((order.isShipped === true || String(order.isShipped) === 'true') && order.fulfillment) {
                             const links = order.fulfillment.split('\n').filter(l => l.trim().length > 0);
                             
+                            // v2.32: Use Server Log for Redemption status (Column V)
+                            const serverLog = order.redemptionLog || "";
+                            
                             links.forEach((url, i) => {
-                                const isRedeemed = !!redeemedStatus.value[url];
-                                const redeemedAt = isRedeemed ? redeemedStatus.value[url] : null;
+                                // Check if this index is marked as redeemed in server log
+                                // Format in server log: "[1]已核銷..." (1-based index)
+                                const isServerRedeemed = serverLog.includes(`[${i+1}]已核銷`);
+                                
+                                // Fallback to local storage if not found (legacy support)
+                                const isLocalRedeemed = !!redeemedStatus.value[url];
+                                const isRedeemed = isServerRedeemed || isLocalRedeemed;
+                                
+                                let redeemedAt = null;
+                                if (isServerRedeemed) {
+                                    // Try parse timestamp from log "[1]已核銷 2023/..."
+                                    const match = serverLog.match(new RegExp(`\\[${i+1}\\]已核銷\\s*(.*)`));
+                                    if (match) redeemedAt = match[1].split('\n')[0];
+                                } else if (isLocalRedeemed) {
+                                    redeemedAt = redeemedStatus.value[url];
+                                }
                                 
                                 let pName = '商品票券';
                                 let vendorName = '';
+                                let expiryDate = '';
                                 
                                 if (order.items && order.items.length > 0) {
                                      const expandedItems = [];
                                      order.items.forEach(it => {
-                                         for(let k=0; k<it.quantity; k++) expandedItems.push(it.name);
+                                         for(let k=0; k<it.quantity; k++) expandedItems.push(it); // Push whole item object
                                      });
-                                     if(expandedItems[i]) pName = expandedItems[i];
-                                     else pName = order.items[0].name + (order.items.length > 1 ? ' 等' : '');
+                                     if(expandedItems[i]) {
+                                         pName = expandedItems[i].name;
+                                         expiryDate = expandedItems[i].expiryDate;
+                                     } else {
+                                         pName = order.items[0].name + (order.items.length > 1 ? ' 等' : '');
+                                         expiryDate = order.items[0].expiryDate;
+                                     }
                                 }
                                 
                                 const product = products.value.find(p => p.name === pName);
@@ -1179,16 +1244,23 @@
 
                                 // Extract date only for display
                                 const purchaseDate = order.timestamp ? order.timestamp.split(' ')[0] : '';
+                                
+                                // Search filtering
+                                if (ticketSearchQuery.value && !pName.includes(ticketSearchQuery.value) && !order.id.includes(ticketSearchQuery.value)) {
+                                    return;
+                                }
 
                                 items.push({
                                     url: url,
                                     orderId: order.id,
+                                    ticketIndex: i, // Track index for redemption
                                     name: pName,
                                     vendor: vendorName,
                                     isRedeemed: isRedeemed,
                                     redeemedAt: redeemedAt,
-                                    purchaseDate: purchaseDate, // v231: Added for sorting/display
-                                    fullTimestamp: order.timestamp // For sorting
+                                    purchaseDate: purchaseDate, 
+                                    expiryDate: expiryDate, // v2.32
+                                    fullTimestamp: order.timestamp 
                                 });
                             });
                         }
@@ -1209,15 +1281,11 @@
                     // v231: Sort Used by Redemption Time (Newest First) if available, else OrderId
                     return allTickets.value.filter(t => t.isRedeemed).sort((a, b) => {
                         if (a.redeemedAt && b.redeemedAt) {
-                            return new Date(b.redeemedAt).getTime() - new Date(a.redeemedAt).getTime();
+                            // Basic string compare for timestamp usually works if format is fixed
+                            return b.redeemedAt.localeCompare(a.redeemedAt);
                         }
                         return b.orderId.localeCompare(a.orderId);
                     });
-                });
-
-                const walletItems = computed(() => {
-                     // Keep this for backward compat if needed, but UI uses currentDisplayTickets
-                     return [...availableTickets.value, ...usedTickets.value];
                 });
                 
                 const currentDisplayTickets = computed(() => {
@@ -1225,6 +1293,7 @@
                 });
                 
                 const openWallet = () => {
+                    ticketSearchQuery.value = '';
                     if (ticketModal) ticketModal.show();
                 };
                 
@@ -1232,18 +1301,47 @@
                     window.open(item.url, '_blank');
                 };
                 
-                const confirmRedeem = (item) => {
-                    if(confirm("確定要核銷此票券嗎？\n核銷後票券將標示為「已使用」，方便您管理。")) {
-                        // v231: Improved Timestamp Format
-                        const now = new Date();
-                        const timeStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-                        
-                        redeemedStatus.value[item.url] = timeStr;
-                        // Force update
-                        redeemedStatus.value = { ...redeemedStatus.value };
-                        safeSetStorage('mm_redeemed_map', JSON.stringify(redeemedStatus.value));
-                        showToast("已標記為核銷！");
+                // v2.32: Replaced confirm() with Modal
+                const openRedeemConfirm = (item) => {
+                    itemToRedeem.value = item;
+                    if (redeemConfirmModal) redeemConfirmModal.show();
+                };
+
+                const confirmRedeemAction = async () => {
+                    if (!itemToRedeem.value) return;
+                    isRedeeming.value = true;
+                    
+                    const item = itemToRedeem.value;
+                    const now = new Date();
+                    const timeStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+
+                    // 1. Optimistic UI Update (Local)
+                    redeemedStatus.value[item.url] = timeStr;
+                    redeemedStatus.value = { ...redeemedStatus.value };
+                    safeSetStorage('mm_redeemed_map', JSON.stringify(redeemedStatus.value));
+
+                    // 2. Call Backend to Sync
+                    try {
+                        await fetch(API_URL, {
+                            method: 'POST', mode: 'no-cors',
+                            body: JSON.stringify({
+                                action: 'redeemTicket',
+                                orderId: item.orderId,
+                                ticketIndex: item.ticketIndex,
+                                timestamp: timeStr
+                            })
+                        });
+                        // 3. Refresh Order Status to get definitive state from server
+                        fetchOrderStatus(userProfile.value.userId);
+                    } catch(e) {
+                        console.error("Redeem Sync Failed", e);
+                        // Fallback remains (Local storage)
                     }
+
+                    isRedeeming.value = false;
+                    if (redeemConfirmModal) redeemConfirmModal.hide();
+                    showToast("核銷成功！");
+                    itemToRedeem.value = null;
                 };
 
                 // v230: Vendor Guide Logic
@@ -1262,11 +1360,13 @@
 
                 return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayment, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, fetchOrderStatus, showToast, errorMsg, 
                 // v228 Exports
-                openWallet, walletItems, walletFilter, confirmRedeem, showTicketImage,
+                openWallet, walletFilter, showTicketImage,
                 // v230 Exports
                 openVendorGuide, currentVendorGuide,
                 // v231 Exports
-                availableTickets, usedTickets, currentDisplayTickets };
+                availableTickets, usedTickets, currentDisplayTickets,
+                // v2.32 Exports
+                openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery };
             }
         }).mount('#app');
     </script>
