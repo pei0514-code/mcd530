@@ -245,7 +245,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.47</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.48</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -292,7 +292,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.47</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.48</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -439,15 +439,17 @@
                         <!-- v2.42 Logic Updates -->
                         <div v-if="deliveryMethod === 'screenshot' && giftOnlyItemsNames.length > 0" class="alert alert-warning d-flex align-items-center p-2 mb-3" style="font-size: 12px; font-weight: 700;">
                              <i class="fas fa-exclamation-triangle me-2 text-warning fs-5"></i>
-                             <div>⚠️ {{ giftOnlyItemsNames.join(', ') }} 為轉贈商品，截圖發送需等待客服人工處理，建議改選「優先轉贈」以加速領取。</div>
+                             <!-- Update 1: Use ideographic comma -->
+                             <div>⚠️ {{ giftOnlyItemsNames.join('、') }} 為轉贈商品，截圖發送需等待客服人工處理，建議改選「優先轉贈」以加速領取。</div>
                         </div>
                         <div v-if="deliveryMethod === 'gift' && driveOnlyItemsNames.length > 0" class="alert alert-warning d-flex align-items-center p-2 mb-3" style="font-size: 12px; font-weight: 700;">
                              <i class="fas fa-exclamation-circle me-2 text-warning fs-5"></i>
                              <div>⚠️ {{ driveOnlyItemsNames.join('、') }} 僅支援截圖發送，系統將自動分成2個訂單，並各別進行發貨。</div>
                         </div>
 
+                        <!-- Update 3: Warning text update -->
                         <div class="alert alert-danger d-flex align-items-center p-2 mb-3" style="font-size: 13px; font-weight: 700;">
-                             <i class="fas fa-stopwatch me-2 fs-4"></i><div>⚠️ 為保障庫存權益，訂單成立後請於 <span class="text-decoration-underline">30 分鐘內</span> 完成付款，逾時系統將自動取消訂單。</div>
+                             <i class="fas fa-stopwatch me-2 fs-4"></i><div>⚠️ 為維護庫存管理，訂單成立後請於 <span class="text-decoration-underline">30 分鐘內</span> 完成付款，逾時系統將自動取消訂單。優先截圖使用中信轉帳將採取自動發券。</div>
                         </div>
                         
                         <!-- v2.42: Hide Momo info completely if Screenshot priority -->
@@ -472,8 +474,8 @@
                                   <i class="fas fa-university text-muted payment-icon"></i>
                                   <div style="overflow: hidden; flex: 1;">
                                       <div class="small fw-bold text-truncate">{{ bank.name }}</div>
-                                      <!-- v2.42 Bank Note -->
-                                      <div v-if="bank.note" class="text-danger fw-bold" style="font-size: 10px;">{{ bank.note }}</div>
+                                      <!-- Update 2: Hide note if gift priority + CTBC -->
+                                      <div v-if="bank.note && !(deliveryMethod === 'gift' && bank.code === '822')" class="text-danger fw-bold" style="font-size: 10px;">{{ bank.note }}</div>
                                       <div v-if="bank.code === '396'" class="text-muted" style="font-size: 10px;">戶名：sue</div>
                                   </div>
                                   <i class="fas fa-dot-circle text-danger ms-1" v-if="selectedPayment === bank.code"></i><i class="far fa-circle text-muted ms-1" v-else></i>
@@ -502,6 +504,13 @@
                              <div class="input-group input-group-sm">
                                 <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-3"><i class="fas fa-search text-muted"></i></span>
                                 <input type="text" class="form-control border-start-0" placeholder="搜尋商品名稱..." v-model="ticketSearchQuery">
+                                <!-- Update 4: Ticket Sort Select -->
+                                <select v-if="walletFilter === 'available'" v-model="ticketSortType" class="form-select border-start-0 border-end-0 bg-light fw-bold text-secondary" style="max-width: 90px; font-size: 11px;">
+                                    <option value="expiry">📅 效期近</option>
+                                    <option value="purchase">🕒 購買新</option>
+                                    <option value="order">🔢 單號新</option>
+                                    <option value="vendor">🏷️ 種類</option>
+                                </select>
                                 <button class="btn btn-outline-danger border-start-0 rounded-end-pill pe-3 fw-bold" @click="() => { fetchOrderStatus(userProfile.userId); showToast('已刷新票券狀態'); }">
                                     刷新 <i class="fas fa-sync-alt ms-1"></i>
                                 </button>
@@ -881,6 +890,8 @@
                 const itemToRedeem = ref(null);
                 const isRedeeming = ref(false);
                 const ticketSearchQuery = ref('');
+                // Update 4: Ticket Sort Type Ref
+                const ticketSortType = ref('expiry'); // Default sort by Expiry
 
                 let cartModal, successModal, historyModal, guideModal, alertModalInstance, guestWarningModal, unreportedModal, cancelModal, productDetailModal, ticketModal, vendorGuideModal, redeemConfirmModal;
 
@@ -1391,21 +1402,50 @@
                 });
 
                 const availableTickets = computed(() => {
-                    // v231: Sort Available by Newest First (Order Timestamp)
-                    return allTickets.value.filter(t => !t.isRedeemed).sort((a, b) => {
-                         // Simple string comparison for standard format YYYY/MM/DD works reasonably well
-                         // or just rely on orderId descending
-                         return b.orderId.localeCompare(a.orderId);
+                    let list = allTickets.value.filter(t => !t.isRedeemed);
+                    return list.sort((a, b) => {
+                        // Update 4: Sorting Logic
+                        if (ticketSortType.value === 'expiry') {
+                             // Expiry Date Ascending (Near to Far)
+                             // Put empty or non-standard dates at the end
+                             const validA = a.expiryDate && a.expiryDate.match(/\d{4}\/\d{2}\/\d{2}/);
+                             const validB = b.expiryDate && b.expiryDate.match(/\d{4}\/\d{2}\/\d{2}/);
+                             
+                             if (validA && !validB) return -1;
+                             if (!validA && validB) return 1;
+                             
+                             if (validA && validB) return a.expiryDate.localeCompare(b.expiryDate);
+                             // Fallback
+                             return b.orderId.localeCompare(a.orderId);
+                        }
+                        if (ticketSortType.value === 'purchase') {
+                             // Purchase Date Descending (New to Old)
+                             return b.fullTimestamp.localeCompare(a.fullTimestamp) || b.orderId.localeCompare(a.orderId);
+                        }
+                        if (ticketSortType.value === 'order') {
+                             // Order ID Descending
+                             return b.orderId.localeCompare(a.orderId);
+                        }
+                        if (ticketSortType.value === 'vendor') {
+                             // Vendor Alphabetical, then Expiry
+                             return a.vendor.localeCompare(b.vendor) || b.orderId.localeCompare(a.orderId);
+                        }
+                        // Default fallback
+                        return b.orderId.localeCompare(a.orderId);
                     });
                 });
 
                 const usedTickets = computed(() => {
-                    // v231: Sort Used by Redemption Time (Newest First) if available, else OrderId
+                    // Update 4: Sort Used by Redemption Time Descending (Newest redeemed first)
+                    // If no redemption time, fall back to Order ID
                     return allTickets.value.filter(t => t.isRedeemed).sort((a, b) => {
-                        if (a.redeemedAt && b.redeemedAt) {
-                            // Basic string compare for timestamp usually works if format is fixed
-                            return b.redeemedAt.localeCompare(a.redeemedAt);
+                        const timeA = a.redeemedAt || '';
+                        const timeB = b.redeemedAt || '';
+                        if (timeA && timeB) {
+                            return timeB.localeCompare(timeA); // Descending
                         }
+                        if (timeA && !timeB) return -1;
+                        if (!timeA && timeB) return 1;
                         return b.orderId.localeCompare(a.orderId);
                     });
                 });
@@ -1512,7 +1552,10 @@
                 // v2.42 Exports
                 giftOnlyItemsNames, driveOnlyItemsNames,
                 // v2.47 Exports
-                getHistoryItemName };
+                getHistoryItemName,
+                // v2.48 Exports
+                ticketSortType
+                 };
             }
         }).mount('#app');
     </script>
