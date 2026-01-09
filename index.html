@@ -82,11 +82,6 @@
         .opt-item:active { background: #f5f5f5; }
         .opt-item.active { background: var(--brand-red); color: white; }
 
-        .line-float { position: fixed; bottom: 85px; right: 20px; width: 54px; height: 54px; background: var(--line-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 26px; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.3); z-index: 1001; text-decoration: none; border: 2px solid white; transition: 0.2s; }
-        
-        .btn-line-custom { background-color: var(--line-green) !important; color: white !important; border: none !important; box-shadow: 0 4px 12px rgba(6, 199, 85, 0.2) !important; }
-        .btn-line-custom:active { transform: scale(0.98); opacity: 0.9; }
-
         .mode-small .product-card { border-radius: 10px; }
         .mode-small .p-body { padding: 5px; }
         .mode-small .p-title { font-size: 10px; min-height: 28px; line-height: 1.2; -webkit-line-clamp: 2; margin-bottom: 2px; }
@@ -225,7 +220,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v212</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v216</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -466,6 +461,12 @@
                     <!-- 付款回報表單 -->
                     <div v-else>
                          <h5 class="fw-bold mb-3"><i class="fas fa-edit me-2"></i>回報付款資訊</h5>
+                         
+                         <!-- v216: 新增總金額顯示 -->
+                         <div class="alert alert-primary fw-bold text-center fs-5 mb-3">
+                             本次回報總金額：<span class="text-danger">${{ reportingTotalAmount }}</span>
+                         </div>
+
                          <div class="text-start mb-3">
                              <label class="form-label-small fw-bold">您匯入的帳戶：</label>
                              <select v-model="paymentForm.bankCode" class="form-select rounded-pill mb-3" :disabled="selectedBankInfos.length === 1">
@@ -520,6 +521,32 @@
                      </div>
                  </div>
              </div>
+        </div>
+
+        <!-- v216: Cancel Confirmation Modal -->
+        <div class="modal fade" id="cancelConfirmModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+                    <div class="modal-header border-0 bg-secondary text-white py-3">
+                        <h5 class="fw-bold fs-5 mb-0"><i class="fas fa-times-circle me-2"></i>取消訂單確認</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4 text-center">
+                        <div class="mb-3 text-muted"><i class="far fa-sad-tear fa-4x"></i></div>
+                        <h5 class="fw-bold mb-2">確定要取消這筆訂單嗎？</h5>
+                        <p class="text-muted small">取消後庫存將會自動釋出，<br>若您已匯款請勿取消，請聯繫客服。</p>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                             <button class="btn btn-danger rounded-pill fw-bold" @click="confirmCancel">
+                                 <i class="fas fa-check me-2"></i>確認取消
+                             </button>
+                             <button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">
+                                 保留訂單
+                             </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="modal fade" id="alertModal" tabindex="-1">
@@ -645,7 +672,7 @@
                                 <button class="btn btn-outline-success btn-sm flex-grow-1 rounded-pill" @click="resendHistory(h)">補傳訂單</button>
                                 <button class="btn btn-outline-danger btn-sm flex-grow-1 rounded-pill" @click="reBuy(h)">再次購買</button>
                                 <button v-if="getStatusBadge(h).canReport" class="btn btn-warning btn-sm flex-grow-1 rounded-pill fw-bold text-dark" @click="openReportForHistory(h)">回報付款</button>
-                                <button v-if="getStatusBadge(h).canCancel" class="btn btn-secondary btn-sm flex-grow-1 rounded-pill fw-bold" @click="cancelOrder(h)">取消訂單</button>
+                                <button v-if="getStatusBadge(h).canCancel" class="btn btn-secondary btn-sm flex-grow-1 rounded-pill fw-bold" @click="openCancelModal(h)">取消訂單</button>
                             </div>
                         </div>
                     </div>
@@ -753,7 +780,10 @@
                 // v212: Selective reporting
                 const pendingSelection = ref([]);
 
-                let cartModal, successModal, historyModal, guideModal, alertModalInstance, guestWarningModal, unreportedModal;
+                // v216: Cancel Order State
+                const orderToCancel = ref(null);
+
+                let cartModal, successModal, historyModal, guideModal, alertModalInstance, guestWarningModal, unreportedModal, cancelModal;
 
                 onMounted(() => {
                     initApp();
@@ -765,6 +795,7 @@
                         alertModalInstance = new bootstrap.Modal(document.getElementById('alertModal'));
                         guestWarningModal = new bootstrap.Modal(document.getElementById('guestWarningModal'));
                         unreportedModal = new bootstrap.Modal(document.getElementById('unreportedModal'));
+                        cancelModal = new bootstrap.Modal(document.getElementById('cancelConfirmModal'));
                     } catch(e) { console.error('Bootstrap modal init error', e); }
                     
                     let startY = 0;
@@ -928,6 +959,14 @@
                 const totalQty = computed(() => cartItems.value.reduce((a, b) => a + b.quantity, 0));
                 const totalPrice = computed(() => cartItems.value.reduce((a, b) => a + (b.price * b.quantity), 0));
                 
+                // v216: Compute total amount for selected orders in payment reporting
+                const reportingTotalAmount = computed(() => {
+                    if (lastOrderIds.value.length === 0) return 0;
+                    return orderHistory.value
+                        .filter(o => lastOrderIds.value.includes(o.id))
+                        .reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+                });
+
                 const selectedBankInfos = computed(() => {
                     if (selectedPayments.value.length === 0) return bankAccounts.value; 
                     return bankAccounts.value.filter(b => selectedPayments.value.includes(b.code));
@@ -960,9 +999,17 @@
                     if(successModal) successModal.show();
                 };
                 
-                const cancelOrder = async (h) => {
-                    if (!confirm('確定要取消這筆訂單嗎？\n取消後庫存將會釋出。')) return;
-                    
+                // v216: Stylized Cancel Flow
+                const openCancelModal = (h) => {
+                    orderToCancel.value = h;
+                    if(cancelModal) cancelModal.show();
+                };
+
+                const confirmCancel = async () => {
+                    if (!orderToCancel.value) return;
+                    const h = orderToCancel.value;
+                    if (cancelModal) cancelModal.hide();
+
                     try {
                         showToast('正在取消訂單...');
                         const response = await fetch(API_URL, {
@@ -986,12 +1033,10 @@
                         unreportedOrders.value = remPending;
                         safeSetStorage('mm_pending_payment_orders', JSON.stringify(remPending));
                         
-                        showToast('訂單已取消');
+                        showToast('訂單已成功取消！謝謝您');
                         
                         // Reload products to reflect stock changes after short delay
-                        setTimeout(() => {
-                             initApp(); 
-                        }, 1000);
+                        setTimeout(() => { initApp(); }, 1200);
                         
                     } catch(e) {
                         showToast('取消失敗，請聯繫客服');
@@ -1201,7 +1246,7 @@
                         });
                         
                         if (liff.isInClient()) {
-                             const msg = `💰【付款回報】\n單號：${lastOrderIds.value.join(', ')}\n銀行：${bankName}\n帳號/名稱：${paymentForm.value.accountInfo}`;
+                             const msg = `💰【付款回報】\n單號：${lastOrderIds.value.join(', ')}\n銀行：${bankName}\n帳號/名稱：${paymentForm.value.accountInfo}\n總金額：$${reportingTotalAmount.value}`;
                              liff.sendMessages([{ type: 'text', text: msg }])
                                  .then(() => console.log('Message sent'))
                                  .catch(err => console.error('LIFF Send Error', err));
@@ -1262,7 +1307,7 @@
                     showPaymentForm.value = false; 
                 };
 
-                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayments, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, cancelOrder };
+                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayments, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, openCancelModal, confirmCancel, reportingTotalAmount };
             }
         }).mount('#app');
     </script>
