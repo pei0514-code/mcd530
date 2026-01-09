@@ -83,6 +83,11 @@
         .opt-item:active { background: #f5f5f5; }
         .opt-item.active { background: var(--brand-red); color: white; }
 
+        .line-float { position: fixed; bottom: 85px; right: 20px; width: 54px; height: 54px; background: var(--line-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 26px; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.3); z-index: 1001; text-decoration: none; border: 2px solid white; transition: 0.2s; }
+        
+        .btn-line-custom { background-color: var(--line-green) !important; color: white !important; border: none !important; box-shadow: 0 4px 12px rgba(6, 199, 85, 0.2) !important; }
+        .btn-line-custom:active { transform: scale(0.98); opacity: 0.9; }
+
         .mode-small .product-card { border-radius: 10px; }
         .mode-small .p-body { padding: 5px; }
         .mode-small .p-title { font-size: 10px; min-height: 28px; line-height: 1.2; -webkit-line-clamp: 2; margin-bottom: 2px; }
@@ -174,7 +179,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v217</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v218</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -221,7 +226,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v217</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v218</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -324,7 +329,7 @@
                                         <span class="fw-bold text-danger">${{ item.price * item.quantity }}</span>
                                     </div>
                                     <div class="text-muted" style="font-size: 10px;">
-                                        (雲端: {{ item.driveStock }} | 轉贈: {{ item.giftStock }})
+                                        (截圖: {{ item.driveStock }} | 轉贈: {{ item.giftStock }})
                                     </div>
                                 </div>
                             </div>
@@ -446,6 +451,7 @@
                                 <div>
                                     <div class="small text-muted">{{ bank.name }}</div>
                                     <div class="fw-bold text-danger">{{ bank.account }}</div>
+                                    <div v-if="bank.code === '396'" class="text-muted" style="font-size: 11px; margin-top:2px;">街口名稱：Sue</div>
                                 </div>
                                 <i class="far fa-copy text-secondary"></i>
                             </div>
@@ -1004,7 +1010,17 @@
                 const gridColClass = computed(() => viewMode.value === 'large' ? 'col-6' : (viewMode.value === 'medium' ? 'col-4' : 'col-3'));
 
                 const categories = computed(() => [...new Set(products.value.map(p => p.category))]);
-                const filteredProducts = computed(() => currentCat.value === 'ALL' ? products.value : products.value.filter(p => p.category === currentCat.value));
+                const filteredProducts = computed(() => {
+                    let res = currentCat.value === 'ALL' ? products.value : products.value.filter(p => p.category === currentCat.value);
+                    // v218: Sort in-stock items first, then out-of-stock items
+                    return res.slice().sort((a, b) => {
+                        const stockA = Number(a.stock) > 0;
+                        const stockB = Number(b.stock) > 0;
+                        if (stockA && !stockB) return -1;
+                        if (!stockA && stockB) return 1;
+                        return 0; 
+                    });
+                });
                 const cartItems = computed(() => Object.keys(cart.value).map(id => { const p = products.value.find(x => x.id === id); return p ? { ...p, quantity: cart.value[id] } : null; }).filter(x => x));
                 const totalQty = computed(() => cartItems.value.reduce((a, b) => a + b.quantity, 0));
                 const totalPrice = computed(() => cartItems.value.reduce((a, b) => a + (b.price * b.quantity), 0));
