@@ -60,7 +60,6 @@
         .p-img-box { position: relative; width: 100%; aspect-ratio: 1/1; background: #fdfdfd; overflow: hidden; cursor: pointer; }
         .p-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
         
-        /* v228 Update: Bigger Zoom Icon */
         .zoom-icon { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; backdrop-filter: blur(2px); cursor: pointer; z-index: 10; transition: transform 0.1s, background 0.2s; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
         .zoom-icon:active { transform: scale(0.9); background: var(--brand-red); }
 
@@ -139,7 +138,6 @@
         .guide-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; align-items: center; border: 1px solid #f0f0f0; }
         .guide-icon-box { width: 50px; height: 50px; border-radius: 12px; background: #fff5f5; color: var(--brand-red); display: flex; align-items: center; justify-content: center; font-size: 20px; margin-right: 15px; flex-shrink: 0; }
         
-        /* v229 Update: Increased font sizes */
         .guide-content h6 { font-weight: 800; margin-bottom: 4px; color: #333; font-size: 17px; }
         .guide-content p { font-size: 14px; color: #777; margin: 0; line-height: 1.5; }
 
@@ -177,14 +175,19 @@
         .status-pending { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffa39e; }
         .status-paid { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
 
-        /* v228: Ticket Wallet Styles */
-        .ticket-card { background: #fff; border: 1px solid #eee; border-radius: 15px; overflow: hidden; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); transition: 0.2s; }
-        .ticket-card.redeemed { opacity: 0.6; filter: grayscale(100%); border-color: #ddd; }
-        .ticket-card.redeemed .ticket-body { background: #f9f9f9; }
-        .ticket-img-box { position: relative; width: 100%; padding-bottom: 100%; background: #f0f0f0; cursor: pointer; }
-        .ticket-img { position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; } /* Updated to cover for generic images */
-        .ticket-body { padding: 15px; }
-        .ticket-badge-used { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); border: 3px solid #555; color: #555; padding: 5px 15px; font-size: 20px; font-weight: 900; border-radius: 10px; opacity: 0.8; background: rgba(255,255,255,0.8); pointer-events: none; }
+        /* v233: Ticket Wallet Styles Enhanced */
+        .ticket-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 16px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); transition: 0.2s; position: relative; }
+        .ticket-card.redeemed { border-color: #eee; }
+        /* v233: Grayscale for redeemed images */
+        .ticket-card.redeemed .ticket-img { filter: grayscale(100%); opacity: 0.7; }
+        
+        .ticket-img-box { position: relative; width: 100%; aspect-ratio: 1/1; background: #f8f9fa; cursor: pointer; overflow: hidden; }
+        .ticket-img { position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; transition: transform 0.3s ease; }
+        .ticket-card:not(.redeemed):active .ticket-img { transform: scale(1.02); }
+        
+        .ticket-body { padding: 16px; }
+        .ticket-badge-used { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); border: 4px solid #555; color: #555; padding: 10px 25px; font-size: 24px; font-weight: 900; border-radius: 12px; opacity: 0.85; background: rgba(255,255,255,0.9); pointer-events: none; z-index: 10; letter-spacing: 2px; }
+        
         .btn-wallet { border: none; background: #fff5f5; color: var(--brand-red); font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 20px; transition: 0.2s; display: flex; align-items: center; cursor: pointer; }
         .btn-wallet:active { background: #ffe0e0; }
 
@@ -204,7 +207,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.32</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.33</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -251,12 +254,11 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.32</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.33</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <!-- v228: Added My Tickets Button -->
                     <button class="btn-wallet" @click="openWallet">
                         <i class="fas fa-ticket-alt me-1"></i>我的票券
                     </button>
@@ -305,7 +307,6 @@
                     <div class="product-card">
                         <div class="p-img-box" @click.stop="showProductDetail(p)">
                             <img :src="p.image || 'https://via.placeholder.com/300'" class="p-img" loading="lazy">
-                            <!-- v228: Bigger zoom icon class applied -->
                             <div class="zoom-icon" @click.stop="showProductDetail(p)"><i class="fas fa-search"></i></div>
                         </div>
                         <div class="p-body">
@@ -425,7 +426,7 @@
             </div>
         </div>
 
-        <!-- v228 Added: Ticket Wallet Modal -->
+        <!-- v233 Updated: Ticket Wallet Modal -->
         <div class="modal fade" id="ticketModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 rounded-4 shadow-lg" style="background: #f8f9fa;">
@@ -435,7 +436,6 @@
                                 <h5 class="fw-bold mb-0"><i class="fas fa-wallet me-2 text-danger"></i>我的票券夾</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                              </div>
-                             <!-- v2.32: Search Bar & Refresh -->
                              <div class="input-group input-group-sm">
                                 <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-3"><i class="fas fa-search text-muted"></i></span>
                                 <input type="text" class="form-control border-start-0" placeholder="搜尋商品名稱..." v-model="ticketSearchQuery">
@@ -446,11 +446,9 @@
                     <div class="p-2 d-flex justify-content-center bg-white border-bottom">
                         <div class="btn-group w-100 px-2" role="group">
                             <input type="radio" class="btn-check" name="walletFilter" id="filterAvailable" autocomplete="off" :checked="walletFilter === 'available'" @change="walletFilter = 'available'">
-                            <!-- v231: Added Count -->
                             <label class="btn btn-outline-danger fw-bold rounded-start-pill" for="filterAvailable">可使用 ({{ availableTickets.length }})</label>
                             
                             <input type="radio" class="btn-check" name="walletFilter" id="filterUsed" autocomplete="off" :checked="walletFilter === 'used'" @change="walletFilter = 'used'">
-                            <!-- v231: Added Count -->
                             <label class="btn btn-outline-secondary fw-bold rounded-end-pill" for="filterUsed">已核銷 ({{ usedTickets.length }})</label>
                         </div>
                     </div>
@@ -459,31 +457,36 @@
                             <i class="fas fa-ticket-alt fa-3x mb-3 text-secondary"></i><br>目前沒有{{ walletFilter === 'available' ? '可用' : '已核銷' }}的票券
                         </div>
                         <div v-for="(item, idx) in currentDisplayTickets" :key="idx" class="ticket-card" :class="{ redeemed: item.isRedeemed }">
-                            <!-- v2.32: Use Generic Image based on Status -->
+                            <!-- v2.33: Revert to Product Image -->
                             <div class="ticket-img-box" @click="showTicketImage(item)">
-                                <img :src="item.isRedeemed ? 'https://i.ibb.co/jZsctfyk/S-35979275-0.jpg' : 'https://i.ibb.co/KxGkCs9K/S-35979276-0.jpg'" class="ticket-img" loading="lazy">
-                                <div class="zoom-icon"><i class="fas fa-search"></i></div>
+                                <img :src="item.image || 'https://via.placeholder.com/300?text=No+Image'" class="ticket-img" loading="lazy">
+                                <div v-if="item.isRedeemed" class="ticket-badge-used">已核銷</div>
+                                <div v-else class="zoom-icon"><i class="fas fa-search"></i></div>
                             </div>
                             <div class="ticket-body">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <div class="fw-bold text-truncate" style="max-width: 65%;">{{ item.name || '商品票券' }}</div>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="fw-bold text-truncate" style="max-width: 60%; font-size: 15px;">{{ item.name || '商品票券' }}</div>
                                     <div class="d-flex flex-column align-items-end">
-                                        <span class="badge bg-dark rounded-pill mb-1">{{ item.orderId }}</span>
-                                        <span class="text-muted" style="font-size: 10px;">購買: {{ item.purchaseDate }}</span>
-                                        <!-- v2.32: Added Expiry Date Display -->
-                                        <span v-if="item.expiryDate" class="text-danger fw-bold" style="font-size: 10px;">效期: {{ item.expiryDate }}</span>
+                                        <span class="badge bg-dark rounded-pill mb-1">#{{ item.orderId }}</span>
+                                        <span v-if="item.expiryDate" class="text-danger fw-bold" style="font-size: 11px;">效期: {{ item.expiryDate }}</span>
                                     </div>
                                 </div>
-                                <!-- v230: Added Vendor Guide Button -->
-                                <div v-if="!item.isRedeemed" class="d-grid gap-2">
-                                    <button class="btn btn-outline-secondary btn-sm fw-bold rounded-pill" @click="openVendorGuide(item)">
-                                        <i class="fas fa-book-open me-2"></i>使用說明
+                                
+                                <!-- v2.33: Enhanced Action Buttons -->
+                                <div v-if="!item.isRedeemed">
+                                    <button class="btn btn-danger w-100 rounded-pill py-2 fw-bold mb-2 shadow-sm" @click="showTicketImage(item)">
+                                        <i class="fas fa-search me-2"></i>點擊開啟票券 (顯示條碼)
                                     </button>
-                                    <button class="btn btn-warning fw-bold rounded-pill" @click="openRedeemConfirm(item)">
-                                        <i class="fas fa-stamp me-2"></i>確認使用 (核銷)
-                                    </button>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-outline-secondary flex-grow-1 fw-bold rounded-pill" @click="openVendorGuide(item)">
+                                            <i class="fas fa-book-open me-1"></i>使用說明
+                                        </button>
+                                        <button class="btn btn-warning flex-grow-1 fw-bold rounded-pill" @click="openRedeemConfirm(item)">
+                                            <i class="fas fa-stamp me-1"></i>確認核銷
+                                        </button>
+                                    </div>
                                 </div>
-                                <div v-else class="text-center text-muted small fw-bold">
+                                <div v-else class="text-center text-muted small fw-bold mt-2">
                                     <i class="fas fa-check-circle me-1"></i>於 {{ item.redeemedAt }} 核銷
                                 </div>
                             </div>
@@ -493,7 +496,7 @@
             </div>
         </div>
 
-        <!-- v2.32: New Redeem Confirm Modal -->
+        <!-- Redeem Confirm Modal -->
         <div class="modal fade" id="redeemConfirmModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered" style="max-width: 320px;">
                 <div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden">
@@ -502,7 +505,6 @@
                         <div class="mb-3 text-warning"><i class="fas fa-stamp fa-4x"></i></div>
                         <h5 class="fw-bold mb-2">確認核銷票券？</h5>
                         <p class="text-muted small mb-4">請向店員出示票券畫面後再點擊核銷。<br>核銷後將無法復原，是否繼續？</p>
-                        
                         <div class="d-grid gap-2">
                             <button class="btn btn-warning rounded-pill fw-bold shadow-sm" @click="confirmRedeemAction" :disabled="isRedeeming">
                                 <span v-if="isRedeeming"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</span>
@@ -515,7 +517,7 @@
             </div>
         </div>
 
-        <!-- v230 Added: Vendor Guide Modal -->
+        <!-- Vendor Guide Modal -->
         <div class="modal fade" id="vendorGuideModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 rounded-4 shadow-lg">
@@ -524,14 +526,14 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body p-0" v-if="currentVendorGuide">
-                        <!-- v2.32: Click to open image -->
                         <div v-if="currentVendorGuide.image" class="w-100 bg-dark position-relative" style="min-height:200px; cursor: pointer;" onclick="window.open(this.querySelector('img').src, '_blank')">
                             <img :src="currentVendorGuide.image" class="w-100 object-fit-contain" style="max-height: 40vh;">
                             <div class="position-absolute bottom-0 end-0 m-2 badge bg-dark opacity-75"><i class="fas fa-search-plus me-1"></i>點擊放大</div>
                         </div>
                         <div class="p-4">
                             <h5 class="fw-bold mb-3 text-danger">{{ currentVendorGuide.name }}</h5>
-                            <div class="text-muted small" style="white-space: pre-wrap; line-height: 1.6;">{{ currentVendorGuide.instruction || '暫無詳細說明' }}</div>
+                            <!-- v2.33: Auto-linkify -->
+                            <div class="text-muted small" style="white-space: pre-wrap; line-height: 1.6;" v-html="linkify(currentVendorGuide.instruction || '暫無詳細說明')"></div>
                         </div>
                     </div>
                     <div class="modal-footer border-0 p-3">
@@ -646,8 +648,10 @@
                             </div>
                             <div v-if="h.fulfillment" class="mt-2 mb-3 p-2 bg-light rounded border">
                                <div class="small fw-bold text-success mb-2"><i class="fas fa-gift me-1"></i>發貨內容 (點擊開啟)：</div>
-                               <div v-for="(link, idx) in h.fulfillment.split('\n')" :key="idx" class="mb-2">
-                                   <a v-if="link.trim().length > 0" :href="link" target="_blank" class="btn btn-sm btn-outline-primary w-100 text-truncate fw-bold rounded-pill" style="font-size:11px;"><i class="fas fa-external-link-alt me-1"></i>開啟商品連結 {{ idx + 1 }}</a>
+                               <!-- v233: Added product thumbnails to links -->
+                               <div v-for="(link, idx) in h.fulfillment.split('\n')" :key="idx" class="mb-2 d-flex align-items-center gap-2" v-if="link.trim().length > 0">
+                                   <img :src="getHistoryLinkImage(h, idx)" class="rounded border" style="width:30px; height:30px; object-fit:cover;">
+                                   <a :href="link" target="_blank" class="btn btn-sm btn-outline-primary flex-grow-1 text-truncate fw-bold rounded-pill" style="font-size:11px;"><i class="fas fa-external-link-alt me-1"></i>開啟商品連結 {{ idx + 1 }}</a>
                                </div>
                             </div>
                             <div class="d-flex gap-2 flex-wrap">
@@ -1193,28 +1197,20 @@
                 };
                 
                 // v228: Ticket Wallet Logic
-                // v231 Refactor: Extracted ticket logic for counting and sorting
                 const allTickets = computed(() => {
                     const items = [];
                     orderHistory.value.forEach(order => {
                         if ((order.isShipped === true || String(order.isShipped) === 'true') && order.fulfillment) {
                             const links = order.fulfillment.split('\n').filter(l => l.trim().length > 0);
-                            
-                            // v2.32: Use Server Log for Redemption status (Column V)
                             const serverLog = order.redemptionLog || "";
                             
                             links.forEach((url, i) => {
-                                // Check if this index is marked as redeemed in server log
-                                // Format in server log: "[1]已核銷..." (1-based index)
                                 const isServerRedeemed = serverLog.includes(`[${i+1}]已核銷`);
-                                
-                                // Fallback to local storage if not found (legacy support)
                                 const isLocalRedeemed = !!redeemedStatus.value[url];
                                 const isRedeemed = isServerRedeemed || isLocalRedeemed;
                                 
                                 let redeemedAt = null;
                                 if (isServerRedeemed) {
-                                    // Try parse timestamp from log "[1]已核銷 2023/..."
                                     const match = serverLog.match(new RegExp(`\\[${i+1}\\]已核銷\\s*(.*)`));
                                     if (match) redeemedAt = match[1].split('\n')[0];
                                 } else if (isLocalRedeemed) {
@@ -1224,11 +1220,14 @@
                                 let pName = '商品票券';
                                 let vendorName = '';
                                 let expiryDate = '';
-                                
+                                let image = ''; // v2.33: Add image prop
+
                                 if (order.items && order.items.length > 0) {
                                      const expandedItems = [];
                                      order.items.forEach(it => {
-                                         for(let k=0; k<it.quantity; k++) expandedItems.push(it); // Push whole item object
+                                         // Handle string quantity safely
+                                         const qty = parseInt(it.quantity) || 1;
+                                         for(let k=0; k<qty; k++) expandedItems.push(it); 
                                      });
                                      if(expandedItems[i]) {
                                          pName = expandedItems[i].name;
@@ -1240,12 +1239,13 @@
                                 }
                                 
                                 const product = products.value.find(p => p.name === pName);
-                                if(product) vendorName = product.vendor;
+                                if(product) {
+                                    vendorName = product.vendor;
+                                    image = product.image; // v2.33
+                                }
 
-                                // Extract date only for display
                                 const purchaseDate = order.timestamp ? order.timestamp.split(' ')[0] : '';
                                 
-                                // Search filtering
                                 if (ticketSearchQuery.value && !pName.includes(ticketSearchQuery.value) && !order.id.includes(ticketSearchQuery.value)) {
                                     return;
                                 }
@@ -1253,14 +1253,15 @@
                                 items.push({
                                     url: url,
                                     orderId: order.id,
-                                    ticketIndex: i, // Track index for redemption
+                                    ticketIndex: i, 
                                     name: pName,
                                     vendor: vendorName,
                                     isRedeemed: isRedeemed,
                                     redeemedAt: redeemedAt,
                                     purchaseDate: purchaseDate, 
-                                    expiryDate: expiryDate, // v2.32
-                                    fullTimestamp: order.timestamp 
+                                    expiryDate: expiryDate, 
+                                    fullTimestamp: order.timestamp,
+                                    image: image // v2.33
                                 });
                             });
                         }
@@ -1269,19 +1270,14 @@
                 });
 
                 const availableTickets = computed(() => {
-                    // v231: Sort Available by Newest First (Order Timestamp)
                     return allTickets.value.filter(t => !t.isRedeemed).sort((a, b) => {
-                         // Simple string comparison for standard format YYYY/MM/DD works reasonably well
-                         // or just rely on orderId descending
                          return b.orderId.localeCompare(a.orderId);
                     });
                 });
 
                 const usedTickets = computed(() => {
-                    // v231: Sort Used by Redemption Time (Newest First) if available, else OrderId
                     return allTickets.value.filter(t => t.isRedeemed).sort((a, b) => {
                         if (a.redeemedAt && b.redeemedAt) {
-                            // Basic string compare for timestamp usually works if format is fixed
                             return b.redeemedAt.localeCompare(a.redeemedAt);
                         }
                         return b.orderId.localeCompare(a.orderId);
@@ -1301,7 +1297,6 @@
                     window.open(item.url, '_blank');
                 };
                 
-                // v2.32: Replaced confirm() with Modal
                 const openRedeemConfirm = (item) => {
                     itemToRedeem.value = item;
                     if (redeemConfirmModal) redeemConfirmModal.show();
@@ -1315,12 +1310,10 @@
                     const now = new Date();
                     const timeStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
 
-                    // 1. Optimistic UI Update (Local)
                     redeemedStatus.value[item.url] = timeStr;
                     redeemedStatus.value = { ...redeemedStatus.value };
                     safeSetStorage('mm_redeemed_map', JSON.stringify(redeemedStatus.value));
 
-                    // 2. Call Backend to Sync
                     try {
                         await fetch(API_URL, {
                             method: 'POST', mode: 'no-cors',
@@ -1331,11 +1324,9 @@
                                 timestamp: timeStr
                             })
                         });
-                        // 3. Refresh Order Status to get definitive state from server
                         fetchOrderStatus(userProfile.value.userId);
                     } catch(e) {
                         console.error("Redeem Sync Failed", e);
-                        // Fallback remains (Local storage)
                     }
 
                     isRedeeming.value = false;
@@ -1357,16 +1348,40 @@
                          showToast("此廠商暫無詳細說明");
                      }
                 };
+                
+                // v2.33: Helper to linkify text
+                const linkify = (inputText) => {
+                    if(!inputText) return '';
+                    const replacedText = inputText.replace(
+                        /(https?:\/\/[^\s]+)/g, 
+                        '<a href="$1" target="_blank" class="text-primary text-decoration-underline">$1</a>'
+                    );
+                    return replacedText;
+                };
+
+                // v2.33: Helper to get image for history links
+                const getHistoryLinkImage = (h, idx) => {
+                    let pName = '商品';
+                    if (h.items && h.items.length > 0) {
+                         const expandedItems = [];
+                         h.items.forEach(it => {
+                             // Handle string quantity safely
+                             const qty = parseInt(it.quantity) || 1;
+                             for(let k=0; k<qty; k++) expandedItems.push(it.name); 
+                         });
+                         // Safety index access
+                         if(idx < expandedItems.length) pName = expandedItems[idx];
+                         else pName = h.items[0].name;
+                    }
+                    return getProductImage(pName);
+                };
 
                 return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayment, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, fetchOrderStatus, showToast, errorMsg, 
-                // v228 Exports
                 openWallet, walletFilter, showTicketImage,
-                // v230 Exports
                 openVendorGuide, currentVendorGuide,
-                // v231 Exports
                 availableTickets, usedTickets, currentDisplayTickets,
-                // v2.32 Exports
-                openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery };
+                openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery, 
+                linkify, getHistoryLinkImage }; // v2.33 exports
             }
         }).mount('#app');
     </script>
