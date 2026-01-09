@@ -36,7 +36,7 @@
             overflow-x: hidden;
             opacity: 0;
             animation: fadeInBody 0.15s forwards;
-            overscroll-behavior-y: contain; /* v227: Prevent native pull-to-refresh to stop accidental reloads */
+            overscroll-behavior-y: contain; 
         }
         @keyframes fadeInBody { to { opacity: 1; } }
         
@@ -60,8 +60,9 @@
         .p-img-box { position: relative; width: 100%; aspect-ratio: 1/1; background: #fdfdfd; overflow: hidden; cursor: pointer; }
         .p-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
         
-        .zoom-icon { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.5); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; backdrop-filter: blur(2px); cursor: pointer; z-index: 10; transition: transform 0.1s; }
-        .zoom-icon:active { transform: scale(0.9); }
+        /* v228 Update: Bigger Zoom Icon */
+        .zoom-icon { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; backdrop-filter: blur(2px); cursor: pointer; z-index: 10; transition: transform 0.1s, background 0.2s; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .zoom-icon:active { transform: scale(0.9); background: var(--brand-red); }
 
         .p-body { padding: 14px; flex: 1; display: flex; flex-direction: column; }
         .p-title { font-weight: 800; font-size: 14px; color: #333; line-height: 1.4; min-height: 40px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px; cursor: pointer; }
@@ -174,6 +175,17 @@
         .status-pending { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffa39e; }
         .status-paid { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
 
+        /* v228: Ticket Wallet Styles */
+        .ticket-card { background: #fff; border: 1px solid #eee; border-radius: 15px; overflow: hidden; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); transition: 0.2s; }
+        .ticket-card.redeemed { opacity: 0.6; filter: grayscale(100%); border-color: #ddd; }
+        .ticket-card.redeemed .ticket-body { background: #f9f9f9; }
+        .ticket-img-box { position: relative; width: 100%; padding-bottom: 100%; background: #f0f0f0; cursor: pointer; }
+        .ticket-img { position: absolute; top:0; left:0; width:100%; height:100%; object-fit: contain; }
+        .ticket-body { padding: 15px; }
+        .ticket-badge-used { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); border: 3px solid #555; color: #555; padding: 5px 15px; font-size: 20px; font-weight: 900; border-radius: 10px; opacity: 0.8; background: rgba(255,255,255,0.8); pointer-events: none; }
+        .btn-wallet { border: none; background: #fff5f5; color: var(--brand-red); font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 20px; transition: 0.2s; display: flex; align-items: center; cursor: pointer; }
+        .btn-wallet:active { background: #ffe0e0; }
+
         [v-cloak] { display: none; }
     </style>
 <script type="importmap">
@@ -190,7 +202,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v227</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v228</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -237,12 +249,16 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v227</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v228</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <button class="btn-help" @click="showGuide"><i class="fas fa-question-circle me-1"></i>操作說明</button>
+                    <!-- v228: Added My Tickets Button -->
+                    <button class="btn-wallet" @click="openWallet">
+                        <i class="fas fa-ticket-alt me-1"></i>我的票券
+                    </button>
+                    <button class="btn-help" @click="showGuide"><i class="fas fa-question-circle me-1"></i></button>
                     <div class="text-muted p-2" @click="openHistory" style="cursor: pointer;"><i class="fas fa-history fa-lg"></i></div>
                 </div>
             </div>
@@ -287,6 +303,7 @@
                     <div class="product-card">
                         <div class="p-img-box" @click.stop="showProductDetail(p)">
                             <img :src="p.image || 'https://via.placeholder.com/300'" class="p-img" loading="lazy">
+                            <!-- v228: Bigger zoom icon class applied -->
                             <div class="zoom-icon" @click.stop="showProductDetail(p)"><i class="fas fa-search"></i></div>
                         </div>
                         <div class="p-body">
@@ -350,7 +367,6 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body px-4">
-                        
                         <div class="bg-light rounded-3 p-2 mb-3 border">
                             <div v-for="item in cartItems" :key="item.id" class="d-flex align-items-center py-2 border-bottom small">
                                 <img :src="item.image" class="cart-item-img me-2">
@@ -364,278 +380,178 @@
                                         </div>
                                         <span class="fw-bold text-danger">${{ item.price * item.quantity }}</span>
                                     </div>
-                                    <div class="text-muted" style="font-size: 10px;">
-                                        (截圖: {{ item.driveStock }} | 轉贈: {{ item.giftStock }})
-                                    </div>
+                                    <div class="text-muted" style="font-size: 10px;">(截圖: {{ item.driveStock }} | 轉贈: {{ item.giftStock }})</div>
                                 </div>
                             </div>
-                            <div class="d-flex justify-content-between fw-bold fs-5 mt-2 px-2">
-                                <span>應付金額</span><span class="text-danger">${{ totalPrice }}</span>
-                            </div>
+                            <div class="d-flex justify-content-between fw-bold fs-5 mt-2 px-2"><span>應付金額</span><span class="text-danger">${{ totalPrice }}</span></div>
                         </div>
-
                         <label class="form-label-small">領取方式優先順序</label>
                         <div class="option-group d-flex gap-2 mb-3">
-                            <div class="option-btn btn btn-outline-danger flex-grow-1 rounded-pill" 
-                                 :class="{ active: deliveryMethod === 'screenshot' }" 
-                                 @click="deliveryMethod = 'screenshot'">
-                                 📸 優先截圖
-                            </div>
-                            <!-- 只有當購物車內有轉贈庫存時，才允許點擊 -->
-                            <div class="option-btn btn btn-outline-danger flex-grow-1 rounded-pill" 
-                                 :class="{ active: deliveryMethod === 'gift', disabled: !canSelectGift }" 
-                                 @click="canSelectGift && (deliveryMethod = 'gift')">
-                                 🎁 優先轉贈
-                            </div>
+                            <div class="option-btn btn btn-outline-danger flex-grow-1 rounded-pill" :class="{ active: deliveryMethod === 'screenshot' }" @click="deliveryMethod = 'screenshot'">📸 優先截圖</div>
+                            <div class="option-btn btn btn-outline-danger flex-grow-1 rounded-pill" :class="{ active: deliveryMethod === 'gift', disabled: !canSelectGift }" @click="canSelectGift && (deliveryMethod = 'gift')">🎁 優先轉贈</div>
                         </div>
-                        
-                        <div v-if="!canSelectGift" class="text-muted small text-center mb-2" style="font-size: 11px;">
-                            * 您選擇的商品目前無轉贈庫存，僅支援截圖發送
-                        </div>
-
-                        <!-- Mixed Split Warning -->
+                        <div v-if="!canSelectGift" class="text-muted small text-center mb-2" style="font-size: 11px;">* 您選擇的商品目前無轉贈庫存，僅支援截圖發送</div>
                         <div v-if="deliveryMethod === 'gift' && hasDriveOnlyItems" class="alert alert-warning d-flex align-items-center p-2 mb-3" style="font-size: 12px; font-weight: 700;">
-                             <i class="fas fa-info-circle me-2 text-warning fs-5"></i>
-                             <div>注意：部分商品僅支援截圖發送，系統將自動為您拆分為兩筆訂單。</div>
+                             <i class="fas fa-info-circle me-2 text-warning fs-5"></i><div>注意：部分商品僅支援截圖發送，系統將自動為您拆分為兩筆訂單。</div>
                         </div>
                         <div v-if="deliveryMethod === 'screenshot' && hasGiftOnlyItems" class="alert alert-warning d-flex align-items-center p-2 mb-3" style="font-size: 12px; font-weight: 700;">
-                             <i class="fas fa-info-circle me-2 text-warning fs-5"></i>
-                             <div>注意：部分商品無法自動發送。<br>僅有「轉贈庫存」之商品，若選擇截圖將由客服人工處理。</div>
+                             <i class="fas fa-info-circle me-2 text-warning fs-5"></i><div>注意：部分商品無法自動發送。<br>僅有「轉贈庫存」之商品，若選擇截圖將由客服人工處理。</div>
                         </div>
-
-                        <!-- 2-Hour Payment Warning -->
                         <div class="alert alert-danger d-flex align-items-center p-2 mb-3" style="font-size: 13px; font-weight: 700;">
-                             <i class="fas fa-stopwatch me-2 fs-4"></i>
-                             <div>
-                                 ⚠️ 為保障庫存權益，訂單成立後請於 <span class="text-decoration-underline">2 小時內</span> 完成付款，逾時系統將自動取消訂單。
-                             </div>
+                             <i class="fas fa-stopwatch me-2 fs-4"></i><div>⚠️ 為保障庫存權益，訂單成立後請於 <span class="text-decoration-underline">2 小時內</span> 完成付款，逾時系統將自動取消訂單。</div>
                         </div>
-                        
                         <div v-if="deliveryMethod === 'gift' || hasGiftOnlyItems" class="mb-3 p-3 bg-light rounded-4 border">
-                            <div class="mb-2">
-                                <label class="form-label-small text-danger">momo 姓名 (必填)</label>
-                                <input type="text" v-model="giftInfo.name" class="form-control rounded-pill" placeholder="請輸入收件人姓名">
-                            </div>
-                            <div>
-                                <label class="form-label-small text-danger">momo 電話 (必填)</label>
-                                <input type="tel" v-model="giftInfo.phone" class="form-control rounded-pill" placeholder="請輸入收件人電話">
-                            </div>
+                            <div class="mb-2"><label class="form-label-small text-danger">momo 姓名 (必填)</label><input type="text" v-model="giftInfo.name" class="form-control rounded-pill" placeholder="請輸入收件人姓名"></div>
+                            <div><label class="form-label-small text-danger">momo 電話 (必填)</label><input type="tel" v-model="giftInfo.phone" class="form-control rounded-pill" placeholder="請輸入收件人電話"></div>
                         </div>
-
                         <label class="form-label-small">付款方式 (請選擇一種)</label>
                         <div class="mb-3 payment-grid">
-                             <div v-for="bank in bankAccounts" :key="bank.code" 
-                                  class="payment-option" 
-                                  :class="{ active: selectedPayment === bank.code }"
-                                  @click="togglePayment(bank.code)">
+                             <div v-for="bank in bankAccounts" :key="bank.code" class="payment-option" :class="{ active: selectedPayment === bank.code }" @click="togglePayment(bank.code)">
                                   <i class="fas fa-university text-muted payment-icon"></i>
-                                  <div style="overflow: hidden; flex: 1;">
-                                      <div class="small fw-bold text-truncate">{{ bank.name }}</div>
-                                      <div v-if="bank.code === '396'" class="text-muted" style="font-size: 10px;">戶名：sue</div>
-                                  </div>
-                                  <i class="fas fa-dot-circle text-danger ms-1" v-if="selectedPayment === bank.code"></i>
-                                  <i class="far fa-circle text-muted ms-1" v-else></i>
+                                  <div style="overflow: hidden; flex: 1;"><div class="small fw-bold text-truncate">{{ bank.name }}</div><div v-if="bank.code === '396'" class="text-muted" style="font-size: 10px;">戶名：sue</div></div>
+                                  <i class="fas fa-dot-circle text-danger ms-1" v-if="selectedPayment === bank.code"></i><i class="far fa-circle text-muted ms-1" v-else></i>
                              </div>
                         </div>
-
-                        <div class="mb-3 input-group">
-                            <span class="input-group-text bg-white border-end-0 rounded-start-pill"><i class="fas fa-mobile-alt text-muted"></i></span>
-                            <input type="tel" v-model="userContact.phone" class="form-control form-control-pill border-start-0" placeholder="聯絡手機 (選填，方便客服核對)">
-                        </div>
-                        
-                        <!-- v227: Email field removed per request -->
-
-                        <div class="terms-box">
-                            <div class="terms-title">📜 購買需知</div>
-                            1. 電子票券履約期限為取得後約 30 天內兌換，為免遺忘，請儘速兌換。<br>
-                            2. 票券兌換依商家不同，請參考客服訊息，截圖畫面通常即可使用。<br>
-                            3. 逾期將失效恕無法補發或退款。<br>
-                            4. 麥當勞每次交易最多兌換 5 張，可重複多次兌換。<br>
-                            5. 取消兌換後序號會鎖定 5 分鐘。<br>
-                            6. 自備環保杯可依店家規定折抵 5-10 元。<br>
-                            7. 效期以客服提供之圖片或說明為主。
-                        </div>
-
-                        <label class="d-flex align-items-center gap-2 mb-3">
-                            <input type="checkbox" v-model="acceptTerms">
-                            <span class="small fw-bold">我已閱讀並同意「購買需知」</span>
-                        </label>
-
+                        <div class="mb-3 input-group"><span class="input-group-text bg-white border-end-0 rounded-start-pill"><i class="fas fa-mobile-alt text-muted"></i></span><input type="tel" v-model="userContact.phone" class="form-control form-control-pill border-start-0" placeholder="聯絡手機 (選填，方便客服核對)"></div>
+                        <div class="terms-box"><div class="terms-title">📜 購買需知</div>1. 電子票券履約期限為取得後約 30 天內兌換，為免遺忘，請儘速兌換。<br>2. 票券兌換依商家不同，請參考客服訊息，截圖畫面通常即可使用。<br>3. 逾期將失效恕無法補發或退款。<br>4. 麥當勞每次交易最多兌換 5 張，可重複多次兌換。<br>5. 取消兌換後序號會鎖定 5 分鐘。<br>6. 自備環保杯可依店家規定折抵 5-10 元。<br>7. 效期以客服提供之圖片或說明為主。</div>
+                        <label class="d-flex align-items-center gap-2 mb-3"><input type="checkbox" v-model="acceptTerms"><span class="small fw-bold">我已閱讀並同意「購買需知」</span></label>
                     </div>
                     <div class="modal-footer border-0 p-4">
-                        <button class="btn btn-line-custom w-100 rounded-pill py-3 fw-bold shadow" @click="handleCheckout" :disabled="isSubmitting">
-                            <span v-if="isSubmitting"><i class="fas fa-spinner fa-spin me-2"></i>訂單傳送中...</span>
-                            <span v-else><i class="fab fa-line me-2"></i>送出訂單並傳至 LINE</span>
-                        </button>
+                        <button class="btn btn-line-custom w-100 rounded-pill py-3 fw-bold shadow" @click="handleCheckout" :disabled="isSubmitting"><span v-if="isSubmitting"><i class="fas fa-spinner fa-spin me-2"></i>訂單傳送中...</span><span v-else><i class="fab fa-line me-2"></i>送出訂單並傳至 LINE</span></button>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- v228 Added: Ticket Wallet Modal -->
+        <div class="modal fade" id="ticketModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 rounded-4 shadow-lg" style="background: #f8f9fa;">
+                    <div class="modal-header border-0 bg-white shadow-sm">
+                        <h5 class="fw-bold"><i class="fas fa-wallet me-2 text-danger"></i>我的票券夾</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="p-2 d-flex justify-content-center bg-white border-bottom">
+                        <div class="btn-group w-100 px-2" role="group">
+                            <input type="radio" class="btn-check" name="walletFilter" id="filterAvailable" autocomplete="off" :checked="walletFilter === 'available'" @change="walletFilter = 'available'">
+                            <label class="btn btn-outline-danger fw-bold rounded-start-pill" for="filterAvailable">可使用</label>
+                            <input type="radio" class="btn-check" name="walletFilter" id="filterUsed" autocomplete="off" :checked="walletFilter === 'used'" @change="walletFilter = 'used'">
+                            <label class="btn btn-outline-secondary fw-bold rounded-end-pill" for="filterUsed">已核銷</label>
+                        </div>
+                    </div>
+                    <div class="modal-body p-3">
+                        <div v-if="walletItems.length === 0" class="text-center py-5 text-muted">
+                            <i class="fas fa-ticket-alt fa-3x mb-3 text-secondary"></i><br>目前沒有{{ walletFilter === 'available' ? '可用' : '已核銷' }}的票券
+                        </div>
+                        <div v-for="(item, idx) in walletItems" :key="idx" class="ticket-card" :class="{ redeemed: item.isRedeemed }">
+                            <div class="ticket-img-box" @click="showTicketImage(item)">
+                                <img :src="item.url" class="ticket-img" loading="lazy" onerror="this.src='https://via.placeholder.com/300?text=Image+Error'">
+                                <div v-if="item.isRedeemed" class="ticket-badge-used">已核銷</div>
+                                <div v-else class="zoom-icon"><i class="fas fa-search"></i></div>
+                            </div>
+                            <div class="ticket-body">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="fw-bold text-truncate" style="max-width: 70%;">{{ item.name || '商品票券' }}</div>
+                                    <span class="badge bg-dark rounded-pill">{{ item.orderId }}</span>
+                                </div>
+                                <div v-if="!item.isRedeemed" class="d-grid">
+                                    <button class="btn btn-warning fw-bold rounded-pill" @click="confirmRedeem(item)">
+                                        <i class="fas fa-stamp me-2"></i>確認使用 (核銷)
+                                    </button>
+                                </div>
+                                <div v-else class="text-center text-muted small fw-bold">
+                                    <i class="fas fa-check-circle me-1"></i>於 {{ item.redeemedAt }} 核銷
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- v228 Added: Ticket Fullscreen Viewer (Reusing product detail or simple lightbox logic) -->
+        <!-- We can actually reuse the productDetailModal structure but simplified, or just use a simple image viewer -->
+        <!-- Let's assume using the browser's new tab for full image is safest for "scanning", or reuse ProductDetail logic -->
 
         <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content text-center p-4 border-0 rounded-4 shadow-lg">
-                    
-                    <!-- 初始狀態：顯示匯款資訊 -->
                     <div v-if="!showPaymentForm">
                         <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
                         <h4 class="fw-bold">訂單已成功送出！</h4>
                         <p class="small text-muted mb-4">請完成付款後，點擊下方按鈕回報。</p>
-                        
                         <div class="bg-light rounded-3 p-3 text-start mb-4 border">
                             <div class="fw-bold text-dark border-bottom pb-2 mb-2"><i class="fas fa-wallet me-2"></i>匯款帳號 (點擊複製)</div>
                             <div v-for="bank in selectedBankInfos" :key="bank.code" class="mb-2 d-flex justify-content-between align-items-center bg-white p-2 rounded border" @click="copyText(bank.account)">
-                                <div>
-                                    <div class="small text-muted">{{ bank.name }}</div>
-                                    <div class="fw-bold text-danger">{{ bank.account }}</div>
-                                    <div v-if="bank.code === '396'" class="text-muted" style="font-size: 11px; margin-top:2px;">街口名稱：Sue</div>
-                                </div>
-                                <i class="far fa-copy text-secondary"></i>
+                                <div><div class="small text-muted">{{ bank.name }}</div><div class="fw-bold text-danger">{{ bank.account }}</div><div v-if="bank.code === '396'" class="text-muted" style="font-size: 11px; margin-top:2px;">街口名稱：Sue</div></div><i class="far fa-copy text-secondary"></i>
                             </div>
                         </div>
-
-                        <button class="btn btn-warning w-100 rounded-pill py-2 fw-bold mb-2 shadow-sm text-dark" @click="openPaymentForm">
-                            <i class="fas fa-money-bill-wave me-2"></i>我已付款 (回報後五碼)
-                        </button>
-                        <button class="btn btn-outline-dark w-100 rounded-pill py-2 fw-bold" data-bs-dismiss="modal" @click="resetCart">
-                            稍後回報 / 關閉視窗
-                        </button>
+                        <button class="btn btn-warning w-100 rounded-pill py-2 fw-bold mb-2 shadow-sm text-dark" @click="openPaymentForm"><i class="fas fa-money-bill-wave me-2"></i>我已付款 (回報後五碼)</button>
+                        <button class="btn btn-outline-dark w-100 rounded-pill py-2 fw-bold" data-bs-dismiss="modal" @click="resetCart">稍後回報 / 關閉視窗</button>
                     </div>
-
-                    <!-- 付款回報表單 -->
                     <div v-else>
                          <h5 class="fw-bold mb-3"><i class="fas fa-edit me-2"></i>回報付款資訊</h5>
-                         
-                         <!-- v216: 新增總金額顯示 -->
-                         <div class="alert alert-primary fw-bold text-center fs-5 mb-3">
-                             本次回報總金額：<span class="text-danger">${{ reportingTotalAmount }}</span>
-                         </div>
-
+                         <div class="alert alert-primary fw-bold text-center fs-5 mb-3">本次回報總金額：<span class="text-danger">${{ reportingTotalAmount }}</span></div>
                          <div class="text-start mb-3">
                              <label class="form-label-small fw-bold">您匯入的帳戶：</label>
-                             <select v-model="paymentForm.bankCode" class="form-select rounded-pill mb-3" :disabled="selectedBankInfos.length === 1">
-                                 <option v-for="bank in selectedBankInfos" :key="bank.code" :value="bank.code">
-                                     {{ bank.name }}
-                                 </option>
-                             </select>
-
-                             <label class="form-label-small fw-bold">
-                                 {{ paymentFormLabel }}
-                             </label>
-                             <input type="text" v-model="paymentForm.accountInfo" class="form-control rounded-pill" :placeholder="paymentFormPlaceholder">
+                             <select v-model="paymentForm.bankCode" class="form-select rounded-pill mb-3" :disabled="selectedBankInfos.length === 1"><option v-for="bank in selectedBankInfos" :key="bank.code" :value="bank.code">{{ bank.name }}</option></select>
+                             <label class="form-label-small fw-bold">{{ paymentFormLabel }}</label><input type="text" v-model="paymentForm.accountInfo" class="form-control rounded-pill" :placeholder="paymentFormPlaceholder">
                          </div>
-
-                         <button class="btn btn-success w-100 rounded-pill py-2 fw-bold mb-2 shadow" @click="submitPayment" :disabled="isSubmittingPayment">
-                             <span v-if="isSubmittingPayment"><i class="fas fa-spinner fa-spin me-2"></i>傳送中...</span>
-                             <span v-else>送出回報</span>
-                         </button>
-                         <button class="btn btn-link text-muted small" @click="showPaymentForm = false">
-                             返回上一頁
-                         </button>
+                         <button class="btn btn-success w-100 rounded-pill py-2 fw-bold mb-2 shadow" @click="submitPayment" :disabled="isSubmittingPayment"><span v-if="isSubmittingPayment"><i class="fas fa-spinner fa-spin me-2"></i>傳送中...</span><span v-else>送出回報</span></button>
+                         <button class="btn btn-link text-muted small" @click="showPaymentForm = false">返回上一頁</button>
                     </div>
-
                 </div>
             </div>
         </div>
 
-        <!-- Unreported Payment Prompt Modal (v212 Updated) -->
         <div class="modal fade" id="unreportedModal" tabindex="-1">
              <div class="modal-dialog modal-dialog-centered">
                  <div class="modal-content border-0 rounded-4 shadow-lg text-center p-4">
                      <div class="mb-2 text-warning"><i class="fas fa-bell fa-4x"></i></div>
                      <h5 class="fw-bold mb-2">您有待回報的訂單</h5>
                      <p class="text-muted small mb-3">請勾選您已完成轉帳的訂單進行回報：</p>
-                     
                      <div class="bg-light rounded-3 p-3 mb-4 text-start border" style="max-height: 200px; overflow-y: auto;">
-                         <div v-for="oid in unreportedOrders" :key="oid" class="form-check mb-2">
-                             <input class="form-check-input" type="checkbox" :value="oid" v-model="pendingSelection" :id="'chk-'+oid">
-                             <label class="form-check-label fw-bold text-dark" :for="'chk-'+oid">
-                                 訂單 #{{ oid }}
-                             </label>
-                         </div>
+                         <div v-for="oid in unreportedOrders" :key="oid" class="form-check mb-2"><input class="form-check-input" type="checkbox" :value="oid" v-model="pendingSelection" :id="'chk-'+oid"><label class="form-check-label fw-bold text-dark" :for="'chk-'+oid">訂單 #{{ oid }}</label></div>
                      </div>
-                     
                      <div class="d-grid gap-2">
-                         <button class="btn btn-warning rounded-pill fw-bold" @click="openReportForPending" :disabled="pendingSelection.length === 0">
-                             <i class="fas fa-money-bill-wave me-2"></i>回報選取訂單
-                         </button>
-                         <button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">
-                             稍後再說
-                         </button>
+                         <button class="btn btn-warning rounded-pill fw-bold" @click="openReportForPending" :disabled="pendingSelection.length === 0"><i class="fas fa-money-bill-wave me-2"></i>回報選取訂單</button>
+                         <button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">稍後再說</button>
                      </div>
                  </div>
              </div>
         </div>
 
-        <!-- v216: Cancel Confirmation Modal -->
         <div class="modal fade" id="cancelConfirmModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
-                    <div class="modal-header border-0 bg-secondary text-white py-3">
-                        <h5 class="fw-bold fs-5 mb-0"><i class="fas fa-times-circle me-2"></i>取消訂單確認</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
+                    <div class="modal-header border-0 bg-secondary text-white py-3"><h5 class="fw-bold fs-5 mb-0"><i class="fas fa-times-circle me-2"></i>取消訂單確認</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
                     <div class="modal-body p-4 text-center">
-                        <div class="mb-3 text-muted"><i class="far fa-sad-tear fa-4x"></i></div>
-                        <h5 class="fw-bold mb-2">確定要取消這筆訂單嗎？</h5>
-                        <p class="text-muted small">取消後庫存將會自動釋出，<br>若您已匯款請勿取消，請聯繫客服。</p>
-                        
-                        <div class="d-grid gap-2 mt-4">
-                             <button class="btn btn-danger rounded-pill fw-bold" @click="confirmCancel">
-                                 <i class="fas fa-check me-2"></i>確認取消
-                             </button>
-                             <button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">
-                                 保留訂單
-                             </button>
-                        </div>
+                        <div class="mb-3 text-muted"><i class="far fa-sad-tear fa-4x"></i></div><h5 class="fw-bold mb-2">確定要取消這筆訂單嗎？</h5><p class="text-muted small">取消後庫存將會自動釋出，<br>若您已匯款請勿取消，請聯繫客服。</p>
+                        <div class="d-grid gap-2 mt-4"><button class="btn btn-danger rounded-pill fw-bold" @click="confirmCancel"><i class="fas fa-check me-2"></i>確認取消</button><button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">保留訂單</button></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- v217: Product Detail Modal -->
         <div class="modal fade" id="productDetailModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
-                    <div class="modal-header border-0 pb-0">
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" style="z-index: 10;"></button>
-                    </div>
+                    <div class="modal-header border-0 pb-0"><button type="button" class="btn-close" data-bs-dismiss="modal" style="z-index: 10;"></button></div>
                     <div class="modal-body p-0" v-if="selectedProduct">
-                        <div class="ratio ratio-1x1 bg-light">
-                             <img :src="selectedProduct.image" class="w-100 h-100 object-fit-cover">
-                        </div>
+                        <div class="ratio ratio-1x1 bg-light"><img :src="selectedProduct.image" class="w-100 h-100 object-fit-cover"></div>
                         <div class="p-4">
-                            <div class="d-flex align-items-center mb-2">
-                                <span class="badge bg-dark me-2">{{ selectedProduct.vendor }}</span>
-                                <span class="badge bg-secondary">{{ selectedProduct.category }}</span>
-                            </div>
+                            <div class="d-flex align-items-center mb-2"><span class="badge bg-dark me-2">{{ selectedProduct.vendor }}</span><span class="badge bg-secondary">{{ selectedProduct.category }}</span></div>
                             <h5 class="fw-bold mb-3 text-dark" style="line-height: 1.5;">{{ selectedProduct.name }}</h5>
-                            
                             <div class="d-flex justify-content-between align-items-end mb-4 border-bottom pb-3">
-                                <div>
-                                    <div class="text-danger fw-bold fs-2">${{ selectedProduct.price }}</div>
-                                    <div class="text-muted text-decoration-line-through small" v-if="selectedProduct.originalPrice > selectedProduct.price">${{ selectedProduct.originalPrice }}</div>
-                                </div>
-                                <div class="text-end">
-                                    <div class="mb-1"><span class="stock-tag" :class="{ none: Number(selectedProduct.stock) <= 0 }">剩 {{ selectedProduct.stock }} 組</span></div>
-                                    <div class="text-muted small"><i class="far fa-calendar-alt me-1"></i>{{ selectedProduct.expiryDate }}</div>
-                                </div>
+                                <div><div class="text-danger fw-bold fs-2">${{ selectedProduct.price }}</div><div class="text-muted text-decoration-line-through small" v-if="selectedProduct.originalPrice > selectedProduct.price">${{ selectedProduct.originalPrice }}</div></div>
+                                <div class="text-end"><div class="mb-1"><span class="stock-tag" :class="{ none: Number(selectedProduct.stock) <= 0 }">剩 {{ selectedProduct.stock }} 組</span></div><div class="text-muted small"><i class="far fa-calendar-alt me-1"></i>{{ selectedProduct.expiryDate }}</div></div>
                             </div>
-                            
-                            <!-- v219: Added Description Section -->
-                            <div v-if="selectedProduct.description" class="bg-light p-3 rounded-3 mb-3 text-muted small" style="white-space: pre-wrap; text-align: left; line-height: 1.6;">
-                                {{ selectedProduct.description }}
-                            </div>
-                            
+                            <div v-if="selectedProduct.description" class="bg-light p-3 rounded-3 mb-3 text-muted small" style="white-space: pre-wrap; text-align: left; line-height: 1.6;">{{ selectedProduct.description }}</div>
                             <div class="d-grid gap-2">
                                  <div v-if="cart[selectedProduct.id]" class="d-flex justify-content-between align-items-center bg-light rounded-pill p-2 border">
-                                    <button class="btn btn-light rounded-circle shadow-sm" style="width:40px;height:40px;" @click="updateCart(selectedProduct, -1)"><i class="fas fa-minus"></i></button>
-                                    <span class="fw-bold fs-5">{{ cart[selectedProduct.id] }}</span>
-                                    <button class="btn btn-light rounded-circle shadow-sm" style="width:40px;height:40px;" @click="updateCart(selectedProduct, 1)" :disabled="cart[selectedProduct.id] >= Number(selectedProduct.stock)"><i class="fas fa-plus"></i></button>
+                                    <button class="btn btn-light rounded-circle shadow-sm" style="width:40px;height:40px;" @click="updateCart(selectedProduct, -1)"><i class="fas fa-minus"></i></button><span class="fw-bold fs-5">{{ cart[selectedProduct.id] }}</span><button class="btn btn-light rounded-circle shadow-sm" style="width:40px;height:40px;" @click="updateCart(selectedProduct, 1)" :disabled="cart[selectedProduct.id] >= Number(selectedProduct.stock)"><i class="fas fa-plus"></i></button>
                                  </div>
-                                 <button v-else class="btn btn-danger rounded-pill py-3 fw-bold shadow" @click="updateCart(selectedProduct, 1)" :disabled="Number(selectedProduct.stock) <= 0">
-                                     {{ Number(selectedProduct.stock) <= 0 ? '已售完' : '加入購物車' }}
-                                 </button>
+                                 <button v-else class="btn btn-danger rounded-pill py-3 fw-bold shadow" @click="updateCart(selectedProduct, 1)" :disabled="Number(selectedProduct.stock) <= 0">{{ Number(selectedProduct.stock) <= 0 ? '已售完' : '加入購物車' }}</button>
                             </div>
                         </div>
                     </div>
@@ -649,48 +565,25 @@
                     <div class="modal-header border-0 pt-4 px-4 bg-light d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold fs-4 mb-0"><i class="fas fa-history me-2"></i>歷史訂單</h5>
                         <div class="d-flex align-items-center gap-2">
-                            <button class="btn btn-outline-danger btn-sm rounded-pill fw-bold" @click="() => { fetchOrderStatus(userProfile.userId); showToast('已刷新訂單狀態'); }">
-                                <i class="fas fa-sync-alt me-1"></i>刷新
-                            </button>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            <button class="btn btn-outline-danger btn-sm rounded-pill fw-bold" @click="() => { fetchOrderStatus(userProfile.userId); showToast('已刷新訂單狀態'); }"><i class="fas fa-sync-alt me-1"></i>刷新</button><button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                     </div>
                     <div class="modal-body px-4 py-3" style="max-height: 60vh; overflow-y: auto;">
                         <div v-if="orderHistory.length === 0" class="text-center py-5 text-muted">尚未有紀錄</div>
                         <div v-for="h in orderHistory" :key="h.id" class="history-item mb-4 border-bottom pb-3">
-                            <div class="d-flex justify-content-between mb-2">
-                                <div>
-                                    <span class="fw-bold small me-2">#{{ h.id }}</span>
-                                    <span class="text-muted" style="font-size:10px">{{ h.timestamp }}</span>
-                                </div>
-                                <div>
-                                    <span :class="getStatusBadge(h).class" class="status-badge">{{ getStatusBadge(h).text }}</span>
-                                </div>
-                            </div>
+                            <div class="d-flex justify-content-between mb-2"><div><span class="fw-bold small me-2">#{{ h.id }}</span><span class="text-muted" style="font-size:10px">{{ h.timestamp }}</span></div><div><span :class="getStatusBadge(h).class" class="status-badge">{{ getStatusBadge(h).text }}</span></div></div>
                             <div class="text-end mb-2"><span class="text-danger fw-bold">${{ h.totalAmount }}</span></div>
-
                             <div class="history-imgs-container mb-3">
-                                <div v-for="item in h.items" :key="item.name" class="h-thumb-box">
-                                    <img :src="getProductImage(item.name)" class="h-thumb" onerror="this.src='https://via.placeholder.com/48'">
-                                    <div class="h-qty-badge">x{{ item.quantity }}</div>
-                                </div>
+                                <div v-for="item in h.items" :key="item.name" class="h-thumb-box"><img :src="getProductImage(item.name)" class="h-thumb" onerror="this.src='https://via.placeholder.com/48'"><div class="h-qty-badge">x{{ item.quantity }}</div></div>
                             </div>
-                            
-                            <!-- v220: Self-Check Fulfillment Links -->
                             <div v-if="h.fulfillment" class="mt-2 mb-3 p-2 bg-light rounded border">
                                <div class="small fw-bold text-success mb-2"><i class="fas fa-gift me-1"></i>發貨內容 (點擊開啟)：</div>
                                <div v-for="(link, idx) in h.fulfillment.split('\n')" :key="idx" class="mb-2">
-                                   <a v-if="link.trim().length > 0" :href="link" target="_blank" class="btn btn-sm btn-outline-primary w-100 text-truncate fw-bold rounded-pill" style="font-size:11px;">
-                                       <i class="fas fa-external-link-alt me-1"></i>開啟商品連結 {{ idx + 1 }}
-                                   </a>
+                                   <a v-if="link.trim().length > 0" :href="link" target="_blank" class="btn btn-sm btn-outline-primary w-100 text-truncate fw-bold rounded-pill" style="font-size:11px;"><i class="fas fa-external-link-alt me-1"></i>開啟商品連結 {{ idx + 1 }}</a>
                                </div>
                             </div>
-                            
                             <div class="d-flex gap-2 flex-wrap">
-                                <button class="btn btn-outline-success btn-sm flex-grow-1 rounded-pill" @click="resendHistory(h)">補傳訂單</button>
-                                <button class="btn btn-outline-danger btn-sm flex-grow-1 rounded-pill" @click="reBuy(h)">再次購買</button>
-                                <button v-if="getStatusBadge(h).canReport" class="btn btn-warning btn-sm flex-grow-1 rounded-pill fw-bold text-dark" @click="openReportForHistory(h)">回報付款</button>
-                                <button v-if="getStatusBadge(h).canCancel" class="btn btn-secondary btn-sm flex-grow-1 rounded-pill fw-bold" @click="openCancelModal(h)">取消訂單</button>
+                                <button class="btn btn-outline-success btn-sm flex-grow-1 rounded-pill" @click="resendHistory(h)">補傳訂單</button><button class="btn btn-outline-danger btn-sm flex-grow-1 rounded-pill" @click="reBuy(h)">再次購買</button><button v-if="getStatusBadge(h).canReport" class="btn btn-warning btn-sm flex-grow-1 rounded-pill fw-bold text-dark" @click="openReportForHistory(h)">回報付款</button><button v-if="getStatusBadge(h).canCancel" class="btn btn-secondary btn-sm flex-grow-1 rounded-pill fw-bold" @click="openCancelModal(h)">取消訂單</button>
                             </div>
                         </div>
                     </div>
@@ -698,86 +591,33 @@
             </div>
         </div>
 
-        <!-- v226 Added: Guide Modal -->
         <div class="modal fade" id="guideModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 rounded-4 shadow-lg">
-                    <div class="modal-header border-0 pb-0">
-                        <h5 class="fw-bold"><i class="fas fa-book-reader me-2"></i>操作說明</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
+                    <div class="modal-header border-0 pb-0"><h5 class="fw-bold"><i class="fas fa-book-reader me-2"></i>操作說明</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                     <div class="modal-body p-4">
-                        <div class="guide-card">
-                            <div class="guide-icon-box"><i class="fas fa-shopping-basket"></i></div>
-                            <div class="guide-content">
-                                <h6>1. 挑選商品</h6>
-                                <p>瀏覽商品列表，將喜歡的商品加入購物車。點擊圖片可查看詳細資訊。</p>
-                            </div>
-                        </div>
-                        <div class="guide-card">
-                            <div class="guide-icon-box"><i class="fas fa-cash-register"></i></div>
-                            <div class="guide-content">
-                                <h6>2. 確認結帳</h6>
-                                <p>進入購物車，確認數量與金額，選擇您方便的付款方式 (支援多種銀行/街口)。</p>
-                            </div>
-                        </div>
-                        <div class="guide-card">
-                            <div class="guide-icon-box"><i class="fab fa-line"></i></div>
-                            <div class="guide-content">
-                                <h6>3. 訂單傳送</h6>
-                                <p>按下送出後，系統會自動將訂單明細傳送至 LINE 聊天室，請勿關閉視窗。</p>
-                            </div>
-                        </div>
-                        <div class="guide-card">
-                            <div class="guide-icon-box"><i class="fas fa-file-invoice-dollar"></i></div>
-                            <div class="guide-content">
-                                <h6>4. 付款與回報</h6>
-                                <p>完成轉帳後，請點擊「回報付款」或至歷史訂單中回報您的帳號後五碼。</p>
-                            </div>
-                        </div>
-                        <div class="guide-card">
-                            <div class="guide-icon-box"><i class="fas fa-gift"></i></div>
-                            <div class="guide-content">
-                                <h6>5. 領取商品</h6>
-                                <p>確認款項後，系統會自動發送商品圖片連結或轉贈至您的 momo 帳戶。</p>
-                            </div>
-                        </div>
+                        <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-shopping-basket"></i></div><div class="guide-content"><h6>1. 挑選商品</h6><p>瀏覽商品列表，將喜歡的商品加入購物車。點擊圖片可查看詳細資訊。</p></div></div>
+                        <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-cash-register"></i></div><div class="guide-content"><h6>2. 確認結帳</h6><p>進入購物車，確認數量與金額，選擇您方便的付款方式 (支援多種銀行/街口)。</p></div></div>
+                        <div class="guide-card"><div class="guide-icon-box"><i class="fab fa-line"></i></div><div class="guide-content"><h6>3. 訂單傳送</h6><p>按下送出後，系統會自動將訂單明細傳送至 LINE 聊天室，請勿關閉視窗。</p></div></div>
+                        <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-file-invoice-dollar"></i></div><div class="guide-content"><h6>4. 付款與回報</h6><p>完成轉帳後，請點擊「回報付款」或至歷史訂單中回報您的帳號後五碼。</p></div></div>
+                        <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-gift"></i></div><div class="guide-content"><h6>5. 領取商品</h6><p>確認款項後，系統會自動發送商品圖片連結或轉贈至您的 momo 帳戶。</p></div></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- v226 Added: Beautified Alert Modal -->
         <div class="modal fade" id="alertModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered" style="max-width: 320px;">
                 <div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden">
-                    <div class="modal-body p-4">
-                        <div class="mb-3 text-warning"><i class="fas fa-exclamation-circle fa-3x"></i></div>
-                        <h5 class="fw-bold mb-3">溫馨提醒</h5>
-                        <div class="text-muted text-start bg-light p-3 rounded-3 small" style="line-height:1.6;">
-                            <div v-for="(msg, idx) in alertMessages" :key="idx" class="mb-1">
-                                <i class="fas fa-caret-right me-2 text-warning"></i>{{ msg }}
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <button type="button" class="btn btn-dark w-100 rounded-pill fw-bold" data-bs-dismiss="modal">我知道了</button>
-                        </div>
-                    </div>
+                    <div class="modal-body p-4"><div class="mb-3 text-warning"><i class="fas fa-exclamation-circle fa-3x"></i></div><h5 class="fw-bold mb-3">溫馨提醒</h5><div class="text-muted text-start bg-light p-3 rounded-3 small" style="line-height:1.6;"><div v-for="(msg, idx) in alertMessages" :key="idx" class="mb-1"><i class="fas fa-caret-right me-2 text-warning"></i>{{ msg }}</div></div><div class="mt-4"><button type="button" class="btn btn-dark w-100 rounded-pill fw-bold" data-bs-dismiss="modal">我知道了</button></div></div>
                 </div>
             </div>
         </div>
 
-        <!-- v226 Added: Guest Warning Modal -->
         <div class="modal fade" id="guestWarningModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered" style="max-width: 320px;">
                  <div class="modal-content border-0 rounded-4 shadow-lg text-center p-4">
-                     <div class="mb-2 text-danger"><i class="fas fa-user-secret fa-3x"></i></div>
-                     <h5 class="fw-bold mb-2">訪客模式提醒</h5>
-                     <p class="text-muted small mb-3">您目前未使用 LINE 登入，訂單將無法自動連結至您的帳號。</p>
-                     <p class="text-muted small mb-4">建議您使用 LINE 開啟本商城，以享有完整服務與訂單查詢功能。</p>
-                     <button class="btn btn-danger w-100 rounded-pill fw-bold" onclick="copyGuestLink()">
-                         複製商城連結去 LINE 開啟
-                     </button>
+                     <div class="mb-2 text-danger"><i class="fas fa-user-secret fa-3x"></i></div><h5 class="fw-bold mb-2">訪客模式提醒</h5><p class="text-muted small mb-3">您目前未使用 LINE 登入，訂單將無法自動連結至您的帳號。</p><p class="text-muted small mb-4">建議您使用 LINE 開啟本商城，以享有完整服務與訂單查詢功能。</p><button class="btn btn-danger w-100 rounded-pill fw-bold" onclick="copyGuestLink()">複製商城連結去 LINE 開啟</button>
                  </div>
             </div>
         </div>
@@ -790,9 +630,7 @@
 
     <script>
         window.onerror = function(msg, url, line, col, error) {
-            // Suppress error if it's just a fetch issue handled by retry
             if (msg.indexOf('fetch') > -1) return false;
-
             const loader = document.getElementById('static-loader');
             if(loader && loader.style.display !== 'none') {
                 const div = document.createElement('div');
@@ -857,8 +695,6 @@
                 const deliveryMethod = ref('screenshot'); 
                 const errorMsg = ref(''); 
                 
-                // v227: Change to single string selection (default '822' optional, using empty here to force choice or default in template logic if needed)
-                // We'll init as empty string so user must select, OR init as '822' to match previous default behavior
                 const selectedPayment = ref(''); 
                 const bankAccounts = ref(BANK_ACCOUNTS);
 
@@ -884,8 +720,15 @@
 
                 const orderToCancel = ref(null);
                 const selectedProduct = ref(null);
+                
+                // v228: Ticket Wallet State
+                const walletFilter = ref('available'); // 'available' or 'used'
+                // Load redeemed status from local storage
+                let redeemedMap = {};
+                try { redeemedMap = JSON.parse(safeGetStorage('mm_redeemed_map', '{}')); } catch(e) { redeemedMap = {}; }
+                const redeemedStatus = ref(redeemedMap);
 
-                let cartModal, successModal, historyModal, guideModal, alertModalInstance, guestWarningModal, unreportedModal, cancelModal, productDetailModal;
+                let cartModal, successModal, historyModal, guideModal, alertModalInstance, guestWarningModal, unreportedModal, cancelModal, productDetailModal, ticketModal;
 
                 onMounted(() => {
                     initApp();
@@ -899,9 +742,8 @@
                         unreportedModal = new bootstrap.Modal(document.getElementById('unreportedModal'));
                         cancelModal = new bootstrap.Modal(document.getElementById('cancelConfirmModal'));
                         productDetailModal = new bootstrap.Modal(document.getElementById('productDetailModal'));
+                        ticketModal = new bootstrap.Modal(document.getElementById('ticketModal'));
                     } catch(e) { console.error('Bootstrap modal init error', e); }
-                    
-                    // v227: Removed custom touchmove reload logic to prevent accidental refresh
                 });
 
                 watch(acceptTerms, (newVal) => { safeSetStorage('mm_accept_terms', newVal); });
@@ -1019,7 +861,6 @@
                 const showAlert = (msgs) => { alertMessages.value = Array.isArray(msgs) ? msgs : [msgs]; if(alertModalInstance) alertModalInstance.show(); else alert(msgs.join('\n')); };
                 const setViewMode = (mode) => { viewMode.value = mode; safeSetStorage('mm_view_mode', mode); showLayoutMenu.value = false; };
                 
-                // v227: Toggle simply sets the value
                 const togglePayment = (code) => { selectedPayment.value = code; };
                 
                 const copyText = (txt) => { navigator.clipboard.writeText(txt).then(() => showToast('已複製帳號')).catch(() => showToast('複製失敗')); };
@@ -1047,7 +888,6 @@
                     return orderHistory.value.filter(o => lastOrderIds.value.includes(o.id)).reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
                 });
 
-                // v227: Return array of the single selected bank for modal display logic, or all if none (though validation prevents that)
                 const selectedBankInfos = computed(() => {
                     if (!selectedPayment.value) return bankAccounts.value; 
                     return bankAccounts.value.filter(b => b.code === selectedPayment.value);
@@ -1269,8 +1109,63 @@
                     selectedPayment.value = ''; 
                     showPaymentForm.value = false; 
                 };
+                
+                // v228: Ticket Wallet Logic
+                const walletItems = computed(() => {
+                    const items = [];
+                    orderHistory.value.forEach(order => {
+                        // Ensure only shipped orders (Status: Shipped) with fulfillment links
+                        if ((order.isShipped === true || String(order.isShipped) === 'true') && order.fulfillment) {
+                            const links = order.fulfillment.split('\n').filter(l => l.trim().length > 0);
+                            links.forEach((url, i) => {
+                                const isRedeemed = !!redeemedStatus.value[url];
+                                const redeemedAt = isRedeemed ? redeemedStatus.value[url] : null;
+                                
+                                // Simple mapping to try and guess product name from order items (Approximate)
+                                let pName = order.items.length > 0 ? order.items[0].name : '商品票券';
+                                if(order.items.length > 1) pName += ` 等(${order.items.length}樣)`;
+                                
+                                const ticket = {
+                                    url: url,
+                                    orderId: order.id,
+                                    name: pName,
+                                    isRedeemed: isRedeemed,
+                                    redeemedAt: redeemedAt
+                                };
+                                
+                                if (walletFilter.value === 'available' && !isRedeemed) items.push(ticket);
+                                else if (walletFilter.value === 'used' && isRedeemed) items.push(ticket);
+                            });
+                        }
+                    });
+                    return items;
+                });
+                
+                const openWallet = () => {
+                    if (ticketModal) ticketModal.show();
+                };
+                
+                const showTicketImage = (item) => {
+                    // For now, open in new tab as "Zoom" since simple lightbox is complex to add without deps
+                    // Or reuse existing mechanism if possible.
+                    // Let's just open in new tab which is safest for scanning
+                    window.open(item.url, '_blank');
+                };
+                
+                const confirmRedeem = (item) => {
+                    if(confirm("確定要核銷此票券嗎？\n核銷後票券將標示為「已使用」，方便您管理。")) {
+                        const now = new Date().toLocaleString();
+                        redeemedStatus.value[item.url] = now;
+                        // Force update
+                        redeemedStatus.value = { ...redeemedStatus.value };
+                        safeSetStorage('mm_redeemed_map', JSON.stringify(redeemedStatus.value));
+                        showToast("已標記為核銷！");
+                    }
+                };
 
-                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayment, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, fetchOrderStatus, showToast, errorMsg };
+                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayment, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, fetchOrderStatus, showToast, errorMsg, 
+                // v228 Exports
+                openWallet, walletItems, walletFilter, confirmRedeem, showTicketImage };
             }
         }).mount('#app');
     </script>
