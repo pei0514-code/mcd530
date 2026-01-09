@@ -138,8 +138,10 @@
 
         .guide-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; align-items: center; border: 1px solid #f0f0f0; }
         .guide-icon-box { width: 50px; height: 50px; border-radius: 12px; background: #fff5f5; color: var(--brand-red); display: flex; align-items: center; justify-content: center; font-size: 20px; margin-right: 15px; flex-shrink: 0; }
-        .guide-content h6 { font-weight: 800; margin-bottom: 4px; color: #333; font-size: 15px; }
-        .guide-content p { font-size: 12px; color: #777; margin: 0; line-height: 1.4; }
+        
+        /* v229 Update: Increased font sizes */
+        .guide-content h6 { font-weight: 800; margin-bottom: 4px; color: #333; font-size: 17px; }
+        .guide-content p { font-size: 14px; color: #777; margin: 0; line-height: 1.5; }
 
         .timeline-container { position: relative; padding-left: 10px; margin-top: 10px; }
         .timeline-container::before { content: ''; position: absolute; left: 21px; top: 12px; bottom: 30px; width: 2px; background: #eee; z-index: 1; }
@@ -202,7 +204,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v228</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v229</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -249,7 +251,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v228</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v229</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -1170,4 +1172,461 @@
         }).mount('#app');
     </script>
 </body>
-</html>
+</html>--- START OF FILE services/geminiService.ts ---
+
+import { GoogleGenAI } from "@google/genai";
+import { ModelName } from "../types";
+
+// Initialize Gemini Client
+// IMPORTANT: The API key must be provided via the environment variable VITE_GEMINI_API_KEY
+// In a real production app, this should be proxied through a backend to keep the key secret.
+// For this demo, we assume the environment variable is available.
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+// Only initialize if key exists to prevent immediate crash, handle error in function
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+
+interface StreamResponseParams {
+  model: ModelName;
+  prompt: string;
+  images?: { mimeType: string; data: string }[];
+  useSearch?: boolean;
+  systemInstruction?: string;
+  onChunk: (text: string) => void;
+  onComplete: (text: string, groundingSources?: any[]) => void;
+  onError: (error: Error) => void;
+}
+
+export async function streamResponse({
+  model,
+  prompt,
+  images = [],
+  useSearch = false,
+  systemInstruction,
+  onChunk,
+  onComplete,
+  onError,
+}: StreamResponseParams) {
+  if (!ai) {
+    onError(new Error("API Key not found. Please set VITE_GEMINI_API_KEY in .env"));
+    return;
+  }
+
+  try {
+    const modelId = model;
+    
+    // Construct content parts
+    const parts: any[] = [];
+    
+    // Add images if any
+    if (images.length > 0) {
+      images.forEach(img => {
+        parts.push({
+          inlineData: {
+            mimeType: img.mimeType,
+            data: img.data
+          }
+        });
+      });
+    }
+
+    // Add text prompt
+    parts.push({ text: prompt });
+
+    // Prepare Tools
+    const tools: any[] = [];
+    if (useSearch) {
+      tools.push({ googleSearch: {} });
+    }
+
+    // Prepare Config
+    const config: any = {};
+    if (systemInstruction) {
+      config.systemInstruction = systemInstruction;
+    }
+    if (tools.length > 0) {
+      config.tools = tools;
+    }
+
+    // Call streaming API
+    const responseStream = await ai.models.generateContentStream({
+      model: modelId,
+      contents: { parts },
+      config: config
+    });
+
+    let fullText = "";
+    let groundingMetadata: any = null;
+
+    for await (const chunk of responseStream) {
+      const chunkText = chunk.text;
+      if (chunkText) {
+        fullText += chunkText;
+        onChunk(chunkText);
+      }
+      
+      // Capture grounding metadata if available (usually in the last chunks)
+      if (chunk.candidates?.[0]?.groundingMetadata) {
+        groundingMetadata = chunk.candidates[0].groundingMetadata;
+      }
+    }
+
+    // Extract sources from grounding metadata
+    let sources: any[] = [];
+    if (groundingMetadata?.groundingChunks) {
+      sources = groundingMetadata.groundingChunks
+        .filter((c: any) => c.web?.uri && c.web?.title)
+        .map((c: any) => ({
+          title: c.web.title,
+          uri: c.web.uri
+        }));
+    }
+
+    onComplete(fullText, sources);
+
+  } catch (error: any) {
+    console.error("Gemini API Error:", error);
+    onError(error);
+  }
+}--- START OF FILE components/Sidebar.tsx ---
+
+import React from 'react';
+import { ModelName } from '../types';
+import { MessageSquare, Image, Search, Settings, Cpu, Globe } from 'lucide-react';
+
+interface SidebarProps {
+  selectedModel: ModelName;
+  onSelectModel: (model: ModelName) => void;
+  useSearch: boolean;
+  onToggleSearch: () => void;
+}
+
+export function Sidebar({ selectedModel, onSelectModel, useSearch, onToggleSearch }: SidebarProps) {
+  return (
+    <div className="hidden md:flex w-64 flex-col bg-slate-900 border-r border-slate-800 h-full">
+      <div className="p-4 border-b border-slate-800">
+        <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400 flex items-center gap-2">
+          <Cpu className="w-6 h-6 text-indigo-400" />
+          Gemini Nexus
+        </h1>
+      </div>
+
+      <div className="p-4 flex-1 overflow-y-auto">
+        <div className="mb-6">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-2">
+            Models
+          </h2>
+          <div className="space-y-1">
+            <ModelOption 
+              name="Flash 2.0" 
+              description="Fast & Efficient"
+              isActive={selectedModel === ModelName.FLASH}
+              onClick={() => onSelectModel(ModelName.FLASH)}
+            />
+            <ModelOption 
+              name="Pro 2.0" 
+              description="Complex Reasoning"
+              isActive={selectedModel === ModelName.PRO}
+              onClick={() => onSelectModel(ModelName.PRO)}
+            />
+            <ModelOption 
+              name="Flash 2.5 (Latest)" 
+              description="Experimental"
+              isActive={selectedModel === ModelName.FLASH_2_5}
+              onClick={() => onSelectModel(ModelName.FLASH_2_5)}
+            />
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-2">
+            Capabilities
+          </h2>
+          <div className="space-y-1">
+            <button 
+              onClick={onToggleSearch}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all ${
+                useSearch 
+                  ? 'bg-emerald-900/30 text-emerald-300 border border-emerald-800' 
+                  : 'text-slate-400 hover:bg-slate-800 border border-transparent'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4" />
+                <span>Google Search</span>
+              </div>
+              <div className={`w-8 h-4 rounded-full relative transition-colors ${useSearch ? 'bg-emerald-500' : 'bg-slate-600'}`}>
+                <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${useSearch ? 'left-4.5 translate-x-0' : 'left-0.5'}`} />
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4 border-t border-slate-800">
+        <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-800/50">
+           <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-xs">
+             AI
+           </div>
+           <div className="flex-1 min-w-0">
+             <div className="text-sm font-medium text-slate-200 truncate">Demo User</div>
+             <div className="text-xs text-slate-500 truncate">Free Tier</div>
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ModelOption({ name, description, isActive, onClick }: { name: string, description: string, isActive: boolean, onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full text-left px-3 py-2.5 rounded-lg transition-all ${
+        isActive 
+          ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/20' 
+          : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+      }`}
+    >
+      <div className="text-sm font-medium">{name}</div>
+      <div className={`text-xs ${isActive ? 'text-indigo-200' : 'text-slate-500'}`}>{description}</div>
+    </button>
+  );
+}--- START OF FILE components/InputArea.tsx ---
+
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Image as ImageIcon, X, Loader2 } from 'lucide-react';
+import { Attachment } from '../types';
+
+interface InputAreaProps {
+  onSendMessage: (text: string, attachments: Attachment[]) => void;
+  isLoading: boolean;
+}
+
+export function InputArea({ onSendMessage, isLoading }: InputAreaProps) {
+  const [text, setText] = useState('');
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+    }
+  }, [text]);
+
+  const handleSend = () => {
+    if ((!text.trim() && attachments.length === 0) || isLoading) return;
+    onSendMessage(text, attachments);
+    setText('');
+    setAttachments([]);
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newAttachments: Attachment[] = [];
+      Array.from(e.target.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64String = reader.result as string;
+          // Extract pure base64 data (remove "data:image/jpeg;base64," prefix)
+          const base64Data = base64String.split(',')[1];
+          
+          setAttachments(prev => [...prev, {
+            mimeType: file.type,
+            data: base64Data,
+            url: base64String // Keep full string for preview
+          }]);
+        };
+        reader.readAsDataURL(file);
+      });
+      // Reset input so same file can be selected again if needed
+      e.target.value = '';
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div className="p-4 bg-slate-900 border-t border-slate-800">
+      <div className="max-w-4xl mx-auto">
+        
+        {/* Attachment Previews */}
+        {attachments.length > 0 && (
+          <div className="flex gap-3 mb-3 overflow-x-auto pb-2">
+            {attachments.map((att, i) => (
+              <div key={i} className="relative group shrink-0">
+                <img 
+                  src={att.url} 
+                  alt="preview" 
+                  className="w-16 h-16 object-cover rounded-lg border border-slate-700" 
+                />
+                <button 
+                  onClick={() => removeAttachment(i)}
+                  className="absolute -top-2 -right-2 bg-slate-800 rounded-full p-0.5 border border-slate-600 hover:bg-red-500/20 hover:text-red-400 transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="relative flex items-end gap-2 bg-slate-800 p-2 rounded-xl border border-slate-700 focus-within:border-indigo-500/50 focus-within:ring-1 focus-within:ring-indigo-500/50 transition-all shadow-sm">
+          
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            className="p-2 text-slate-400 hover:text-indigo-400 hover:bg-slate-700/50 rounded-lg transition-colors pb-3"
+            title="Upload Image"
+          >
+            <ImageIcon className="w-5 h-5" />
+          </button>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            className="hidden" 
+            accept="image/*" 
+            multiple 
+          />
+
+          <textarea
+            ref={textareaRef}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask anything..."
+            className="flex-1 bg-transparent border-none focus:ring-0 text-slate-100 placeholder-slate-500 resize-none max-h-48 py-3 text-sm scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent"
+            rows={1}
+          />
+
+          <button
+            onClick={handleSend}
+            disabled={(!text.trim() && attachments.length === 0) || isLoading}
+            className={`p-2 rounded-lg mb-0.5 transition-all ${
+              (!text.trim() && attachments.length === 0) || isLoading
+                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                : 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-900/20'
+            }`}
+          >
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+          </button>
+        </div>
+        
+        <div className="text-center mt-2">
+           <p className="text-[10px] text-slate-500">
+             AI can make mistakes. Check important info.
+           </p>
+        </div>
+      </div>
+    </div>
+  );
+}--- START OF FILE components/ChatMessage.tsx ---
+
+import React from 'react';
+import ReactMarkdown from 'react-markdown';
+import { Message, Role } from '../types';
+import { Bot, User, Globe, ExternalLink } from 'lucide-react';
+
+interface ChatMessageProps {
+  message: Message;
+}
+
+export function ChatMessage({ message }: ChatMessageProps) {
+  const isUser = message.role === Role.USER;
+
+  return (
+    <div className={`group flex gap-4 p-4 md:px-8 transition-colors ${
+      isUser ? '' : 'bg-slate-900/30 rounded-2xl border border-slate-800/50'
+    }`}>
+      {/* Avatar */}
+      <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+        isUser ? 'bg-slate-700' : 'bg-indigo-600'
+      }`}>
+        {isUser ? <User className="w-5 h-5 text-slate-300" /> : <Bot className="w-5 h-5 text-white" />}
+      </div>
+
+      <div className="flex-1 min-w-0 space-y-2">
+        {/* Name & Time */}
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-sm text-slate-200">
+            {isUser ? 'You' : 'Gemini'}
+          </span>
+          {message.isStreaming && (
+            <span className="inline-block w-2 h-2 bg-indigo-500 rounded-full animate-pulse" />
+          )}
+        </div>
+
+        {/* User Attachments */}
+        {message.attachments && message.attachments.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {message.attachments.map((att, i) => (
+              <img 
+                key={i} 
+                src={att.url} 
+                alt="attachment" 
+                className="max-h-64 rounded-lg border border-slate-700" 
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Message Content */}
+        <div className="prose prose-invert prose-sm max-w-none leading-relaxed">
+          <ReactMarkdown
+             components={{
+                a: ({node, ...props}) => <a {...props} target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 no-underline hover:underline" />,
+                code: ({node, inline, className, children, ...props}: any) => {
+                    return inline ? (
+                        <code className="bg-slate-800 px-1 py-0.5 rounded text-indigo-200 font-mono text-xs" {...props}>{children}</code>
+                    ) : (
+                        <div className="bg-slate-950 rounded-lg p-4 my-2 border border-slate-800 overflow-x-auto">
+                           <code className="font-mono text-xs text-slate-300" {...props}>{children}</code>
+                        </div>
+                    )
+                }
+             }}
+          >
+            {message.text}
+          </ReactMarkdown>
+        </div>
+
+        {/* Grounding Sources */}
+        {message.groundingSources && message.groundingSources.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-slate-800/50">
+             <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase mb-2">
+                <Globe className="w-3 h-3" />
+                Sources
+             </div>
+             <div className="flex flex-wrap gap-2">
+                {message.groundingSources.map((source, i) => (
+                   <a 
+                     key={i}
+                     href={source.uri}
+                     target="_blank"
+                     rel="noreferrer"
+                     className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 rounded-full transition-colors border border-slate-700"
+                   >
+                      <span className="truncate max-w-[150px]">{source.title}</span>
+                      <ExternalLink className="w-3 h-3 opacity-50" />
+                   </a>
+                ))}
+             </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
