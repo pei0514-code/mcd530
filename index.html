@@ -645,6 +645,7 @@
                                 <button class="btn btn-outline-success btn-sm flex-grow-1 rounded-pill" @click="resendHistory(h)">補傳訂單</button>
                                 <button class="btn btn-outline-danger btn-sm flex-grow-1 rounded-pill" @click="reBuy(h)">再次購買</button>
                                 <button v-if="getStatusBadge(h).canReport" class="btn btn-warning btn-sm flex-grow-1 rounded-pill fw-bold text-dark" @click="openReportForHistory(h)">回報付款</button>
+                                <button v-if="getStatusBadge(h).canCancel" class="btn btn-secondary btn-sm flex-grow-1 rounded-pill fw-bold" @click="cancelOrder(h)">取消訂單</button>
                             </div>
                         </div>
                     </div>
@@ -946,10 +947,10 @@
                 // v211: Helper to get status badge props
                 const getStatusBadge = (h) => {
                     // v212: Ensure isShipped check is robust
-                    if (h.isShipped === true || String(h.isShipped) === 'true') return { text: '✅ 已發貨', class: 'status-shipped', canReport: false };
-                    if (h.paymentNote && (String(h.paymentNote).includes('取消') || String(h.paymentNote).includes('失效'))) return { text: '❌ 已失效', class: 'status-invalid', canReport: false };
-                    if ((h.isPaid === true || String(h.isPaid) === 'true') || (h.paymentNote && String(h.paymentNote).length > 1)) return { text: '💰 已回報', class: 'status-paid', canReport: false }; // Pending admin check
-                    return { text: '⏳ 待回報', class: 'status-pending', canReport: true };
+                    if (h.isShipped === true || String(h.isShipped) === 'true') return { text: '✅ 已發貨', class: 'status-shipped', canReport: false, canCancel: false };
+                    if (h.paymentNote && (String(h.paymentNote).includes('取消') || String(h.paymentNote).includes('失效'))) return { text: '❌ 已失效', class: 'status-invalid', canReport: false, canCancel: false };
+                    if ((h.isPaid === true || String(h.isPaid) === 'true') || (h.paymentNote && String(h.paymentNote).length > 1)) return { text: '💰 已回報', class: 'status-paid', canReport: false, canCancel: false }; // Pending admin check
+                    return { text: '⏳ 待回報', class: 'status-pending', canReport: true, canCancel: true };
                 };
                 
                 const openReportForHistory = (h) => {
@@ -957,6 +958,45 @@
                     lastOrderIds.value = [h.id];
                     openPaymentForm();
                     if(successModal) successModal.show();
+                };
+                
+                const cancelOrder = async (h) => {
+                    if (!confirm('確定要取消這筆訂單嗎？\n取消後庫存將會釋出。')) return;
+                    
+                    try {
+                        showToast('正在取消訂單...');
+                        const response = await fetch(API_URL, {
+                            method: 'POST', mode: 'no-cors',
+                            body: JSON.stringify({
+                                action: 'cancelOrder',
+                                orderId: h.id,
+                                userId: userProfile.value.userId || 'GUEST'
+                            })
+                        });
+                        
+                        // Optimistic update locally
+                        orderHistory.value = orderHistory.value.map(o => {
+                             if (o.id === h.id) return { ...o, paymentNote: '用戶自行取消' };
+                             return o;
+                        });
+                        safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
+                        
+                        // Remove from pending list
+                        const remPending = unreportedOrders.value.filter(id => id !== h.id);
+                        unreportedOrders.value = remPending;
+                        safeSetStorage('mm_pending_payment_orders', JSON.stringify(remPending));
+                        
+                        showToast('訂單已取消');
+                        
+                        // Reload products to reflect stock changes after short delay
+                        setTimeout(() => {
+                             initApp(); 
+                        }, 1000);
+                        
+                    } catch(e) {
+                        showToast('取消失敗，請聯繫客服');
+                        console.error(e);
+                    }
                 };
                 
                 const openReportForPending = () => {
@@ -1222,7 +1262,7 @@
                     showPaymentForm.value = false; 
                 };
 
-                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayments, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection };
+                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayments, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, cancelOrder };
             }
         }).mount('#app');
     </script>
