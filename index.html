@@ -172,7 +172,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v201</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v204</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -219,7 +219,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v201</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v204</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -338,11 +338,16 @@
                                  @click="deliveryMethod = 'screenshot'">
                                  📸 優先截圖
                             </div>
+                            <!-- 只有當購物車內有轉贈庫存時，才允許點擊 -->
                             <div class="option-btn btn btn-outline-danger flex-grow-1 rounded-pill" 
-                                 :class="{ active: deliveryMethod === 'gift' }" 
-                                 @click="deliveryMethod = 'gift'">
+                                 :class="{ active: deliveryMethod === 'gift', disabled: !canSelectGift }" 
+                                 @click="canSelectGift && (deliveryMethod = 'gift')">
                                  🎁 優先轉贈
                             </div>
+                        </div>
+                        
+                        <div v-if="!canSelectGift" class="text-muted small text-center mb-2" style="font-size: 11px;">
+                            * 您選擇的商品目前無轉贈庫存，僅支援截圖發送
                         </div>
 
                         <!-- Mixed Split Warning -->
@@ -416,25 +421,58 @@
         <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content text-center p-4 border-0 rounded-4 shadow-lg">
-                    <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
-                    <h4 class="fw-bold">訂單已成功送出！</h4>
-                    <p class="small text-muted mb-4">請完成付款後，聯繫客服告知帳號末五碼。</p>
                     
-                    <div class="bg-light rounded-3 p-3 text-start mb-4 border">
-                        <div class="fw-bold text-dark border-bottom pb-2 mb-2"><i class="fas fa-wallet me-2"></i>匯款帳號 (點擊複製)</div>
-                        <div v-for="bank in selectedBankInfos" :key="bank.code" class="mb-2 d-flex justify-content-between align-items-center bg-white p-2 rounded border" @click="copyText(bank.account)">
-                            <div>
-                                <div class="small text-muted">{{ bank.name }}</div>
-                                <div class="fw-bold text-danger">{{ bank.account }}</div>
+                    <!-- 初始狀態：顯示匯款資訊 -->
+                    <div v-if="!showPaymentForm">
+                        <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
+                        <h4 class="fw-bold">訂單已成功送出！</h4>
+                        <p class="small text-muted mb-4">請完成付款後，點擊下方按鈕回報。</p>
+                        
+                        <div class="bg-light rounded-3 p-3 text-start mb-4 border">
+                            <div class="fw-bold text-dark border-bottom pb-2 mb-2"><i class="fas fa-wallet me-2"></i>匯款帳號 (點擊複製)</div>
+                            <div v-for="bank in selectedBankInfos" :key="bank.code" class="mb-2 d-flex justify-content-between align-items-center bg-white p-2 rounded border" @click="copyText(bank.account)">
+                                <div>
+                                    <div class="small text-muted">{{ bank.name }}</div>
+                                    <div class="fw-bold text-danger">{{ bank.account }}</div>
+                                </div>
+                                <i class="far fa-copy text-secondary"></i>
                             </div>
-                            <i class="far fa-copy text-secondary"></i>
                         </div>
-                        <div v-if="selectedBankInfos.length === 0" class="text-muted small text-center">未選擇付款方式，請參考下方完整列表</div>
+
+                        <button class="btn btn-warning w-100 rounded-pill py-2 fw-bold mb-2 shadow-sm text-dark" @click="openPaymentForm">
+                            <i class="fas fa-money-bill-wave me-2"></i>我已付款 (回報後五碼)
+                        </button>
+                        <button class="btn btn-outline-dark w-100 rounded-pill py-2 fw-bold" data-bs-dismiss="modal" @click="resetCart">
+                            稍後回報 / 關閉視窗
+                        </button>
                     </div>
 
-                    <button class="btn btn-dark w-100 rounded-pill py-2 fw-bold mb-2 shadow-sm" data-bs-dismiss="modal" @click="resetCart">
-                        關閉視窗
-                    </button>
+                    <!-- 付款回報表單 -->
+                    <div v-else>
+                         <h5 class="fw-bold mb-3"><i class="fas fa-edit me-2"></i>回報付款資訊</h5>
+                         <div class="text-start mb-3">
+                             <label class="form-label-small fw-bold">您匯入的帳戶：</label>
+                             <select v-model="paymentForm.bankCode" class="form-select rounded-pill mb-3" :disabled="selectedBankInfos.length === 1">
+                                 <option v-for="bank in selectedBankInfos" :key="bank.code" :value="bank.code">
+                                     {{ bank.name }}
+                                 </option>
+                             </select>
+
+                             <label class="form-label-small fw-bold">
+                                 {{ paymentFormLabel }}
+                             </label>
+                             <input type="text" v-model="paymentForm.accountInfo" class="form-control rounded-pill" :placeholder="paymentFormPlaceholder">
+                         </div>
+
+                         <button class="btn btn-success w-100 rounded-pill py-2 fw-bold mb-2 shadow" @click="submitPayment" :disabled="isSubmittingPayment">
+                             <span v-if="isSubmittingPayment"><i class="fas fa-spinner fa-spin me-2"></i>傳送中...</span>
+                             <span v-else>送出回報</span>
+                         </button>
+                         <button class="btn btn-link text-muted small" @click="showPaymentForm = false">
+                             返回上一頁
+                         </button>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -589,7 +627,7 @@
             if(loader && loader.style.display !== 'none') {
                 document.getElementById('force-load-btn').style.display = 'block';
             }
-        }, 12000); // Extended timeout
+        }, 12000); 
 
         function safeGetStorage(key, defaultVal) {
             try { return localStorage.getItem(key) !== null ? localStorage.getItem(key) : defaultVal; } 
@@ -634,7 +672,7 @@
                 const acceptTerms = ref(safeGetStorage('mm_accept_terms', 'false') === 'true');
                 const viewMode = ref(safeGetStorage('mm_view_mode', 'medium'));
                 const showLayoutMenu = ref(false);
-                const deliveryMethod = ref('screenshot'); // 'screenshot' or 'gift' (preference)
+                const deliveryMethod = ref('screenshot'); 
                 
                 const selectedPayments = ref([]);
                 const bankAccounts = ref(BANK_ACCOUNTS);
@@ -648,6 +686,12 @@
                 try { hist = JSON.parse(safeGetStorage('mm_order_history', '[]')); } catch(e){ hist = []; }
                 const orderHistory = ref(hist);
                 const alertMessages = ref([]);
+
+                // New States for Payment Reporting
+                const showPaymentForm = ref(false);
+                const isSubmittingPayment = ref(false);
+                const paymentForm = ref({ bankCode: '', accountInfo: '' });
+                const lastOrderIds = ref([]); // Tracks the IDs generated in the last checkout
 
                 let cartModal, successModal, historyModal, guideModal, alertModalInstance, guestWarningModal;
 
@@ -695,8 +739,14 @@
                         if (setRes.liffId) {
                             try {
                                 await liff.init({ liffId: setRes.liffId });
-                                if (liff.isLoggedIn()) userProfile.value = await liff.getProfile();
-                                else checkGuestStatus();
+                                if (liff.isLoggedIn()) {
+                                    userProfile.value = await liff.getProfile();
+                                    // Try to get email if scope allows
+                                    try {
+                                        const decoded = liff.getDecodedIDToken();
+                                        if (decoded && decoded.email) userProfile.value.email = decoded.email;
+                                    } catch(e) {}
+                                } else checkGuestStatus();
                             } catch (e) { console.warn("LIFF init failed", e); checkGuestStatus(); }
                         }
                     } catch (err) { 
@@ -734,15 +784,16 @@
                     return bankAccounts.value.filter(b => selectedPayments.value.includes(b.code));
                 });
 
-                // Computed checkers for warnings
-                const hasGiftOnlyItems = computed(() => {
-                    // Check if there are items that MUST be gift (no drive stock but has gift stock)
-                    return cartItems.value.some(item => item.driveStock < item.quantity && item.giftStock >= item.quantity);
-                });
+                const hasGiftOnlyItems = computed(() => cartItems.value.some(item => item.driveStock < item.quantity && item.giftStock >= item.quantity));
+                const hasDriveOnlyItems = computed(() => cartItems.value.some(item => item.giftStock < item.quantity && item.driveStock >= item.quantity));
                 
-                const hasDriveOnlyItems = computed(() => {
-                    // Check if there are items that MUST be drive (no gift stock but has drive stock)
-                    return cartItems.value.some(item => item.giftStock < item.quantity && item.driveStock >= item.quantity);
+                // 是否能選擇轉贈 (購物車內是否有任何商品有轉贈庫存)
+                const canSelectGift = computed(() => cartItems.value.some(i => i.giftStock > 0));
+
+                watch(canSelectGift, (val) => {
+                    if (!val && deliveryMethod.value === 'gift') {
+                        deliveryMethod.value = 'screenshot';
+                    }
                 });
 
                 const updateCart = (p, d) => {
@@ -782,38 +833,22 @@
                     safeSetStorage('mm_user_phone', userContact.value.phone);
                     if (requiresGiftInfo) { safeSetStorage('mm_momo_name', giftInfo.value.name); safeSetStorage('mm_momo_phone', giftInfo.value.phone); }
 
-                    // Determine Split
                     const driveItems = [];
                     const giftItems = [];
                     
-                    // Allocation Logic
                     cartItems.value.forEach(item => {
                         let allocated = false;
-                        
-                        // Try preferred method first
                         if (deliveryMethod.value === 'gift') {
-                             if (item.giftStock >= item.quantity) {
-                                 giftItems.push(item); allocated = true;
-                             } else if (item.driveStock >= item.quantity) {
-                                 driveItems.push(item); allocated = true;
-                             }
+                             if (item.giftStock >= item.quantity) { giftItems.push(item); allocated = true; } 
+                             else if (item.driveStock >= item.quantity) { driveItems.push(item); allocated = true; }
                         } else {
-                             // Preference Screenshot
-                             if (item.driveStock >= item.quantity) {
-                                 driveItems.push(item); allocated = true;
-                             } else if (item.giftStock >= item.quantity) {
-                                 giftItems.push(item); allocated = true;
-                             }
+                             if (item.driveStock >= item.quantity) { driveItems.push(item); allocated = true; } 
+                             else if (item.giftStock >= item.quantity) { giftItems.push(item); allocated = true; }
                         }
-                        
-                        if (!allocated) {
-                             errors.push(`商品【${item.name}】庫存不足，無法結帳`);
-                        }
+                        if (!allocated) errors.push(`商品【${item.name}】庫存不足，無法結帳`);
                     });
                     
-                    if (errors.length > 0) {
-                        showAlert(errors); isSubmitting.value = false; return;
-                    }
+                    if (errors.length > 0) { showAlert(errors); isSubmitting.value = false; return; }
 
                     const now = new Date();
                     const baseOrderId = `M${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
@@ -821,23 +856,24 @@
                     const orderPromises = [];
                     const lineMessages = [];
                     const records = [];
+                    const generatedOrderIds = [];
 
-                    // Create Screenshot Order Payload
                     if (driveItems.length > 0) {
                          const oid = giftItems.length > 0 ? `${baseOrderId}-1` : baseOrderId;
+                         generatedOrderIds.push(oid);
                          const total = driveItems.reduce((a,b) => a + (b.price*b.quantity), 0);
                          const record = { 
                              id: oid, timestamp: now.toLocaleString(), totalAmount: total, 
                              items: driveItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) 
                          };
                          records.push(record);
-                         
                          orderPromises.push(
                              fetch(API_URL, { 
                                 method: 'POST', mode: 'no-cors', 
                                 body: JSON.stringify({ 
                                     ...record, 
                                     phone: userContact.value.phone, 
+                                    email: userProfile.value.email || '',
                                     deliveryMethod: '截圖發送', 
                                     momoName: '', momoPhone: '', 
                                     userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', 
@@ -845,29 +881,28 @@
                                 }) 
                              })
                          );
-                         
                          let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：📸 截圖發送\n🍱 內容：\n`;
                          driveItems.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${i.name} x${i.quantity}\n`; });
                          msg += `💰 小計：$${total}`;
                          lineMessages.push(msg);
                     }
 
-                    // Create Gift Order Payload
                     if (giftItems.length > 0) {
                          const oid = driveItems.length > 0 ? `${baseOrderId}-2` : baseOrderId;
+                         generatedOrderIds.push(oid);
                          const total = giftItems.reduce((a,b) => a + (b.price*b.quantity), 0);
                          const record = { 
                              id: oid, timestamp: now.toLocaleString(), totalAmount: total, 
                              items: giftItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) 
                          };
                          records.push(record);
-                         
                          orderPromises.push(
                              fetch(API_URL, { 
                                 method: 'POST', mode: 'no-cors', 
                                 body: JSON.stringify({ 
                                     ...record, 
-                                    phone: userContact.value.phone, 
+                                    phone: userContact.value.phone,
+                                    email: userProfile.value.email || '',
                                     deliveryMethod: 'momo 轉贈', 
                                     momoName: giftInfo.value.name, 
                                     momoPhone: giftInfo.value.phone, 
@@ -876,7 +911,6 @@
                                 }) 
                              })
                          );
-                         
                          let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：🎁 momo 轉贈\n👤 收件：${giftInfo.value.name} / ${giftInfo.value.phone}\n🍱 內容：\n`;
                          giftItems.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${i.name} x${i.quantity}\n`; });
                          msg += `💰 小計：$${total}`;
@@ -887,22 +921,20 @@
                          let finalMsg = `🎉 訂單已送出！\n\n`;
                          if (lineMessages.length > 1) finalMsg += `⚠️ 因商品屬性不同，已自動拆分為兩筆訂單：\n\n`;
                          finalMsg += lineMessages.join('\n\n----------------\n\n');
-                         
                          finalMsg += `\n\n💰 應付總額：$${totalPrice.value}\n`;
                          finalMsg += `🏦 匯款資訊：\n`;
-                         selectedBankInfos.value.forEach(b => {
-                            finalMsg += `${b.name}: ${b.account}\n`;
-                         });
+                         selectedBankInfos.value.forEach(b => { finalMsg += `${b.name}: ${b.account}\n`; });
                          finalMsg += `⚠️ 請於匯款後告知客服匯款相關資訊`;
                          
                          if (liff.isInClient()) {
                             liff.sendMessages([{ type: 'text', text: finalMsg }]).catch(e => console.error(e));
                          }
                          
-                         // Update History (Add all new records)
                          orderHistory.value = [...records, ...orderHistory.value].slice(0, 30);
                          safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
                          
+                         lastOrderIds.value = generatedOrderIds; // Save for payment reporting
+
                          isSubmitting.value = false;
                          if(cartModal) cartModal.hide(); 
                          if(successModal) successModal.show();
@@ -912,6 +944,55 @@
                         isSubmitting.value = false;
                         showToast('連線錯誤，請稍後再試');
                     });
+                };
+
+                const openPaymentForm = () => {
+                    if (selectedBankInfos.value.length === 1) {
+                        paymentForm.value.bankCode = selectedBankInfos.value[0].code;
+                    }
+                    showPaymentForm.value = true;
+                };
+
+                const paymentFormPlaceholder = computed(() => {
+                    if (paymentForm.value.bankCode === '396') return '請輸入您的街口暱稱/名稱';
+                    return '請輸入您帳號的後五碼';
+                });
+                
+                const paymentFormLabel = computed(() => {
+                    if (paymentForm.value.bankCode === '396') return '街口名稱：';
+                    return '帳號末五碼：';
+                });
+
+                const submitPayment = async () => {
+                    if (!paymentForm.value.bankCode || !paymentForm.value.accountInfo) {
+                        showToast('請完整填寫資訊'); return;
+                    }
+                    isSubmittingPayment.value = true;
+                    
+                    const bank = bankAccounts.value.find(b => b.code === paymentForm.value.bankCode);
+                    const bankName = bank ? bank.name : '未知銀行';
+
+                    try {
+                        await fetch(API_URL, {
+                            method: 'POST', mode: 'no-cors',
+                            body: JSON.stringify({
+                                action: 'submitPayment',
+                                orderIds: lastOrderIds.value,
+                                bankName: bankName,
+                                accountInfo: paymentForm.value.accountInfo
+                            })
+                        });
+                        showToast('回報成功！我們會盡快處理');
+                        if(successModal) successModal.hide();
+                        resetCart();
+                        showPaymentForm.value = false;
+                        paymentForm.value = { bankCode: '', accountInfo: '' };
+                    } catch(e) {
+                        showToast('傳送失敗，請直接聯繫客服');
+                        console.error(e);
+                    } finally {
+                        isSubmittingPayment.value = false;
+                    }
                 };
 
                 const reBuy = (h) => {
@@ -925,7 +1006,6 @@
                     let msg = `🛒【歷史訂單補傳】單號：#${h.id}\n品項：\n`;
                     h.items.forEach((it, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${it.name} x${it.quantity}\n`; });
                     msg += `總額：$${h.totalAmount}`;
-                    
                     if (liff.isInClient()) {
                         liff.sendMessages([{ type: 'text', text: msg }]).then(() => liff.closeWindow());
                     } else {
@@ -933,9 +1013,9 @@
                     }
                 };
 
-                const resetCart = () => { cart.value = {}; deliveryMethod.value = 'screenshot'; selectedPayments.value = []; };
+                const resetCart = () => { cart.value = {}; deliveryMethod.value = 'screenshot'; selectedPayments.value = []; showPaymentForm.value = false; };
 
-                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayments, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems };
+                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayments, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment };
             }
         }).mount('#app');
     </script>
