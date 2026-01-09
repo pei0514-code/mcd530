@@ -183,7 +183,6 @@
         .ticket-body { padding: 15px; }
         .ticket-badge-used { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); border: 4px solid #555; color: #555; padding: 8px 20px; font-size: 24px; font-weight: 900; border-radius: 12px; opacity: 0.85; background: rgba(255,255,255,0.9); pointer-events: none; white-space: nowrap; z-index: 10; }
         
-        /* v2.39: Moved Giftable Badge to Product Card */
         .gift-badge { position: absolute; top: 10px; right: 10px; background: #ff4d4f; color: white; font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 5; pointer-events: none; }
 
         .btn-wallet { border: none; background: #fff5f5; color: var(--brand-red); font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 20px; transition: 0.2s; display: flex; align-items: center; cursor: pointer; }
@@ -205,7 +204,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.39</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.40</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -252,7 +251,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.39</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.40</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -305,7 +304,6 @@
                     <div class="product-card">
                         <div class="p-img-box" @click.stop="showProductDetail(p)">
                             <img :src="p.image || 'https://via.placeholder.com/300'" class="p-img" loading="lazy">
-                            <!-- v2.39: Giftable Badge on Product Image -->
                             <div v-if="Number(p.giftStock) > 0" class="gift-badge">可轉贈</div>
                             <div class="zoom-icon" @click.stop="showProductDetail(p)"><i class="fas fa-search"></i></div>
                         </div>
@@ -395,7 +393,7 @@
                         </div>
                         <div v-if="!canSelectGift && !canSelectDrive" class="text-danger small text-center mb-2 fw-bold">⚠️ 所選商品庫存不足</div>
                         <div v-else-if="!canSelectGift" class="text-muted small text-center mb-2" style="font-size: 11px;">* 您選擇的商品目前無轉贈庫存，僅支援截圖發送</div>
-                        <div v-else-if="!canSelectDrive" class="text-muted small text-center mb-2" style="font-size: 11px;">* 您選擇的商品截圖庫存已售完，請選擇轉贈</div>
+                        <div v-else-if="!canSelectDrive" class="text-muted small text-center mb-2" style="font-size: 11px;">* 此商品目前截圖庫存不足，惟仍可改手動截圖發送(需人工處理)</div>
 
                         <div v-if="deliveryMethod === 'gift' && hasDriveOnlyItems" class="alert alert-warning d-flex align-items-center p-2 mb-3" style="font-size: 12px; font-weight: 700;">
                              <i class="fas fa-info-circle me-2 text-warning fs-5"></i><div>注意：部分商品僅支援截圖發送，系統將自動為您拆分為兩筆訂單。</div>
@@ -407,11 +405,10 @@
                              <i class="fas fa-stopwatch me-2 fs-4"></i><div>⚠️ 為保障庫存權益，訂單成立後請於 <span class="text-decoration-underline">30 分鐘內</span> 完成付款，逾時系統將自動取消訂單。</div>
                         </div>
                         <div v-if="deliveryMethod === 'gift' || hasGiftOnlyItems" class="mb-3 p-3 bg-light rounded-4 border">
-                            <!-- v2.38: Hide manual screenshot checkbox if drive stock exists -->
                             <div class="form-check mb-3" v-if="!canSelectDrive">
                                 <input class="form-check-input" type="checkbox" v-model="requestManualScreenshot" id="manualScreenshotCheck">
                                 <label class="form-check-label small fw-bold text-dark" for="manualScreenshotCheck">
-                                    我要截圖 (庫存不足，請客服手動處理)
+                                    我要截圖 (截圖不足，轉贈轉截圖需手動處理)
                                 </label>
                             </div>
                             <div v-if="!requestManualScreenshot">
@@ -467,10 +464,11 @@
                                 <label class="btn btn-outline-secondary fw-bold rounded-end-pill" for="filterUsed">已核銷 ({{ usedTickets.length }})</label>
                             </div>
                         </div>
-                        <div v-if="walletFilter === 'available'" class="alert alert-warning d-flex align-items-start p-2 mb-0 mx-2 small" style="font-size: 14px; font-weight: 700;">
-                             <i class="fas fa-exclamation-triangle me-2 mt-1 text-warning fs-6"></i>
-                             <!-- v2.38: Updated text / v2.39: Increased font size -->
-                             <div>提醒您：若票券已使用完畢，請務必自行點擊「核銷」功能。<br>一旦核銷將無法復原，亦無法再次使用。</div>
+                        <div v-if="walletFilter === 'available'" class="alert alert-warning p-2 mb-0 mx-2" style="border-left: 5px solid #ffc107;">
+                             <div class="text-danger fw-bold mb-1" style="font-size: 15px;">
+                                 <i class="fas fa-exclamation-circle me-1"></i>一旦核銷將無法復原，亦無法再次使用！
+                             </div>
+                             <div class="text-dark fw-bold" style="font-size: 12px;">提醒您：若票券已使用完畢，請務必自行點擊「核銷」功能。</div>
                         </div>
                     </div>
                     <div class="modal-body p-3">
@@ -480,7 +478,6 @@
                         <div v-for="(item, idx) in currentDisplayTickets" :key="idx" class="ticket-card" :class="{ redeemed: item.isRedeemed }">
                             <div class="ticket-img-box" @click="showTicketImage(item)">
                                 <img :src="item.productImage" class="ticket-img" loading="lazy">
-                                <!-- v2.39: Removed Giftable Badge from Ticket Card -->
                                 <div v-if="item.isRedeemed" class="ticket-badge-used">已核銷</div>
                                 <div class="zoom-icon"><i class="fas fa-search"></i></div>
                             </div>
@@ -498,11 +495,10 @@
                                         <i class="fas fa-qrcode me-2"></i>點擊出示票券 (可放大)
                                     </button>
                                     <div class="d-flex gap-2">
-                                        <!-- v2.39: Adjusted Button Ratio & Text -->
-                                        <button class="btn btn-outline-secondary fw-bold rounded-pill" style="width: 30%; font-size: 12px; padding: 6px 0;" @click="openVendorGuide(item)">
-                                            說明
+                                        <button class="btn btn-outline-secondary fw-bold rounded-pill" style="width: 35%; font-size: 12px; padding: 6px 0;" @click="openVendorGuide(item)">
+                                            <i class="fas fa-book-open me-1"></i>說明
                                         </button>
-                                        <button class="btn btn-warning fw-bold rounded-pill" style="width: 70%; font-size: 13px; padding: 6px 0;" @click="openRedeemConfirm(item)">
+                                        <button class="btn btn-warning fw-bold rounded-pill" style="width: 65%; font-size: 13px; padding: 6px 0;" @click="openRedeemConfirm(item)">
                                             <i class="fas fa-stamp me-1"></i>使用後請手動核銷
                                         </button>
                                     </div>
@@ -634,10 +630,11 @@
                             <div class="d-flex justify-content-between align-items-end mb-4 border-bottom pb-3">
                                 <div><div class="text-danger fw-bold fs-2">${{ selectedProduct.price }}</div><div class="text-muted text-decoration-line-through small" v-if="selectedProduct.originalPrice > selectedProduct.price">${{ selectedProduct.originalPrice }}</div></div>
                                 <div class="text-end">
-                                    <div class="mb-1"><span class="stock-tag" :class="{ none: Number(selectedProduct.stock) <= 0 }">剩 {{ selectedProduct.stock }} 組</span></div>
+                                    <div class="mb-2">
+                                        <span class="stock-tag me-2" :class="{ none: Number(selectedProduct.stock) <= 0 }">總庫存 {{ selectedProduct.stock }} 組</span>
+                                        <span class="text-muted" style="font-size: 11px;">(截圖數量：{{ selectedProduct.driveStock }}｜轉贈數量：{{ selectedProduct.giftStock }})</span>
+                                    </div>
                                     <div class="text-muted small"><i class="far fa-calendar-alt me-1"></i>{{ selectedProduct.expiryDate }}</div>
-                                    <!-- v2.38: Added Stock Breakdown -->
-                                    <div class="text-muted" style="font-size: 10px; margin-top: 4px;">(截圖數量：{{ selectedProduct.driveStock }}｜轉贈數量：{{ selectedProduct.giftStock }})</div>
                                 </div>
                             </div>
                             <div v-if="selectedProduct.description" class="bg-light p-3 rounded-3 mb-3 text-muted small" style="white-space: pre-wrap; text-align: left; line-height: 1.6;">{{ selectedProduct.description }}</div>
