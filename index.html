@@ -264,7 +264,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.48</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.49</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -311,7 +311,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.48</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.49</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -774,7 +774,19 @@
                 <div class="modal-content text-center p-4 border-0 rounded-4 shadow-lg">
                     <div v-if="!showPaymentForm">
                         <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
-                        <h4 class="fw-bold">訂單已成功送出！</h4>
+                        <!-- Dynamic Header -->
+                        <h4 class="fw-bold">{{ isRepaying ? '待付款資訊' : '訂單已成功送出！' }}</h4>
+                        
+                        <!-- New Summary Section for Repaying -->
+                        <div v-if="isRepaying" class="alert alert-secondary p-2 mb-3 text-start small">
+                            <div v-for="oid in lastOrderIds" :key="oid" class="mb-1 border-bottom pb-1">
+                                 <strong>訂單編號 {{ oid }}</strong><br>
+                                 <span v-for="item in getOrderItems(oid)" :key="item.name">{{ item.name }} x{{ item.quantity }}<br></span>
+                                 <span class="text-danger fw-bold">金額: ${{ getOrderAmount(oid) }}</span>
+                            </div>
+                            <div class="text-end fw-bold mt-2 fs-6">總金額: <span class="text-danger">${{ reportingTotalAmount }}</span></div>
+                        </div>
+
                         <p class="small text-muted mb-4">請完成付款後，點擊下方按鈕回報。</p>
                         <div class="bg-light rounded-3 p-3 text-start mb-4 border">
                             <div class="fw-bold text-dark border-bottom pb-2 mb-2"><i class="fas fa-wallet me-2"></i>匯款帳號 (點擊複製)</div>
@@ -807,10 +819,12 @@
                      <h5 class="fw-bold mb-2">您有待回報的訂單</h5>
                      <p class="text-muted small mb-3">請勾選您已完成轉帳的訂單進行回報：</p>
                      <div class="bg-light rounded-3 p-3 mb-4 text-start border" style="max-height: 200px; overflow-y: auto;">
-                         <div v-for="oid in validUnreportedOrders" :key="oid" class="form-check mb-2"><input class="form-check-input" type="checkbox" :value="oid" v-model="pendingSelection" :id="'chk-'+oid"><label class="form-check-label fw-bold text-dark" :for="'chk-'+oid">訂單 #{{ oid }}</label></div>
+                         <div v-for="oid in validUnreportedOrders" :key="oid" class="form-check mb-2"><input class="form-check-input" type="checkbox" :value="oid" v-model="pendingSelection" :id="'chk-'+oid"><label class="form-check-label fw-bold text-dark" :for="'chk-'+oid">訂單編號 {{ oid }}</label></div>
                      </div>
                      <div class="d-grid gap-2">
-                         <button class="btn btn-warning rounded-pill fw-bold" @click="openReportForPending" :disabled="pendingSelection.length === 0"><i class="fas fa-money-bill-wave me-2"></i>回報選取訂單</button>
+                         <!-- New Pay Button -->
+                         <button class="btn btn-primary rounded-pill fw-bold" @click="goToPayFromPending" :disabled="pendingSelection.length === 0"><i class="fas fa-wallet me-2"></i>付款去 (查看匯款資訊)</button>
+                         <button class="btn btn-warning rounded-pill fw-bold" @click="openReportForPending" :disabled="pendingSelection.length === 0"><i class="fas fa-edit me-2"></i>我已匯款 (直接回報)</button>
                          <button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">稍後再說</button>
                          <button class="btn btn-link text-muted small text-decoration-none mt-1" @click="dismissPendingAlertForever">不再提醒</button>
                      </div>
@@ -923,6 +937,9 @@
                 
                 const selectedPayment = ref(''); 
                 const bankAccounts = ref(BANK_ACCOUNTS);
+                
+                // New: isRepaying flag to toggle success modal content
+                const isRepaying = ref(false);
 
                 const giftInfo = ref({ 
                     name: safeGetStorage('mm_momo_name', ''), 
@@ -1336,6 +1353,30 @@
                      openPaymentForm();
                      if(successModal) successModal.show();
                 };
+                
+                // New: Go To Pay From Pending
+                const goToPayFromPending = () => {
+                     if (unreportedModal) unreportedModal.hide();
+                     lastOrderIds.value = pendingSelection.value;
+                     // Set Repaying mode to true
+                     isRepaying.value = true;
+                     showPaymentForm.value = false;
+                     // Default to empty to show all banks, or maybe logic to select based on order?
+                     // For now, let user pick bank again to be safe.
+                     selectedPayment.value = ''; 
+                     if(successModal) successModal.show();
+                };
+
+                // Helper to get order items for repay summary
+                const getOrderItems = (oid) => {
+                    const o = orderHistory.value.find(x => x.id === oid);
+                    return o ? o.items : [];
+                };
+                // Helper to get order total for repay summary
+                const getOrderAmount = (oid) => {
+                    const o = orderHistory.value.find(x => x.id === oid);
+                    return o ? o.totalAmount : 0;
+                };
 
                 const updateCart = (p, d) => {
                     if (d > 0) { const current = cart.value[p.id] || 0; if (current >= Number(p.stock)) { showToast('已達庫存上限'); return; } }
@@ -1449,6 +1490,8 @@
                          safeSetStorage('mm_pending_payment_orders', JSON.stringify(unreportedOrders.value));
 
                          isSubmitting.value = false;
+                         // Ensure repayer mode is OFF for fresh orders
+                         isRepaying.value = false; 
                          if(cartModal) cartModal.hide(); 
                          if(successModal) successModal.show();
                          
@@ -1766,7 +1809,7 @@
                 // v2.48 Exports
                 ticketSortType,
                 // v2.49 New Exports
-                totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, validUnreportedOrders, isPendingAlertDismissed, isGroupExpired, dismissPendingAlertForever,
+                totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, validUnreportedOrders, isPendingAlertDismissed, isGroupExpired, dismissPendingAlertForever, isRepaying, goToPayFromPending, getOrderItems, getOrderAmount,
                  };
             }
         }).mount('#app');
