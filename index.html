@@ -234,6 +234,9 @@
         .expired-order .status-badge { background: #eee; color: #999; border: 1px solid #ddd; }
         .timer-badge { font-size: 12px; font-weight: 800; background: #fff0f0; color: #d93025; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; border: 1px solid #ffdcdc; animation: pulseRed 2s infinite; }
         @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(217, 48, 37, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(217, 48, 37, 0); } 100% { box-shadow: 0 0 0 0 rgba(217, 48, 37, 0); } }
+        
+        /* History Group Card Style */
+        .history-group-card { background: #fff; border: 1px solid #eee; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); padding: 15px; margin-bottom: 15px; }
 
         .savings-tag { background: #25d366; color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 8px; box-shadow: 0 2px 5px rgba(37, 211, 102, 0.3); }
 
@@ -667,46 +670,52 @@
                             </div>
                         </div>
 
-                        <div v-for="h in orderHistory" :key="h.id" class="history-item mb-4 border-bottom pb-3" :class="{ 'expired-order': isOrderExpired(h) }">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <div class="d-flex flex-column text-start">
-                                    <span class="fw-bold text-dark" style="font-size: 13px;">{{ h.timestamp }}</span>
-                                    <span class="fw-bold text-dark" style="font-size: 13px;">#{{ h.id }}</span>
-                                </div>
-                                <div class="d-flex flex-column align-items-end">
-                                    <!-- Swap: Status on Top -->
-                                    <span :class="getStatusBadge(h).class" class="status-badge mb-1">{{ getStatusBadge(h).text }}</span>
-                                    
-                                    <!-- Swap: Timer on Bottom -->
-                                    <div v-if="getStatusBadge(h).class === 'status-pending'">
-                                        <span v-if="!isOrderExpired(h)" class="timer-badge">
-                                            <i class="fas fa-clock me-1"></i>{{ getRemainingTime(h.timestamp) }}
-                                        </span>
-                                        <span v-else class="badge bg-secondary" style="font-size: 11px;">
-                                            已逾時失效
-                                        </span>
+                        <!-- Loop through grouped history -->
+                        <div v-for="group in groupedHistory" :key="group.timestamp" class="history-group-card">
+                            <div class="mb-2 border-bottom pb-2">
+                                 <small class="fw-bold text-muted"><i class="far fa-calendar-alt me-1"></i>{{ group.timestamp }}</small>
+                            </div>
+                            
+                            <div v-for="(h, idx) in group.orders" :key="h.id" :class="{ 'border-top pt-3 mt-3': idx > 0 }">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex flex-column text-start">
+                                        <span class="fw-bold text-dark" style="font-size: 14px;">訂單 #{{ h.id }}</span>
+                                    </div>
+                                    <div class="d-flex flex-column align-items-end">
+                                        <!-- Swap: Status on Top -->
+                                        <span :class="getStatusBadge(h).class" class="status-badge mb-1">{{ getStatusBadge(h).text }}</span>
+                                        
+                                        <!-- Swap: Timer on Bottom -->
+                                        <div v-if="getStatusBadge(h).class === 'status-pending'">
+                                            <span v-if="!isOrderExpired(h)" class="timer-badge">
+                                                <i class="fas fa-clock me-1"></i>{{ getRemainingTime(h.timestamp) }}
+                                            </span>
+                                            <span v-else class="badge bg-secondary" style="font-size: 11px;">
+                                                已逾時失效
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="text-end mb-2">
-                                <span class="text-danger fw-bold" style="font-size: 18px;">${{ h.totalAmount }}</span>
-                            </div>
+                                <div class="text-end mb-2">
+                                    <span class="text-danger fw-bold" style="font-size: 18px;">${{ h.totalAmount }}</span>
+                                </div>
 
-                            <div class="history-imgs-container mb-3">
-                                <div v-for="item in h.items" :key="item.name" class="h-thumb-box"><img :src="getProductImage(item.name)" class="h-thumb" onerror="this.src='https://via.placeholder.com/48'"><div class="h-qty-badge">x{{ item.quantity }}</div></div>
-                            </div>
-                            <div v-if="h.fulfillment" class="mt-2 mb-3 p-2 bg-light rounded border">
-                               <div class="small fw-bold text-success mb-2"><i class="fas fa-gift me-1"></i>發貨內容 (點擊開啟)：</div>
-                               <div v-for="(link, idx) in h.fulfillment.split('\n')" :key="idx" class="mb-2">
-                                   <a v-if="link.trim().length > 0" :href="link" target="_blank" class="btn btn-sm btn-outline-primary w-100 text-truncate fw-bold rounded-pill" style="font-size:11px;"><i class="fas fa-external-link-alt me-1"></i>開啟商品連結 {{ idx + 1 }}</a>
-                                   <div class="text-center text-muted fw-bold mt-1" style="font-size: 10px;">{{ getHistoryItemName(h, idx) }}</div>
-                               </div>
-                            </div>
-                            <div class="d-flex gap-2 flex-wrap" v-if="!isOrderExpired(h)">
-                                <button class="btn btn-outline-success btn-sm flex-grow-1 rounded-pill" @click="resendHistory(h)">補傳訂單</button><button class="btn btn-outline-danger btn-sm flex-grow-1 rounded-pill" @click="reBuy(h)">再次購買</button><button v-if="getStatusBadge(h).canReport" class="btn btn-warning btn-sm flex-grow-1 rounded-pill fw-bold text-dark" @click="openReportForHistory(h)">{{ h.paymentNote ? '修改回報' : '回報付款' }}</button><button v-if="getStatusBadge(h).canCancel" class="btn btn-secondary btn-sm flex-grow-1 rounded-pill fw-bold" @click="openCancelModal(h)">取消訂單</button>
-                            </div>
-                            <div v-else class="text-center">
-                                <span class="text-muted small fw-bold">此訂單已超過付款期限 (30分鐘)</span>
+                                <div class="history-imgs-container mb-3">
+                                    <div v-for="item in h.items" :key="item.name" class="h-thumb-box"><img :src="getProductImage(item.name)" class="h-thumb" onerror="this.src='https://via.placeholder.com/48'"><div class="h-qty-badge">x{{ item.quantity }}</div></div>
+                                </div>
+                                <div v-if="h.fulfillment" class="mt-2 mb-3 p-2 bg-light rounded border">
+                                   <div class="small fw-bold text-success mb-2"><i class="fas fa-gift me-1"></i>發貨內容 (點擊開啟)：</div>
+                                   <div v-for="(link, idx) in h.fulfillment.split('\n')" :key="idx" class="mb-2">
+                                       <a v-if="link.trim().length > 0" :href="link" target="_blank" class="btn btn-sm btn-outline-primary w-100 text-truncate fw-bold rounded-pill" style="font-size:11px;"><i class="fas fa-external-link-alt me-1"></i>開啟商品連結 {{ idx + 1 }}</a>
+                                       <div class="text-center text-muted fw-bold mt-1" style="font-size: 10px;">{{ getHistoryItemName(h, idx) }}</div>
+                                   </div>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap" v-if="!isOrderExpired(h)">
+                                    <button class="btn btn-outline-success btn-sm flex-grow-1 rounded-pill" @click="resendHistory(h)">補傳訂單</button><button class="btn btn-outline-danger btn-sm flex-grow-1 rounded-pill" @click="reBuy(h)">再次購買</button><button v-if="getStatusBadge(h).canReport" class="btn btn-warning btn-sm flex-grow-1 rounded-pill fw-bold text-dark" @click="openReportForHistory(h)">{{ h.paymentNote ? '修改回報' : '回報付款' }}</button><button v-if="getStatusBadge(h).canCancel" class="btn btn-secondary btn-sm flex-grow-1 rounded-pill fw-bold" @click="openCancelModal(h)">取消訂單</button>
+                                </div>
+                                <div v-else class="text-center">
+                                    <span class="text-muted small fw-bold">此訂單已超過付款期限 (30分鐘)</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1166,32 +1175,21 @@
                     return { text: '💰 待付款', class: 'status-pending', canReport: true, canCancel: true };
                 };
                 
-                // New: Helper for cross-browser date parsing
+                // New: Robust Date Parsing for iOS Compatibility
                 const safeParseDate = (dateStr) => {
                     if (!dateStr) return new Date();
-                    let s = String(dateStr).trim();
-                    s = s.replace(/-/g, '/'); // iOS Compat
-                    
-                    // 1. Try Standard
-                    let d = new Date(s);
-                    if (!isNaN(d.getTime())) return d;
+                    // Extract digits: 2023-10-10 12:00:00 -> [2023, 10, 10, 12, 00, 00]
+                    const parts = String(dateStr).match(/\d+/g);
+                    if (!parts || parts.length < 3) return new Date(); // Fallback
 
-                    // 2. Try Manual Regex for YYYY/MM/DD HH:mm:ss
-                    const match = s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})/);
-                    if (match) {
-                        return new Date(
-                            parseInt(match[1]),
-                            parseInt(match[2]) - 1, // Month is 0-indexed
-                            parseInt(match[3]),
-                            parseInt(match[4]),
-                            parseInt(match[5]),
-                            parseInt(match[6])
-                        );
-                    }
-                    
-                    // Fail safe: return current date to avoid 00:00 panic, effectively showing 30:00
-                    console.warn("Date parse failed:", dateStr);
-                    return new Date();
+                    const year = parseInt(parts[0]);
+                    const month = parseInt(parts[1]) - 1; // Month is 0-indexed
+                    const day = parseInt(parts[2]);
+                    const hour = parts.length > 3 ? parseInt(parts[3]) : 0;
+                    const min = parts.length > 4 ? parseInt(parts[4]) : 0;
+                    const sec = parts.length > 5 ? parseInt(parts[5]) : 0;
+
+                    return new Date(year, month, day, hour, min, sec);
                 };
 
                 // New: Helper to check if order is expired (older than 30 mins and pending)
@@ -1201,7 +1199,7 @@
                      if (badge.class !== 'status-pending') return false;
                      
                      const orderDate = safeParseDate(h.timestamp);
-                     if (isNaN(orderDate.getTime())) return false; // Prevent error on invalid date
+                     if (isNaN(orderDate.getTime())) return false; 
 
                      const diffMs = now.value - orderDate.getTime();
                      const diffMins = diffMs / (1000 * 60);
@@ -1213,8 +1211,10 @@
                     const orderDate = safeParseDate(timestamp);
                     if (isNaN(orderDate.getTime())) return "00:00";
 
-                    const diffMs = now.value - orderDate.getTime();
-                    const remainingMs = (30 * 60 * 1000) - diffMs;
+                    // Total allowed time is 30 mins. 
+                    // Remaining = (OrderTime + 30m) - Now
+                    const targetTime = orderDate.getTime() + (30 * 60 * 1000);
+                    const remainingMs = targetTime - now.value;
                     
                     if (remainingMs <= 0) return "00:00";
                     
@@ -1223,6 +1223,25 @@
                     const sec = totalSec % 60;
                     return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
                 };
+                
+                // Group History by Timestamp Logic
+                const groupedHistory = computed(() => {
+                    const groups = {};
+                    orderHistory.value.forEach(order => {
+                        const key = order.timestamp; 
+                        if (!groups[key]) groups[key] = [];
+                        groups[key].push(order);
+                    });
+                    
+                    // Sort Groups by newest first
+                    return Object.entries(groups)
+                        .map(([ts, orders]) => ({ timestamp: ts, orders }))
+                        .sort((a, b) => {
+                             const dateA = safeParseDate(a.timestamp);
+                             const dateB = safeParseDate(b.timestamp);
+                             return dateB.getTime() - dateA.getTime();
+                        });
+                });
 
                 const openReportForHistory = (h) => {
                     if (historyModal) historyModal.hide();
@@ -1695,7 +1714,7 @@
                 // v2.48 Exports
                 ticketSortType,
                 // v2.49 New Exports
-                totalSavings, getRemainingTime, isOrderExpired,
+                totalSavings, getRemainingTime, isOrderExpired, groupedHistory,
                  };
             }
         }).mount('#app');
