@@ -232,7 +232,7 @@
         /* Expired Order Styling */
         .expired-order { opacity: 0.6; filter: grayscale(1); pointer-events: none; }
         .expired-order .status-badge { background: #eee; color: #999; border: 1px solid #ddd; }
-        .timer-badge { font-size: 12px; font-weight: 800; background: #fff0f0; color: #d93025; padding: 4px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; border: 1px solid #ffdcdc; animation: pulseRed 2s infinite; }
+        .timer-badge { font-size: 12px; font-weight: 800; background: #fff0f0; color: #d93025; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; border: 1px solid #ffdcdc; animation: pulseRed 2s infinite; }
         @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(217, 48, 37, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(217, 48, 37, 0); } 100% { box-shadow: 0 0 0 0 rgba(217, 48, 37, 0); } }
 
         .savings-tag { background: #25d366; color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 8px; box-shadow: 0 2px 5px rgba(37, 211, 102, 0.3); }
@@ -658,7 +658,7 @@
                     <div class="modal-body px-4 py-3" style="max-height: 60vh; overflow-y: auto;">
                         <div v-if="orderHistory.length === 0" class="text-center py-5 text-muted">尚未有紀錄</div>
                         
-                        <!-- New: Sticky Alert for Pending Payment -->
+                        <!-- Sticky Alert for Pending Payment -->
                         <div v-if="unreportedOrders.length > 0" class="alert alert-danger d-flex align-items-center mb-3 shadow-sm border-0" role="alert">
                             <i class="fas fa-exclamation-circle fa-lg me-2"></i>
                             <div class="small fw-bold">
@@ -668,23 +668,27 @@
                         </div>
 
                         <div v-for="h in orderHistory" :key="h.id" class="history-item mb-4 border-bottom pb-3" :class="{ 'expired-order': isOrderExpired(h) }">
-                            <div class="d-flex justify-content-between mb-2">
-                                <div>
-                                    <span class="fw-bold small me-2">#{{ h.id }}</span>
-                                    <span class="text-muted" style="font-size:10px">{{ h.timestamp }}</span>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex flex-column text-start">
+                                    <span class="text-muted mb-1" style="font-size: 10px;">{{ h.timestamp }}</span>
+                                    <span class="fw-bold text-dark" style="font-size: 14px;">#{{ h.id }}</span>
                                 </div>
-                                <div>
-                                    <!-- New: Countdown Timer for Pending Orders -->
-                                    <span v-if="getStatusBadge(h).class === 'status-pending' && !isOrderExpired(h)" class="timer-badge me-2">
-                                        <i class="far fa-clock"></i> {{ getRemainingTime(h.timestamp) }}
-                                    </span>
-                                    <span v-else-if="getStatusBadge(h).class === 'status-pending' && isOrderExpired(h)" class="badge bg-secondary me-2">
-                                        已逾時失效
-                                    </span>
-                                    <span :class="getStatusBadge(h).class" class="status-badge">{{ getStatusBadge(h).text }}</span>
+                                <div class="d-flex flex-column align-items-end">
+                                    <span :class="getStatusBadge(h).class" class="status-badge mb-1">{{ getStatusBadge(h).text }}</span>
+                                    <div v-if="getStatusBadge(h).class === 'status-pending' && !isOrderExpired(h)">
+                                         <span class="timer-badge">
+                                            <i class="fas fa-clock me-1"></i>{{ getRemainingTime(h.timestamp) }}
+                                         </span>
+                                    </div>
+                                    <div v-else-if="getStatusBadge(h).class === 'status-pending' && isOrderExpired(h)">
+                                        <span class="badge bg-secondary" style="font-size: 10px;">已逾時失效</span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="text-end mb-2"><span class="text-danger fw-bold">${{ h.totalAmount }}</span></div>
+                            <div class="text-end mb-2">
+                                <span class="text-danger fw-bold" style="font-size: 18px;">${{ h.totalAmount }}</span>
+                            </div>
+
                             <div class="history-imgs-container mb-3">
                                 <div v-for="item in h.items" :key="item.name" class="h-thumb-box"><img :src="getProductImage(item.name)" class="h-thumb" onerror="this.src='https://via.placeholder.com/48'"><div class="h-qty-badge">x{{ item.quantity }}</div></div>
                             </div>
@@ -1146,6 +1150,7 @@
                 }, { immediate: true });
                 
                 // v2.42: Updated Status Badge Logic to allow re-reporting
+                // v2.49: Changed "待回報" to "待付款"
                 const getStatusBadge = (h) => {
                     if (h.isShipped === true || String(h.isShipped) === 'true') return { text: '✅ 已發貨', class: 'status-shipped', canReport: false, canCancel: false };
                     if (h.paymentNote && (String(h.paymentNote).includes('取消') || String(h.paymentNote).includes('失效'))) return { text: '❌ 已失效', class: 'status-invalid', canReport: false, canCancel: false };
@@ -1155,16 +1160,27 @@
                     // If Note exists but NOT Paid, user can "Modify Report"
                     if (h.paymentNote && String(h.paymentNote).length > 1) return { text: '⏳ 待核對', class: 'status-pending', canReport: true, canCancel: true };
                     
-                    return { text: '⏳ 待回報', class: 'status-pending', canReport: true, canCancel: true };
+                    return { text: '💰 待付款', class: 'status-pending', canReport: true, canCancel: true };
                 };
                 
+                // New: Helper for cross-browser date parsing
+                const safeParseDate = (dateStr) => {
+                    if (!dateStr) return new Date();
+                    // Try to replace dashes with slashes for iOS/Safari support
+                    // "2023-10-10 12:00:00" -> "2023/10/10 12:00:00"
+                    const safeStr = String(dateStr).replace(/-/g, '/');
+                    return new Date(safeStr);
+                };
+
                 // New: Helper to check if order is expired (older than 30 mins and pending)
                 const isOrderExpired = (h) => {
                      // Check status first - only applies to pending
                      const badge = getStatusBadge(h);
                      if (badge.class !== 'status-pending') return false;
                      
-                     const orderDate = new Date(h.timestamp); // h.timestamp format: "YYYY/MM/DD HH:mm:ss" usually parses fine
+                     const orderDate = safeParseDate(h.timestamp);
+                     if (isNaN(orderDate.getTime())) return false; // Prevent error on invalid date
+
                      const diffMs = now.value - orderDate.getTime();
                      const diffMins = diffMs / (1000 * 60);
                      return diffMins >= 30;
@@ -1172,7 +1188,9 @@
 
                 // New: Helper to get readable remaining time
                 const getRemainingTime = (timestamp) => {
-                    const orderDate = new Date(timestamp);
+                    const orderDate = safeParseDate(timestamp);
+                    if (isNaN(orderDate.getTime())) return "00:00";
+
                     const diffMs = now.value - orderDate.getTime();
                     const remainingMs = (30 * 60 * 1000) - diffMs;
                     
