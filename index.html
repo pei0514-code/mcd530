@@ -238,6 +238,14 @@
         /* History Group Card Style */
         .history-group-card { background: #fff; border: 1px solid #eee; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); padding: 15px; margin-bottom: 15px; }
 
+        /* Desktop Grid Constraint */
+        @media (min-width: 992px) {
+            .container-fluid.mode-large, .container-fluid.mode-medium, .container-fluid.mode-small {
+                padding-left: 15vw !important;
+                padding-right: 15vw !important;
+            }
+        }
+
         .savings-tag { background: #25d366; color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 8px; box-shadow: 0 2px 5px rgba(37, 211, 102, 0.3); }
 
         [v-cloak] { display: none; }
@@ -675,26 +683,24 @@
                         <div v-for="group in groupedHistory" :key="group.timestamp" class="history-group-card">
                             <div class="mb-2 border-bottom pb-2 d-flex justify-content-between align-items-center">
                                  <small class="fw-bold text-muted"><i class="far fa-calendar-alt me-1"></i>{{ group.timestamp }}</small>
-                                 <span v-if="getGroupTimer(group)" class="timer-badge">
-                                    <i class="fas fa-clock me-1"></i>{{ getGroupTimer(group) }}
-                                 </span>
+                                 
+                                 <!-- Timer or Expired Status moved to Right Side of Date -->
+                                 <div>
+                                     <span v-if="getGroupTimer(group)" class="timer-badge">
+                                        <i class="fas fa-clock me-1"></i>{{ getGroupTimer(group) }}
+                                     </span>
+                                     <span v-else-if="isGroupExpired(group)" class="badge bg-secondary" style="font-size: 11px;">已逾時失效</span>
+                                 </div>
                             </div>
                             
                             <div v-for="(h, idx) in group.orders" :key="h.id" :class="{ 'border-top pt-3 mt-3': idx > 0 }">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <div class="d-flex flex-column text-start">
-                                        <span class="fw-bold text-dark" style="font-size: 14px;">訂單 #{{ h.id }}</span>
+                                        <!-- Modified Order ID style: Small and Gray -->
+                                        <span class="fw-bold text-muted small" style="font-size: 11px;">訂單編號 {{ h.id }}</span>
                                     </div>
                                     <div class="d-flex flex-column align-items-end">
-                                        <!-- Swap: Status on Top -->
                                         <span :class="getStatusBadge(h).class" class="status-badge mb-1">{{ getStatusBadge(h).text }}</span>
-                                        
-                                        <!-- Swap: Timer on Bottom (Only show expired status, timer is moved to header) -->
-                                        <div v-if="getStatusBadge(h).class === 'status-pending'">
-                                            <span v-if="isOrderExpired(h)" class="badge bg-secondary" style="font-size: 11px;">
-                                                已逾時失效
-                                            </span>
-                                        </div>
                                     </div>
                                 </div>
                                 <div class="text-end mb-2">
@@ -806,6 +812,7 @@
                      <div class="d-grid gap-2">
                          <button class="btn btn-warning rounded-pill fw-bold" @click="openReportForPending" :disabled="pendingSelection.length === 0"><i class="fas fa-money-bill-wave me-2"></i>回報選取訂單</button>
                          <button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">稍後再說</button>
+                         <button class="btn btn-link text-muted small text-decoration-none mt-1" @click="dismissPendingAlertForever">不再提醒</button>
                      </div>
                  </div>
              </div>
@@ -1089,8 +1096,10 @@
                         isLoadingData.value = false;
                         hideStaticLoader();
                         if (!safeGetStorage('mm_guided_v172', '')) { setTimeout(() => { if(guideModal) guideModal.show(); safeSetStorage('mm_guided_v172', 'true'); }, 600); }
-                        if (unreportedOrders.value.length > 0) {
-                             pendingSelection.value = [...unreportedOrders.value];
+                        
+                        // Fix: Check valid (unexpired) unreported orders instead of all
+                        if (validUnreportedOrders.value.length > 0) {
+                             pendingSelection.value = [...validUnreportedOrders.value];
                              setTimeout(() => { if (unreportedModal) unreportedModal.show(); }, 1500);
                         }
                     }
@@ -1260,6 +1269,14 @@
                     return null;
                 };
                 
+                // Helper to check if group is effectively expired (all pending orders are expired)
+                const isGroupExpired = (group) => {
+                    const pendingOrders = group.orders.filter(o => getStatusBadge(o).class === 'status-pending');
+                    if (pendingOrders.length === 0) return false; // No pending orders, so not "expired" status
+                    // If ALL pending orders are expired, return true
+                    return pendingOrders.every(o => isOrderExpired(o));
+                };
+                
                 // New: Filtered Unreported Orders (exclude expired)
                 const validUnreportedOrders = computed(() => {
                     return unreportedOrders.value.filter(oid => {
@@ -1271,6 +1288,12 @@
                         return badge.class === 'status-pending'; 
                     });
                 });
+                
+                // New Function to Dismiss Pending Alert Forever
+                const dismissPendingAlertForever = () => {
+                    isPendingAlertDismissed.value = true;
+                    if (unreportedModal) unreportedModal.hide();
+                };
 
                 const openReportForHistory = (h) => {
                     if (historyModal) historyModal.hide();
@@ -1743,7 +1766,7 @@
                 // v2.48 Exports
                 ticketSortType,
                 // v2.49 New Exports
-                totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, validUnreportedOrders, isPendingAlertDismissed,
+                totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, validUnreportedOrders, isPendingAlertDismissed, isGroupExpired, dismissPendingAlertForever,
                  };
             }
         }).mount('#app');
