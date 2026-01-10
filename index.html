@@ -1169,10 +1169,29 @@
                 // New: Helper for cross-browser date parsing
                 const safeParseDate = (dateStr) => {
                     if (!dateStr) return new Date();
-                    // Try to replace dashes with slashes for iOS/Safari support
-                    // "2023-10-10 12:00:00" -> "2023/10/10 12:00:00"
-                    const safeStr = String(dateStr).replace(/-/g, '/');
-                    return new Date(safeStr);
+                    let s = String(dateStr).trim();
+                    s = s.replace(/-/g, '/'); // iOS Compat
+                    
+                    // 1. Try Standard
+                    let d = new Date(s);
+                    if (!isNaN(d.getTime())) return d;
+
+                    // 2. Try Manual Regex for YYYY/MM/DD HH:mm:ss
+                    const match = s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})/);
+                    if (match) {
+                        return new Date(
+                            parseInt(match[1]),
+                            parseInt(match[2]) - 1, // Month is 0-indexed
+                            parseInt(match[3]),
+                            parseInt(match[4]),
+                            parseInt(match[5]),
+                            parseInt(match[6])
+                        );
+                    }
+                    
+                    // Fail safe: return current date to avoid 00:00 panic, effectively showing 30:00
+                    console.warn("Date parse failed:", dateStr);
+                    return new Date();
                 };
 
                 // New: Helper to check if order is expired (older than 30 mins and pending)
