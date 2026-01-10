@@ -264,7 +264,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.50</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.51</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -311,7 +311,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.50</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.51</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -551,7 +551,7 @@
                                 <label class="btn btn-outline-danger fw-bold rounded-start-pill" for="filterAvailable">電子票券 ({{ availableTickets.length }})</label>
                                 
                                 <input type="radio" class="btn-check" name="walletFilter" id="filterUsed" autocomplete="off" :checked="walletFilter === 'used'" @change="walletFilter = 'used'">
-                                <label class="btn btn-outline-secondary fw-bold rounded-end-pill" for="filterUsed">已核銷 ({{ usedTickets.length }})</label>
+                                <label class="btn btn-outline-secondary fw-bold rounded-end-pill" for="filterUsed">已手動核銷 ({{ usedTickets.length }})</label>
                             </div>
                         </div>
                         <div v-if="walletFilter === 'available'" class="alert alert-warning p-2 mb-0 mx-2" style="border-left: 5px solid #ffc107;">
@@ -563,12 +563,12 @@
                     </div>
                     <div class="modal-body p-3">
                         <div v-if="currentDisplayTickets.length === 0" class="text-center py-5 text-muted">
-                            <i class="fas fa-ticket-alt fa-3x mb-3 text-secondary"></i><br>目前沒有{{ walletFilter === 'available' ? '可用' : '已核銷' }}的票券
+                            <i class="fas fa-ticket-alt fa-3x mb-3 text-secondary"></i><br>目前沒有{{ walletFilter === 'available' ? '可用' : '已手動核銷' }}的票券
                         </div>
                         <div v-for="(item, idx) in currentDisplayTickets" :key="idx" class="ticket-card" :class="{ redeemed: item.isRedeemed }">
                             <div class="ticket-img-box" @click="showTicketImage(item)">
                                 <img :src="item.productImage" class="ticket-img" loading="lazy">
-                                <div v-if="item.isRedeemed" class="ticket-badge-used">已核銷</div>
+                                <div v-if="item.isRedeemed" class="ticket-badge-used">已手動核銷</div>
                                 <div class="zoom-icon"><i class="fas fa-search"></i></div>
                             </div>
                             <div class="ticket-body">
@@ -855,7 +855,15 @@
         <div class="modal fade" id="guestWarningModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;">
                  <div class="modal-content border-0 rounded-4 shadow-lg text-center p-4">
-                     <div class="mb-2 text-danger"><i class="fas fa-user-secret fa-3x"></i></div><h5 class="fw-bold mb-2">訪客模式提醒</h5><p class="text-muted small mb-3">您目前未使用 LINE 登入，訂單將無法自動連結至您的帳號。</p><p class="text-muted small mb-4">建議您使用 LINE 開啟本商城，以享有完整服務與訂單查詢功能。</p><button class="btn btn-danger w-100 rounded-pill fw-bold" onclick="copyGuestLink()">複製商城連結去 LINE 開啟</button>
+                     <div class="mb-2 text-danger"><i class="fas fa-user-secret fa-3x"></i></div>
+                     <h5 class="fw-bold mb-2">訪客模式提醒</h5>
+                     <p class="text-muted small mb-3">您目前未使用 LINE 登入，訂單將無法自動連結至您的帳號。</p>
+                     <p class="text-muted small mb-4">建議您使用 LINE 開啟本商城，以享有完整服務與訂單查詢功能。</p>
+                     <!-- New Join LINE Button -->
+                     <a href="https://lin.ee/ejXmXDl" target="_blank" class="btn btn-success w-100 rounded-pill fw-bold mb-2 shadow-sm" style="background-color:#06C755; border:none;">
+                        <i class="fab fa-line me-2"></i>點我加入麥麥小舖 LINE@
+                     </a>
+                     <button class="btn btn-outline-danger w-100 rounded-pill fw-bold" onclick="copyGuestLink()">複製商城連結去 LINE 開啟</button>
                  </div>
             </div>
         </div>
@@ -934,6 +942,18 @@
                 const deliveryMethod = ref('screenshot'); 
                 const errorMsg = ref(''); 
                 const requestManualScreenshot = ref(false);
+                
+                // v2.51: Guest UUID Logic
+                const guestUuid = ref(safeGetStorage('mm_guest_uuid', ''));
+                if (!guestUuid.value) {
+                    guestUuid.value = 'guest_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+                    safeSetStorage('mm_guest_uuid', guestUuid.value);
+                }
+                
+                // Helper to get effective User ID (Line or Guest UUID)
+                const getEffectiveUserId = () => {
+                    return (userProfile.value && userProfile.value.userId) || guestUuid.value || 'GUEST';
+                };
                 
                 const selectedPayment = ref(''); 
                 const bankAccounts = ref(BANK_ACCOUNTS);
@@ -1099,9 +1119,18 @@
                                         const decoded = liff.getDecodedIDToken();
                                         if (decoded && decoded.email) userProfile.value.email = decoded.email;
                                     } catch(e) {}
+                                    // Use userProfile ID
                                     fetchOrderStatus(userProfile.value.userId);
-                                } else checkGuestStatus();
-                            } catch (e) { console.warn("LIFF init failed", e); checkGuestStatus(); }
+                                } else {
+                                    // Use Guest UUID
+                                    fetchOrderStatus(guestUuid.value);
+                                    checkGuestStatus();
+                                }
+                            } catch (e) { 
+                                console.warn("LIFF init failed", e);
+                                fetchOrderStatus(guestUuid.value); 
+                                checkGuestStatus(); 
+                            }
                         }
                     } catch (err) { 
                         console.error(err);
@@ -1333,7 +1362,11 @@
                         showToast('正在取消訂單...');
                         const response = await fetch(API_URL, {
                             method: 'POST', mode: 'no-cors',
-                            body: JSON.stringify({ action: 'cancelOrder', orderId: h.id, userId: userProfile.value.userId || 'GUEST' })
+                            body: JSON.stringify({ 
+                                action: 'cancelOrder', 
+                                orderId: h.id, 
+                                userId: getEffectiveUserId() 
+                            })
                         });
                         orderHistory.value = orderHistory.value.map(o => { if (o.id === h.id) return { ...o, paymentNote: '用戶自行取消' }; return o; });
                         safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
@@ -1440,7 +1473,18 @@
                          const total = driveItems.reduce((a,b) => a + (b.price*b.quantity), 0);
                          const record = { id: oid, timestamp: timeStr, totalAmount: total, items: driveItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) };
                          records.push(record);
-                         orderPromises.push(fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ ...record, phone: userContact.value.phone, email: userProfile.value.email || '', deliveryMethod: '截圖發送', momoName: '', momoPhone: '', userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', userId: (userProfile.value && userProfile.value.userId) || 'GUEST' }) }));
+                         orderPromises.push(fetch(API_URL, { 
+                             method: 'POST', mode: 'no-cors', 
+                             body: JSON.stringify({ 
+                                 ...record, 
+                                 phone: userContact.value.phone, 
+                                 email: userProfile.value.email || '', 
+                                 deliveryMethod: '截圖發送', 
+                                 momoName: '', momoPhone: '', 
+                                 userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', 
+                                 userId: getEffectiveUserId() 
+                             }) 
+                         }));
                          let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：📸 截圖發送\n🍱 內容：\n`;
                          driveItems.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${i.name} x${i.quantity}\n`; });
                          msg += `💰 小計：$${total}`;
@@ -1460,7 +1504,18 @@
                          const mName = isManual ? '' : giftInfo.value.name;
                          const mPhone = isManual ? '' : giftInfo.value.phone;
 
-                         orderPromises.push(fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ ...record, phone: userContact.value.phone, email: userProfile.value.email || '', deliveryMethod: methodStr, momoName: mName, momoPhone: mPhone, userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', userId: (userProfile.value && userProfile.value.userId) || 'GUEST' }) }));
+                         orderPromises.push(fetch(API_URL, { 
+                             method: 'POST', mode: 'no-cors', 
+                             body: JSON.stringify({ 
+                                 ...record, 
+                                 phone: userContact.value.phone, 
+                                 email: userProfile.value.email || '', 
+                                 deliveryMethod: methodStr, 
+                                 momoName: mName, momoPhone: mPhone, 
+                                 userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', 
+                                 userId: getEffectiveUserId() 
+                             }) 
+                         }));
                          
                          let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：${methodStr}\n`;
                          if(!isManual) msg += `👤 收件：${giftInfo.value.name} / ${giftInfo.value.phone}\n`;
