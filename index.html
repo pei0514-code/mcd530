@@ -662,18 +662,22 @@
                         <div v-if="orderHistory.length === 0" class="text-center py-5 text-muted">尚未有紀錄</div>
                         
                         <!-- Sticky Alert for Pending Payment -->
-                        <div v-if="unreportedOrders.length > 0" class="alert alert-danger d-flex align-items-center mb-3 shadow-sm border-0" role="alert">
+                        <div v-if="validUnreportedOrders.length > 0 && !isPendingAlertDismissed" class="alert alert-danger d-flex align-items-center mb-3 shadow-sm border-0 position-relative" role="alert">
                             <i class="fas fa-exclamation-circle fa-lg me-2"></i>
                             <div class="small fw-bold">
-                                您有 {{ unreportedOrders.length }} 筆訂單尚未付款或回報！<br>
+                                您有 {{ validUnreportedOrders.length }} 筆訂單尚未付款或回報！<br>
                                 <span class="text-muted" style="font-size: 10px;">請儘速完成以免訂單自動取消。</span>
                             </div>
+                            <button type="button" class="btn-close position-absolute top-0 end-0 m-2 small" style="width: 8px; height: 8px; opacity: 0.5;" @click="isPendingAlertDismissed = true"></button>
                         </div>
 
                         <!-- Loop through grouped history -->
                         <div v-for="group in groupedHistory" :key="group.timestamp" class="history-group-card">
-                            <div class="mb-2 border-bottom pb-2">
+                            <div class="mb-2 border-bottom pb-2 d-flex justify-content-between align-items-center">
                                  <small class="fw-bold text-muted"><i class="far fa-calendar-alt me-1"></i>{{ group.timestamp }}</small>
+                                 <span v-if="getGroupTimer(group)" class="timer-badge">
+                                    <i class="fas fa-clock me-1"></i>{{ getGroupTimer(group) }}
+                                 </span>
                             </div>
                             
                             <div v-for="(h, idx) in group.orders" :key="h.id" :class="{ 'border-top pt-3 mt-3': idx > 0 }">
@@ -685,12 +689,9 @@
                                         <!-- Swap: Status on Top -->
                                         <span :class="getStatusBadge(h).class" class="status-badge mb-1">{{ getStatusBadge(h).text }}</span>
                                         
-                                        <!-- Swap: Timer on Bottom -->
+                                        <!-- Swap: Timer on Bottom (Only show expired status, timer is moved to header) -->
                                         <div v-if="getStatusBadge(h).class === 'status-pending'">
-                                            <span v-if="!isOrderExpired(h)" class="timer-badge">
-                                                <i class="fas fa-clock me-1"></i>{{ getRemainingTime(h.timestamp) }}
-                                            </span>
-                                            <span v-else class="badge bg-secondary" style="font-size: 11px;">
+                                            <span v-if="isOrderExpired(h)" class="badge bg-secondary" style="font-size: 11px;">
                                                 已逾時失效
                                             </span>
                                         </div>
@@ -800,7 +801,7 @@
                      <h5 class="fw-bold mb-2">您有待回報的訂單</h5>
                      <p class="text-muted small mb-3">請勾選您已完成轉帳的訂單進行回報：</p>
                      <div class="bg-light rounded-3 p-3 mb-4 text-start border" style="max-height: 200px; overflow-y: auto;">
-                         <div v-for="oid in unreportedOrders" :key="oid" class="form-check mb-2"><input class="form-check-input" type="checkbox" :value="oid" v-model="pendingSelection" :id="'chk-'+oid"><label class="form-check-label fw-bold text-dark" :for="'chk-'+oid">訂單 #{{ oid }}</label></div>
+                         <div v-for="oid in validUnreportedOrders" :key="oid" class="form-check mb-2"><input class="form-check-input" type="checkbox" :value="oid" v-model="pendingSelection" :id="'chk-'+oid"><label class="form-check-label fw-bold text-dark" :for="'chk-'+oid">訂單 #{{ oid }}</label></div>
                      </div>
                      <div class="d-grid gap-2">
                          <button class="btn btn-warning rounded-pill fw-bold" @click="openReportForPending" :disabled="pendingSelection.length === 0"><i class="fas fa-money-bill-wave me-2"></i>回報選取訂單</button>
@@ -935,6 +936,9 @@
                 try { pending = JSON.parse(safeGetStorage('mm_pending_payment_orders', '[]')); } catch(e) { pending = []; }
                 const unreportedOrders = ref(pending);
                 const pendingSelection = ref([]);
+                
+                // New: Dismiss Pending Alert Flag
+                const isPendingAlertDismissed = ref(false);
 
                 const orderToCancel = ref(null);
                 const selectedProduct = ref(null);
@@ -1241,6 +1245,31 @@
                              const dateB = safeParseDate(b.timestamp);
                              return dateB.getTime() - dateA.getTime();
                         });
+                });
+                
+                // Helper to get timer for the group (if any active pending order exists)
+                const getGroupTimer = (group) => {
+                    const hasActivePending = group.orders.some(o => {
+                        const badge = getStatusBadge(o);
+                        return badge.class === 'status-pending' && !isOrderExpired(o);
+                    });
+                    
+                    if (hasActivePending) {
+                        return getRemainingTime(group.timestamp);
+                    }
+                    return null;
+                };
+                
+                // New: Filtered Unreported Orders (exclude expired)
+                const validUnreportedOrders = computed(() => {
+                    return unreportedOrders.value.filter(oid => {
+                        const order = orderHistory.value.find(o => o.id === oid);
+                        if (!order) return false;
+                        if (isOrderExpired(order)) return false;
+                        // Double check status
+                        const badge = getStatusBadge(order);
+                        return badge.class === 'status-pending'; 
+                    });
                 });
 
                 const openReportForHistory = (h) => {
@@ -1714,7 +1743,7 @@
                 // v2.48 Exports
                 ticketSortType,
                 // v2.49 New Exports
-                totalSavings, getRemainingTime, isOrderExpired, groupedHistory,
+                totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, validUnreportedOrders, isPendingAlertDismissed,
                  };
             }
         }).mount('#app');
