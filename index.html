@@ -302,7 +302,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.62</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.63</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -349,7 +349,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.62</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.63</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -1728,54 +1728,88 @@
                 const allTickets = computed(() => {
                     const items = [];
                     orderHistory.value.forEach(order => {
-                        if ((order.isShipped === true || String(order.isShipped) === 'true') && order.fulfillment) {
-                            const links = order.fulfillment.split('\n').filter(l => l.trim().length > 0);
+                        if ((order.isShipped === true || String(order.isShipped) === 'true') && (order.fulfillment || (order.generatedTickets && order.generatedTickets.length > 0))) {
                             
-                            // v2.61: Smart Multiplier Calculation for Merged Warning
-                            const totalItemRealQty = order.items ? order.items.reduce((sum, it) => {
-                                const qty = Number(it.quantity) || 0;
-                                // v2.62: Updated regex to ignore suffixes like (2組4杯)
-                                const multiplier = (it.name && it.name.match(/\((\d+)[組份]/)) ? parseInt(it.name.match(/\((\d+)[組份]/)[1], 10) : 1;
-                                return sum + (qty * multiplier);
-                            }, 0) : 0;
-                            
-                            const isMergedOrder = totalItemRealQty > links.length;
-                            const serverLog = order.redemptionLog || "";
-                            
-                            links.forEach((url, i) => {
-                                const isServerRedeemed = serverLog.includes(`[${i+1}]已核銷`);
-                                const isLocalRedeemed = !!redeemedStatus.value[url];
-                                const isRedeemed = isServerRedeemed || isLocalRedeemed;
-                                let redeemedAt = null;
-                                if (isServerRedeemed) {
-                                    const match = serverLog.match(new RegExp(`\\[${i+1}\\]已核銷\\s*(.*)`));
-                                    if (match) redeemedAt = match[1].split('\n')[0];
-                                } else if (isLocalRedeemed) {
-                                    redeemedAt = redeemedStatus.value[url];
-                                }
-                                let pName = '商品票券';
-                                let vendorName = '';
-                                let expiryDate = '';
-                                if (order.items && order.items.length > 0) {
-                                     // Need to expand items based on multiplier too? 
-                                     // Actually usually order is just 1 item type per split order.
-                                     // Simple fallback:
-                                     const item0 = order.items[0];
-                                     pName = item0.name;
-                                     expiryDate = item0.expiryDate;
-                                }
-                                const product = products.value.find(p => p.name === pName);
-                                let productImage = product ? product.image : 'https://via.placeholder.com/150?text=No+Image';
-                                if(product) vendorName = product.vendor;
-                                const purchaseDate = order.timestamp ? order.timestamp.split(' ')[0] : '';
-                                if (ticketSearchQuery.value && !pName.includes(ticketSearchQuery.value) && !order.id.includes(ticketSearchQuery.value)) return;
+                            // v2.63 Update: Use backend-provided structured tickets if available
+                            if (order.generatedTickets && order.generatedTickets.length > 0) {
+                                // Calculate total logic for merged warning (kept from v2.61)
+                                const totalItemRealQty = order.items ? order.items.reduce((sum, it) => {
+                                    const qty = Number(it.quantity) || 0;
+                                    const multiplier = (it.name && it.name.match(/\((\d+)[組份]/)) ? parseInt(it.name.match(/\((\d+)[組份]/)[1], 10) : 1;
+                                    return sum + (qty * multiplier);
+                                }, 0) : 0;
+                                const isMergedOrder = totalItemRealQty > order.generatedTickets.length;
+                                const serverLog = order.redemptionLog || "";
 
-                                items.push({
-                                    url: url, orderId: order.id, ticketIndex: i, name: pName, vendor: vendorName,
-                                    productImage: productImage, isRedeemed: isRedeemed, redeemedAt: redeemedAt,
-                                    purchaseDate: purchaseDate, expiryDate: expiryDate, fullTimestamp: order.timestamp, isMergedOrder: isMergedOrder
+                                order.generatedTickets.forEach((t, i) => {
+                                    const isServerRedeemed = serverLog.includes(`[${i+1}]已核銷`);
+                                    const isLocalRedeemed = !!redeemedStatus.value[t.url];
+                                    const isRedeemed = isServerRedeemed || isLocalRedeemed;
+                                    let redeemedAt = null;
+                                    if (isServerRedeemed) {
+                                        const match = serverLog.match(new RegExp(`\\[${i+1}\\]已核銷\\s*(.*)`));
+                                        if (match) redeemedAt = match[1].split('\n')[0];
+                                    } else if (isLocalRedeemed) {
+                                        redeemedAt = redeemedStatus.value[t.url];
+                                    }
+                                    
+                                    const product = products.value.find(p => p.name === t.name);
+                                    let productImage = product ? product.image : 'https://via.placeholder.com/150?text=No+Image';
+                                    let vendorName = product ? product.vendor : '';
+                                    const purchaseDate = order.timestamp ? order.timestamp.split(' ')[0] : '';
+                                    
+                                    if (ticketSearchQuery.value && !t.name.includes(ticketSearchQuery.value) && !order.id.includes(ticketSearchQuery.value)) return;
+
+                                    items.push({
+                                        url: t.url, orderId: order.id, ticketIndex: i, name: t.name, vendor: vendorName,
+                                        productImage: productImage, isRedeemed: isRedeemed, redeemedAt: redeemedAt,
+                                        purchaseDate: purchaseDate, expiryDate: t.expiry || '', fullTimestamp: order.timestamp, isMergedOrder: isMergedOrder
+                                    });
                                 });
-                            });
+                            } 
+                            // Fallback for old orders (Legacy Logic)
+                            else if (order.fulfillment) {
+                                const links = order.fulfillment.split('\n').filter(l => l.trim().length > 0);
+                                const totalItemRealQty = order.items ? order.items.reduce((sum, it) => {
+                                    const qty = Number(it.quantity) || 0;
+                                    const multiplier = (it.name && it.name.match(/\((\d+)[組份]/)) ? parseInt(it.name.match(/\((\d+)[組份]/)[1], 10) : 1;
+                                    return sum + (qty * multiplier);
+                                }, 0) : 0;
+                                const isMergedOrder = totalItemRealQty > links.length;
+                                const serverLog = order.redemptionLog || "";
+                                
+                                links.forEach((url, i) => {
+                                    const isServerRedeemed = serverLog.includes(`[${i+1}]已核銷`);
+                                    const isLocalRedeemed = !!redeemedStatus.value[url];
+                                    const isRedeemed = isServerRedeemed || isLocalRedeemed;
+                                    let redeemedAt = null;
+                                    if (isServerRedeemed) {
+                                        const match = serverLog.match(new RegExp(`\\[${i+1}\\]已核銷\\s*(.*)`));
+                                        if (match) redeemedAt = match[1].split('\n')[0];
+                                    } else if (isLocalRedeemed) {
+                                        redeemedAt = redeemedStatus.value[url];
+                                    }
+                                    let pName = '商品票券';
+                                    let vendorName = '';
+                                    let expiryDate = '';
+                                    if (order.items && order.items.length > 0) {
+                                         const item0 = order.items[0]; // Flawed legacy logic for mixed orders
+                                         pName = item0.name;
+                                         expiryDate = item0.expiryDate;
+                                    }
+                                    const product = products.value.find(p => p.name === pName);
+                                    let productImage = product ? product.image : 'https://via.placeholder.com/150?text=No+Image';
+                                    if(product) vendorName = product.vendor;
+                                    const purchaseDate = order.timestamp ? order.timestamp.split(' ')[0] : '';
+                                    if (ticketSearchQuery.value && !pName.includes(ticketSearchQuery.value) && !order.id.includes(ticketSearchQuery.value)) return;
+
+                                    items.push({
+                                        url: url, orderId: order.id, ticketIndex: i, name: pName, vendor: vendorName,
+                                        productImage: productImage, isRedeemed: isRedeemed, redeemedAt: redeemedAt,
+                                        purchaseDate: purchaseDate, expiryDate: expiryDate, fullTimestamp: order.timestamp, isMergedOrder: isMergedOrder
+                                    });
+                                });
+                            }
                         }
                     });
                     return items;
