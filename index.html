@@ -1753,7 +1753,14 @@
                                         redeemedAt = redeemedStatus.value[t.url];
                                     }
                                     
-                                    const product = products.value.find(p => p.name === t.name);
+                                    // Try exact match
+                                    let product = products.value.find(p => p.name === t.name);
+                                    // Fuzzy fallback: If exact name failed, try cleaning suffix (e.g. remove (2組))
+                                    if (!product) {
+                                        const cleanName = t.name.replace(/\s*\(\d+[組份張].*?\)/g, '').trim();
+                                        product = products.value.find(p => p.name === cleanName);
+                                    }
+
                                     let productImage = product ? product.image : 'https://via.placeholder.com/150?text=No+Image';
                                     let vendorName = product ? product.vendor : '';
                                     const purchaseDate = order.timestamp ? order.timestamp.split(' ')[0] : '';
