@@ -302,7 +302,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.58</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.59</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -349,7 +349,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.58</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.59</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -552,7 +552,7 @@
                                 <i class="fas fa-info-circle me-1"></i>已選擇手動截圖，無須填寫 momo 資料。
                             </div>
                         </div>
-                        <label class="form-label-small">轉入帳號方式 (請選擇一種以利轉入我們帳戶)</label>
+                        <label class="form-label-small">付款帳號資訊(並非您的匯款銀行)</label>
                         <div class="mb-3 payment-grid">
                              <div v-for="bank in bankAccounts" :key="bank.code" class="payment-option" :class="{ active: selectedPayment === bank.code }" @click="togglePayment(bank.code)">
                                   <i class="fas fa-university text-muted payment-icon"></i>
@@ -681,6 +681,25 @@
             </div>
         </div>
 
+        <div class="modal fade" id="mergedWarningModal" tabindex="-1" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;">
+                <div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden">
+                    <div class="modal-body p-4">
+                        <div class="mb-3 text-primary"><i class="fas fa-layer-group fa-3x"></i></div>
+                        <h5 class="fw-bold mb-2">多張合併提醒</h5>
+                        <div class="text-muted small mb-4">
+                            此畫面包含兩張(或以上)票券！<br>
+                            請務必「放大」要兌換的 QRCODE，<br>
+                            或用手遮擋不使用的部分，<br>
+                            避免店家掃描設備重複掃到同一張。
+                        </div>
+                        <button class="btn btn-primary w-100 rounded-pill fw-bold" @click="confirmMergedWarning">我瞭解了</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ... (Rest of modals same as before) ... -->
         <div class="modal fade" id="productDetailModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
@@ -940,7 +959,7 @@
             </div>
         </div>
 
-        <div class="modal fade" id="mergedWarningModal" tabindex="-1">
+        <div class="modal fade" id="mergedWarningModal" tabindex="-1" data-bs-backdrop="static">
             <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;">
                 <div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden">
                     <div class="modal-body p-4">
@@ -952,7 +971,7 @@
                             或用手遮擋不使用的部分，<br>
                             避免店家掃描設備重複掃到同一張。
                         </div>
-                        <button type="button" class="btn btn-primary w-100 rounded-pill fw-bold" data-bs-dismiss="modal">我瞭解了</button>
+                        <button class="btn btn-primary w-100 rounded-pill fw-bold" @click="confirmMergedWarning">我瞭解了</button>
                     </div>
                 </div>
             </div>
@@ -1109,6 +1128,9 @@
                 // v2.58: Wallet Notification Logic
                 const walletUnread = ref(false);
                 const lastKnownTicketCount = ref(Number(safeGetStorage('mm_last_ticket_count', 0)));
+                
+                // v2.59: Merged Warning Flow
+                const pendingTicketUrl = ref('');
 
                 const now = ref(Date.now());
 
@@ -1806,12 +1828,26 @@
 
                 const showTicketImage = (item) => {
                     if (item.isMergedOrder && !item.isRedeemed) {
-                        // v2.58 Use Modal instead of Alert
+                        // v2.59: Use Modal flow for merged warning
+                        pendingTicketUrl.value = item.url;
+                        itemToRedeem.value = item; // Stage item for confirm
                         if(mergedWarningModal) mergedWarningModal.show();
+                    } else {
+                        // Standard Flow
+                        window.open(item.url, '_blank');
+                        if (!item.isRedeemed) setTimeout(() => { openRedeemConfirm(item); }, 800);
                     }
-                    window.open(item.url, '_blank');
-                    if (!item.isRedeemed) setTimeout(() => { openRedeemConfirm(item); }, 800);
                 };
+                const confirmMergedWarning = () => {
+                    if(mergedWarningModal) mergedWarningModal.hide();
+                    if(pendingTicketUrl.value) {
+                        window.open(pendingTicketUrl.value, '_blank');
+                        if(itemToRedeem.value && !itemToRedeem.value.isRedeemed) {
+                            setTimeout(() => { if(redeemConfirmModal) redeemConfirmModal.show(); }, 800);
+                        }
+                    }
+                };
+
                 const openRedeemConfirm = (item) => { itemToRedeem.value = item; if (redeemConfirmModal) redeemConfirmModal.show(); };
                 const confirmRedeemAction = async () => {
                     if (!itemToRedeem.value) return;
@@ -1838,7 +1874,8 @@
                 return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayment, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, canSelectDrive, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, fetchOrderStatus, showToast, errorMsg, requestManualScreenshot,
                 openWallet, walletFilter, showTicketImage, openVendorGuide, currentVendorGuide, availableTickets, usedTickets, currentDisplayTickets, openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery, linkifiedGuideInstruction,
                 giftOnlyItemsNames, driveOnlyItemsNames, getHistoryItemName, ticketSortType, totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, validUnreportedOrders, isPendingAlertDismissed, isGroupExpired, dismissPendingAlertForever, isRepaying, goToPayFromPending, getOrderItems, getOrderAmount,
-                groupedUnreportedOrders, isGroupSelected, toggleGroupSelection, relatedOrdersToCancel, showSortMenu, sortType, setSortType, walletUnread
+                groupedUnreportedOrders, isGroupSelected, toggleGroupSelection, relatedOrdersToCancel, showSortMenu, sortType, setSortType, walletUnread,
+                confirmMergedWarning
                  };
             }
         }).mount('#app');
