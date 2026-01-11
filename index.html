@@ -940,6 +940,24 @@
             </div>
         </div>
 
+        <div class="modal fade" id="mergedWarningModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;">
+                <div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden">
+                    <div class="modal-body p-4">
+                        <div class="mb-3 text-primary"><i class="fas fa-layer-group fa-3x"></i></div>
+                        <h5 class="fw-bold mb-2">多張合併提醒</h5>
+                        <div class="text-muted small mb-4">
+                            此畫面包含兩張(或以上)票券！<br>
+                            請務必「放大」要兌換的 QRCODE，<br>
+                            或用手遮擋不使用的部分，<br>
+                            避免店家掃描設備重複掃到同一張。
+                        </div>
+                        <button type="button" class="btn btn-primary w-100 rounded-pill fw-bold" data-bs-dismiss="modal">我瞭解了</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="modal fade" id="guestWarningModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;">
                  <div class="modal-content border-0 rounded-4 shadow-lg text-center p-4">
@@ -1094,7 +1112,7 @@
 
                 const now = ref(Date.now());
 
-                let cartModal, successModal, historyModal, guideModal, alertModalInstance, guestWarningModal, unreportedModal, cancelModal, productDetailModal, ticketModal, vendorGuideModal, redeemConfirmModal;
+                let cartModal, successModal, historyModal, guideModal, alertModalInstance, guestWarningModal, unreportedModal, cancelModal, productDetailModal, ticketModal, vendorGuideModal, redeemConfirmModal, mergedWarningModal;
 
                 onMounted(() => {
                     initApp();
@@ -1113,6 +1131,7 @@
                         ticketModal = new bootstrap.Modal(document.getElementById('ticketModal'));
                         vendorGuideModal = new bootstrap.Modal(document.getElementById('vendorGuideModal'));
                         redeemConfirmModal = new bootstrap.Modal(document.getElementById('redeemConfirmModal'));
+                        mergedWarningModal = new bootstrap.Modal(document.getElementById('mergedWarningModal'));
                     } catch(e) { console.error('Bootstrap modal init error', e); }
                 });
 
@@ -1786,7 +1805,10 @@
                 });
 
                 const showTicketImage = (item) => {
-                    if (item.isMergedOrder && !item.isRedeemed) alert("⚠️【多張合併提醒】\n\n此畫面包含兩張(或以上)票券！\n\n請務必「放大」要兌換的 QRCODE，或用手遮擋不使用的部分，避免店家掃描設備重複掃到同一張。");
+                    if (item.isMergedOrder && !item.isRedeemed) {
+                        // v2.58 Use Modal instead of Alert
+                        if(mergedWarningModal) mergedWarningModal.show();
+                    }
                     window.open(item.url, '_blank');
                     if (!item.isRedeemed) setTimeout(() => { openRedeemConfirm(item); }, 800);
                 };
