@@ -1734,7 +1734,8 @@
                             // v2.61: Smart Multiplier Calculation for Merged Warning
                             const totalItemRealQty = order.items ? order.items.reduce((sum, it) => {
                                 const qty = Number(it.quantity) || 0;
-                                const multiplier = (it.name && it.name.match(/\((\d+)[組份]\)$/)) ? parseInt(it.name.match(/\((\d+)[組份]\)$/)[1], 10) : 1;
+                                // v2.62: Updated regex to ignore suffixes like (2組4杯)
+                                const multiplier = (it.name && it.name.match(/\((\d+)[組份]/)) ? parseInt(it.name.match(/\((\d+)[組份]/)[1], 10) : 1;
                                 return sum + (qty * multiplier);
                             }, 0) : 0;
                             
