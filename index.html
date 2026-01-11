@@ -98,19 +98,15 @@
         .btn-line-custom { background-color: var(--line-green) !important; color: white !important; border: none !important; box-shadow: 0 4px 12px rgba(6, 199, 85, 0.2) !important; }
         .btn-line-custom:active { transform: scale(0.98); opacity: 0.9; }
 
-        .mode-small .product-card { border-radius: 10px; }
-        .mode-small .p-body { padding: 5px; }
-        .mode-small .p-title { font-size: 10px; min-height: 28px; line-height: 1.2; -webkit-line-clamp: 2; margin-bottom: 2px; }
-        .mode-small .p-price { font-size: 13px; margin-right: 0; }
-        .mode-small .p-original { font-size: 8px; margin-left: 2px; display: none; } 
-        .mode-small .btn-buy { font-size: 9px; padding: 4px 0; border-radius: 4px; }
-        .mode-small .qty-ctrl { padding: 1px; border-radius: 4px; }
-        .mode-small .qty-btn { width: 18px; height: 18px; font-size: 9px; }
-        .mode-small .qty-ctrl span { font-size: 10px; }
-        .mode-small .stock-tag { display: none; }
-        .mode-small .p-info { display: none; }
-        .mode-small .p-price-box { margin-bottom: 2px; }
-        .mode-small .zoom-icon { width: 16px; height: 16px; font-size: 9px; bottom: 4px; right: 4px; }
+        /* View Modes */
+        .mode-xlarge .product-card { border-radius: 24px; }
+        .mode-xlarge .p-title { font-size: 18px; min-height: auto; margin-bottom: 12px; }
+        .mode-xlarge .p-price { font-size: 24px; }
+        .mode-xlarge .btn-buy { font-size: 15px; padding: 12px 0; }
+
+        .mode-large .p-title { font-size: 14px; min-height: 40px; margin-bottom: 8px; }
+        .mode-large .p-price { font-size: 20px; }
+        .mode-large .btn-buy { font-size: 13px; padding: 10px 0; }
 
         .mode-medium .product-card { border-radius: 12px; }
         .mode-medium .p-body { padding: 8px; }
@@ -125,10 +121,34 @@
         .mode-medium .p-price-box { margin-bottom: 4px; }
         .mode-medium .zoom-icon { width: 20px; height: 20px; font-size: 10px; bottom: 6px; right: 6px; }
 
-        .mode-large .p-title { font-size: 14px; min-height: 40px; margin-bottom: 8px; }
-        .mode-large .p-price { font-size: 20px; }
-        .mode-large .btn-buy { font-size: 13px; padding: 10px 0; }
-        
+        .mode-small .product-card { border-radius: 10px; }
+        .mode-small .p-body { padding: 5px; }
+        .mode-small .p-title { font-size: 10px; min-height: 28px; line-height: 1.2; -webkit-line-clamp: 2; margin-bottom: 2px; }
+        .mode-small .p-price { font-size: 13px; margin-right: 0; }
+        .mode-small .p-original { font-size: 8px; margin-left: 2px; display: none; } 
+        .mode-small .btn-buy { font-size: 9px; padding: 4px 0; border-radius: 4px; }
+        .mode-small .qty-ctrl { padding: 1px; border-radius: 4px; }
+        .mode-small .qty-btn { width: 18px; height: 18px; font-size: 9px; }
+        .mode-small .qty-ctrl span { font-size: 10px; }
+        .mode-small .stock-tag { display: none; }
+        .mode-small .p-info { display: none; }
+        .mode-small .p-price-box { margin-bottom: 2px; }
+        .mode-small .zoom-icon { width: 16px; height: 16px; font-size: 9px; bottom: 4px; right: 4px; }
+
+        .mode-xsmall .product-card { border-radius: 8px; }
+        .mode-xsmall .p-body { padding: 3px; }
+        .mode-xsmall .p-title { font-size: 9px; min-height: 22px; line-height: 1.1; -webkit-line-clamp: 2; margin-bottom: 1px; }
+        .mode-xsmall .p-price { font-size: 11px; margin-right: 0; }
+        .mode-xsmall .p-original { display: none; }
+        .mode-xsmall .btn-buy { font-size: 8px; padding: 2px 0; border-radius: 4px; }
+        .mode-xsmall .qty-ctrl { padding: 0; border-radius: 4px; }
+        .mode-xsmall .qty-btn { width: 14px; height: 14px; font-size: 8px; }
+        .mode-xsmall .qty-ctrl span { font-size: 9px; }
+        .mode-xsmall .stock-tag { display: none; }
+        .mode-xsmall .p-info { display: none; }
+        .mode-xsmall .p-price-box { margin-bottom: 1px; }
+        .mode-xsmall .zoom-icon { display: none; }
+
         .terms-box { background: #fff8f8; border: 1px solid #ffebeb; border-radius: 12px; padding: 12px; font-size: 13px; color: #444; line-height: 1.6; height: 120px; overflow-y: auto; margin-bottom: 15px; scrollbar-width: thin; }
         .terms-title { font-weight: 900; color: var(--brand-red); margin-bottom: 5px; font-size: 14px; position: sticky; top: 0; background: #fff8f8; }
 
@@ -243,7 +263,7 @@
 
         /* Desktop Grid Constraint */
         @media (min-width: 992px) {
-            .container-fluid.mode-large, .container-fluid.mode-medium, .container-fluid.mode-small {
+            .container-fluid.mode-large, .container-fluid.mode-medium, .container-fluid.mode-small, .container-fluid.mode-xlarge, .container-fluid.mode-xsmall {
                 padding-left: 15vw !important;
                 padding-right: 15vw !important;
             }
@@ -257,6 +277,14 @@
         .badge-method { font-size: 10px; padding: 3px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .badge-method.momo { background: #D61F5E; color: white; border: 1px solid #c9104b; } /* Momo Pink */
         .badge-method.screenshot { background: #2C3E50; color: white; border: 1px solid #1a252f; } /* Dark Midnight Blue */
+
+        /* Pulsing Animation */
+        @keyframes pulse-icon {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .fa-beat-custom { animation: pulse-icon 1s infinite ease-in-out; }
 
         [v-cloak] { display: none; }
     </style>
@@ -274,7 +302,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.57</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.58</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -321,14 +349,15 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.57</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.58</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <button class="btn-wallet" @click="openWallet">
-                        <span v-if="availableTickets.length > 0">(!) </span>
-                        <i class="fas fa-ticket-alt me-1"></i>我的票券
+                        <i v-if="walletUnread" class="fas fa-exclamation-circle text-danger me-1 fa-beat-custom"></i>
+                        <i v-else class="fas fa-ticket-alt me-1"></i>
+                        我的票券
                         <span v-if="availableTickets.length > 0"> ({{ availableTickets.length }})</span>
                     </button>
                     <button class="btn-help" @click="showGuide"><i class="fas fa-question-circle me-1"></i></button>
@@ -382,7 +411,7 @@
                         <div class="p-body">
                             <div class="p-title" @click.stop="showProductDetail(p)">[{{ p.vendor }}] {{ p.name }}</div>
                             <div class="p-info">
-                                <span class="fw-bold"><i class="far fa-calendar-alt me-1" v-if="viewMode !== 'small'"></i>{{ p.expiryDate }}</span>
+                                <span class="fw-bold"><i class="far fa-calendar-alt me-1" v-if="viewMode !== 'small' && viewMode !== 'xsmall'"></i>{{ p.expiryDate }}</span>
                                 <span class="stock-tag" :class="{ none: Number(p.stock) <= 0 }">剩 {{ p.stock }}</span>
                             </div>
                             <div class="p-price-box" @click.stop="showProductDetail(p)">
@@ -405,6 +434,9 @@
 
         <div class="layout-switcher">
             <div class="layout-options" :class="{ show: showLayoutMenu }">
+                <div class="opt-item" :class="{ active: viewMode === 'xlarge' }" @click="setViewMode('xlarge')">
+                    <span>超大圖</span><i class="fas fa-square"></i>
+                </div>
                 <div class="opt-item" :class="{ active: viewMode === 'large' }" @click="setViewMode('large')">
                     <span>大圖示</span><i class="fas fa-th-large"></i>
                 </div>
@@ -413,6 +445,9 @@
                 </div>
                 <div class="opt-item" :class="{ active: viewMode === 'small' }" @click="setViewMode('small')">
                     <span>小圖示</span><i class="fas fa-border-all"></i>
+                </div>
+                <div class="opt-item" :class="{ active: viewMode === 'xsmall' }" @click="setViewMode('xsmall')">
+                    <span>超小圖</span><i class="fas fa-border-none"></i>
                 </div>
             </div>
             <div class="btn-layout" @click="showLayoutMenu = !showLayoutMenu; showSortMenu = false;">
@@ -481,8 +516,8 @@
                         </div>
                         <label class="form-label-small">領取方式優先順序</label>
                         <div class="option-group d-flex gap-2 mb-3">
-                            <div class="option-btn btn btn-outline-danger flex-grow-1 rounded-pill" :class="{ active: deliveryMethod === 'screenshot', disabled: !canSelectDrive }" @click="canSelectDrive && (deliveryMethod = 'screenshot')">📸 優先截圖</div>
-                            <div class="option-btn btn btn-outline-danger flex-grow-1 rounded-pill" :class="{ active: deliveryMethod === 'gift', disabled: !canSelectGift }" @click="canSelectGift && (deliveryMethod = 'gift')">🎁 優先momo轉贈</div>
+                            <div class="option-btn btn btn-outline-danger w-50 rounded-pill" :class="{ active: deliveryMethod === 'screenshot', disabled: !canSelectDrive }" @click="canSelectDrive && (deliveryMethod = 'screenshot')">📸 優先截圖</div>
+                            <div class="option-btn btn btn-outline-danger w-50 rounded-pill" :class="{ active: deliveryMethod === 'gift', disabled: !canSelectGift }" @click="canSelectGift && (deliveryMethod = 'gift')">🎁 優先momo轉贈</div>
                         </div>
                         <div v-if="!canSelectGift && !canSelectDrive" class="text-danger small text-center mb-2 fw-bold">⚠️ 所選商品庫存不足</div>
                         <div v-else-if="!canSelectGift" class="text-muted small text-center mb-2" style="font-size: 11px;">* 您選擇的商品目前無轉贈庫存，僅支援截圖發送</div>
@@ -517,7 +552,7 @@
                                 <i class="fas fa-info-circle me-1"></i>已選擇手動截圖，無須填寫 momo 資料。
                             </div>
                         </div>
-                        <label class="form-label-small">付款方式 (請選擇一種)</label>
+                        <label class="form-label-small">轉入帳號方式 (請選擇一種以利轉入我們帳戶)</label>
                         <div class="mb-3 payment-grid">
                              <div v-for="bank in bankAccounts" :key="bank.code" class="payment-option" :class="{ active: selectedPayment === bank.code }" @click="togglePayment(bank.code)">
                                   <i class="fas fa-university text-muted payment-icon"></i>
@@ -729,12 +764,11 @@
                                 <div class="history-imgs-container mb-3">
                                     <div v-for="item in h.items" :key="item.name" class="h-thumb-box"><img :src="getProductImage(item.name)" class="h-thumb" onerror="this.src='https://via.placeholder.com/48'"><div class="h-qty-badge">x{{ item.quantity }}</div></div>
                                 </div>
-                                <div v-if="h.fulfillment" class="mt-2 mb-3 p-2 bg-light rounded border">
-                                   <div class="small fw-bold text-success mb-2"><i class="fas fa-gift me-1"></i>發貨內容 (點擊開啟)：</div>
-                                   <div v-for="(link, idx) in h.fulfillment.split('\n')" :key="idx" class="mb-2">
-                                       <a v-if="link.trim().length > 0" :href="link" target="_blank" class="btn btn-sm btn-outline-primary w-100 text-truncate fw-bold rounded-pill" style="font-size:11px;"><i class="fas fa-external-link-alt me-1"></i>開啟商品連結 {{ idx + 1 }}</a>
-                                       <div class="text-center text-muted fw-bold mt-1" style="font-size: 10px;">{{ getHistoryItemName(h, idx) }}</div>
-                                   </div>
+                                <div v-if="h.fulfillment" class="mt-2 mb-3 p-3 bg-light rounded border text-center">
+                                   <div class="small fw-bold text-success mb-2"><i class="fas fa-gift me-1"></i>商品已發貨</div>
+                                   <button class="btn btn-sm btn-outline-primary w-100 rounded-pill fw-bold" @click="openWallet">
+                                       <i class="fas fa-wallet me-1"></i>📂 開啟【我的票券】查看與核銷
+                                   </button>
                                 </div>
                                 <div class="d-flex gap-2 flex-wrap" v-if="!isOrderExpired(h)">
                                     <button class="btn btn-outline-success btn-sm flex-grow-1 rounded-pill" @click="resendHistory(h)">補傳訂單</button><button class="btn btn-outline-danger btn-sm flex-grow-1 rounded-pill" @click="reBuy(h)">再次購買</button><button v-if="getStatusBadge(h).canReport" class="btn btn-warning btn-sm flex-grow-1 rounded-pill fw-bold text-dark" @click="openReportForHistory(h)">{{ h.paymentNote ? '修改回報' : '回報付款' }}</button><button v-if="getStatusBadge(h).canCancel" class="btn btn-secondary btn-sm flex-grow-1 rounded-pill fw-bold" @click="openCancelModal(h)">取消訂單</button>
@@ -1054,6 +1088,10 @@
                 const ticketSearchQuery = ref('');
                 const ticketSortType = ref('expiry');
                 
+                // v2.58: Wallet Notification Logic
+                const walletUnread = ref(false);
+                const lastKnownTicketCount = ref(Number(safeGetStorage('mm_last_ticket_count', 0)));
+
                 const now = ref(Date.now());
 
                 let cartModal, successModal, historyModal, guideModal, alertModalInstance, guestWarningModal, unreportedModal, cancelModal, productDetailModal, ticketModal, vendorGuideModal, redeemConfirmModal;
@@ -1183,8 +1221,15 @@
 
                 // ... (Computed Properties: gridModeClass, categories, filteredProducts, cartItems, etc...) ...
                 const gridModeClass = computed(() => `mode-${viewMode.value}`);
-                const gridRowClass = computed(() => (viewMode.value === 'small' || viewMode.value === 'medium') ? 'g-1' : 'g-2');
-                const gridColClass = computed(() => viewMode.value === 'large' ? 'col-6' : (viewMode.value === 'medium' ? 'col-4' : 'col-3'));
+                const gridRowClass = computed(() => (viewMode.value === 'small' || viewMode.value === 'medium' || viewMode.value === 'xsmall') ? 'g-1' : 'g-2');
+                const gridColClass = computed(() => {
+                    if (viewMode.value === 'xlarge') return 'col-12';
+                    if (viewMode.value === 'large') return 'col-6';
+                    if (viewMode.value === 'medium') return 'col-4';
+                    if (viewMode.value === 'small') return 'col-3';
+                    if (viewMode.value === 'xsmall') return 'col-2'; // 6 per row
+                    return 'col-4';
+                });
                 const categories = computed(() => [...new Set(products.value.map(p => p.category))]);
                 
                 const filteredProducts = computed(() => {
@@ -1718,7 +1763,28 @@
                     return walletFilter.value === 'available' ? availableTickets.value : usedTickets.value;
                 });
                 
-                const openWallet = () => { ticketSearchQuery.value = ''; if (ticketModal) ticketModal.show(); };
+                const openWallet = () => { 
+                    ticketSearchQuery.value = ''; 
+                    // v2.58: Reset unread status
+                    walletUnread.value = false;
+                    safeSetStorage('mm_last_ticket_count', availableTickets.value.length);
+                    lastKnownTicketCount.value = availableTickets.value.length;
+                    
+                    if (historyModal) historyModal.hide(); // Allow opening from History
+                    if (ticketModal) ticketModal.show(); 
+                };
+                
+                // v2.58: Check for new tickets on list update
+                watch(availableTickets, (newVal) => {
+                    if (newVal.length > lastKnownTicketCount.value) {
+                        walletUnread.value = true;
+                    } else if (newVal.length < lastKnownTicketCount.value) {
+                        // If tickets decreased (used), update baseline without notifying
+                        safeSetStorage('mm_last_ticket_count', newVal.length);
+                        lastKnownTicketCount.value = newVal.length;
+                    }
+                });
+
                 const showTicketImage = (item) => {
                     if (item.isMergedOrder && !item.isRedeemed) alert("⚠️【多張合併提醒】\n\n此畫面包含兩張(或以上)票券！\n\n請務必「放大」要兌換的 QRCODE，或用手遮擋不使用的部分，避免店家掃描設備重複掃到同一張。");
                     window.open(item.url, '_blank');
@@ -1750,7 +1816,7 @@
                 return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayment, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, canSelectDrive, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, fetchOrderStatus, showToast, errorMsg, requestManualScreenshot,
                 openWallet, walletFilter, showTicketImage, openVendorGuide, currentVendorGuide, availableTickets, usedTickets, currentDisplayTickets, openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery, linkifiedGuideInstruction,
                 giftOnlyItemsNames, driveOnlyItemsNames, getHistoryItemName, ticketSortType, totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, validUnreportedOrders, isPendingAlertDismissed, isGroupExpired, dismissPendingAlertForever, isRepaying, goToPayFromPending, getOrderItems, getOrderAmount,
-                groupedUnreportedOrders, isGroupSelected, toggleGroupSelection, relatedOrdersToCancel, showSortMenu, sortType, setSortType
+                groupedUnreportedOrders, isGroupSelected, toggleGroupSelection, relatedOrdersToCancel, showSortMenu, sortType, setSortType, walletUnread
                  };
             }
         }).mount('#app');
