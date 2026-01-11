@@ -247,6 +247,8 @@
         }
 
         .savings-tag { background: #25d366; color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 8px; box-shadow: 0 2px 5px rgba(37, 211, 102, 0.3); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         [v-cloak] { display: none; }
     </style>
@@ -264,7 +266,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.53</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.54</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -311,7 +313,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.53</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.54</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -331,6 +333,7 @@
         </div>
 
         <div class="container-fluid px-2 py-3" :class="gridModeClass">
+            <!-- (Content similar to previous, no changes in product list) -->
             <div v-if="isLoadingData" class="text-center py-5">
                 <div class="spinner-border text-danger mb-3" role="status"></div>
                 <div class="text-muted fw-bold">品項獲取中...</div>
@@ -461,10 +464,8 @@
                         <div v-else-if="!canSelectGift" class="text-muted small text-center mb-2" style="font-size: 11px;">* 您選擇的商品目前無轉贈庫存，僅支援截圖發送</div>
                         <div v-else-if="!canSelectDrive" class="text-muted small text-center mb-2" style="font-size: 11px;">* 此商品目前截圖庫存不足，惟仍可改手動截圖發送(需人工處理)</div>
 
-                        <!-- v2.42 Logic Updates -->
                         <div v-if="deliveryMethod === 'screenshot' && giftOnlyItemsNames.length > 0" class="alert alert-warning d-flex align-items-center p-2 mb-3" style="font-size: 12px; font-weight: 700;">
                              <i class="fas fa-exclamation-triangle me-2 text-warning fs-5"></i>
-                             <!-- Update 1: Use ideographic comma -->
                              <div>⚠️ {{ giftOnlyItemsNames.join('、') }} 為轉贈商品，截圖發送需等待客服人工處理，建議改選「優先轉贈」以加速領取。</div>
                         </div>
                         <div v-if="deliveryMethod === 'gift' && driveOnlyItemsNames.length > 0" class="alert alert-warning d-flex align-items-center p-2 mb-3" style="font-size: 12px; font-weight: 700;">
@@ -472,12 +473,10 @@
                              <div>⚠️ {{ driveOnlyItemsNames.join('、') }} 僅支援截圖發送，系統將自動分成2個訂單，並各別進行發貨。</div>
                         </div>
 
-                        <!-- Update 3: Warning text update -->
                         <div class="alert alert-danger d-flex align-items-center p-2 mb-3" style="font-size: 13px; font-weight: 700;">
                              <i class="fas fa-stopwatch me-2 fs-4"></i><div>⚠️ 為維護庫存管理，訂單成立後請於 <span class="text-decoration-underline">30 分鐘內</span> 完成付款，逾時系統將自動取消訂單。優先截圖使用中信轉帳將採取自動發券。</div>
                         </div>
                         
-                        <!-- v2.42: Hide Momo info completely if Screenshot priority -->
                         <div v-if="deliveryMethod === 'gift' || (deliveryMethod === 'screenshot' && giftOnlyItemsNames.length > 0 && false)" class="mb-3 p-3 bg-light rounded-4 border" :style="{ display: deliveryMethod === 'screenshot' ? 'none' : 'block' }">
                             <div class="form-check mb-3" v-if="!canSelectDrive">
                                 <input class="form-check-input" type="checkbox" v-model="requestManualScreenshot" id="manualScreenshotCheck">
@@ -500,7 +499,6 @@
                                   <i class="fas fa-university text-muted payment-icon"></i>
                                   <div style="overflow: hidden; flex: 1;">
                                       <div class="small fw-bold text-truncate">{{ bank.name }}</div>
-                                      <!-- Update 2: Hide note if gift priority + CTBC -->
                                       <div v-if="bank.note && !(deliveryMethod === 'gift' && bank.code === '822')" class="text-danger fw-bold" style="font-size: 10px;">{{ bank.note }}</div>
                                       <div v-if="bank.code === '396'" class="text-muted" style="font-size: 10px;">戶名：sue</div>
                                   </div>
@@ -518,6 +516,7 @@
             </div>
         </div>
 
+        <!-- Ticket Modal and other existing modals... -->
         <div class="modal fade" id="ticketModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 rounded-4 shadow-lg" style="background: #f8f9fa;">
@@ -529,9 +528,7 @@
                              </div>
                              <div class="input-group input-group-sm">
                                 <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-3"><i class="fas fa-search text-muted"></i></span>
-                                <!-- Fix: Shorten placeholder -->
                                 <input type="text" class="form-control border-start-0" placeholder="搜尋..." v-model="ticketSearchQuery">
-                                <!-- Fix: Widen select -->
                                 <select v-if="walletFilter === 'available'" v-model="ticketSortType" class="form-select border-start-0 border-end-0 bg-light fw-bold text-secondary" style="min-width: 110px; font-size: 11px;">
                                     <option value="expiry">📅 效期近</option>
                                     <option value="purchase">🕒 購買新</option>
@@ -545,7 +542,6 @@
                         </div>
                     </div>
                     <div class="p-2 bg-white border-bottom">
-                        <!-- Fix: Reduce margin bottom to pull text up -->
                         <div class="d-flex justify-content-center mb-1">
                             <div class="btn-group w-100 px-2" role="group">
                                 <input type="radio" class="btn-check" name="walletFilter" id="filterAvailable" autocomplete="off" :checked="walletFilter === 'available'" @change="walletFilter = 'available'">
@@ -604,6 +600,7 @@
             </div>
         </div>
 
+        <!-- ... other modals ... -->
         <div class="modal fade" id="redeemConfirmModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;">
                 <div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden">
@@ -670,7 +667,6 @@
                     <div class="modal-body px-4 py-3" style="max-height: 60vh; overflow-y: auto;">
                         <div v-if="orderHistory.length === 0" class="text-center py-5 text-muted">尚未有紀錄</div>
                         
-                        <!-- Sticky Alert for Pending Payment -->
                         <div v-if="validUnreportedOrders.length > 0 && !isPendingAlertDismissed" class="alert alert-danger d-flex align-items-center mb-3 shadow-sm border-0 position-relative" role="alert">
                             <i class="fas fa-exclamation-circle fa-lg me-2"></i>
                             <div class="small fw-bold">
@@ -680,12 +676,9 @@
                             <button type="button" class="btn-close position-absolute top-0 end-0 m-2 small" style="width: 8px; height: 8px; opacity: 0.5;" @click="isPendingAlertDismissed = true"></button>
                         </div>
 
-                        <!-- Loop through grouped history -->
                         <div v-for="group in groupedHistory" :key="group.timestamp" class="history-group-card">
                             <div class="mb-2 border-bottom pb-2 d-flex justify-content-between align-items-center">
                                  <small class="fw-bold text-muted"><i class="far fa-calendar-alt me-1"></i>{{ group.timestamp }}</small>
-                                 
-                                 <!-- Timer or Expired Status moved to Right Side of Date -->
                                  <div>
                                      <span v-if="getGroupTimer(group)" class="timer-badge">
                                         <i class="fas fa-clock me-1"></i>{{ getGroupTimer(group) }}
@@ -697,8 +690,6 @@
                             <div v-for="(h, idx) in group.orders" :key="h.id" :class="{ 'border-top pt-3 mt-3': idx > 0 }">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <div class="d-flex flex-column text-start">
-                                        <!-- Modified Order ID style: Small and Gray -->
-                                        <!-- Update 2: Add Delivery Method Tag in History -->
                                         <span class="fw-bold text-muted small" style="font-size: 11px;">訂單編號 {{ h.id }} 
                                             <span class="badge bg-secondary ms-1" style="font-size: 10px;">{{ h.deliveryMethod }}</span>
                                         </span>
@@ -737,6 +728,7 @@
         <div class="modal fade" id="guideModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 rounded-4 shadow-lg">
+                    <!-- ... Guide Content ... -->
                     <div class="modal-header border-0 pb-0"><h5 class="fw-bold"><i class="fas fa-book-reader me-2"></i>操作說明</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                     <div class="modal-body p-4">
                         <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-shopping-basket"></i></div><div class="guide-content"><h6>1. 挑選商品</h6><p>瀏覽商品列表，將喜歡的商品加入購物車。點擊圖片可查看詳細資訊。</p></div></div>
@@ -749,6 +741,7 @@
             </div>
         </div>
 
+        <!-- Vendor Modal ... -->
         <div class="modal fade" id="vendorGuideModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 rounded-4 shadow-lg">
@@ -778,21 +771,19 @@
                 <div class="modal-content text-center p-4 border-0 rounded-4 shadow-lg">
                     <div v-if="!showPaymentForm">
                         <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
-                        <!-- Dynamic Header -->
                         <h4 class="fw-bold">{{ isRepaying ? '待付款資訊' : '訂單已成功送出！' }}</h4>
                         
-                        <!-- New: Prominent Amount Display -->
+                        <!-- Prominent Amount Display -->
                         <div class="my-3 text-center p-2" style="background: #fdf2f2; border-radius: 12px; border: 1px dashed #f5c6cb;">
                             <div class="text-muted small fw-bold text-uppercase">應付金額</div>
                             <div class="text-danger fw-bold" style="font-size: 28px;">${{ reportingTotalAmount }}</div>
                         </div>
 
-                        <!-- Summary Section for Repaying (keep for details if needed, or remove since amount is above) -->
+                        <!-- Summary Section for Repaying -->
                         <div v-if="isRepaying" class="alert alert-secondary p-2 mb-3 text-start small">
                             <div v-for="oid in lastOrderIds" :key="oid" class="mb-1 border-bottom pb-1">
                                  <strong>訂單編號 {{ oid }}</strong><br>
                                  <span v-for="item in getOrderItems(oid)" :key="item.name">{{ item.name }} x{{ item.quantity }}<br></span>
-                                 <span class="text-danger fw-bold">金額: ${{ getOrderAmount(oid) }}</span>
                             </div>
                         </div>
 
@@ -827,11 +818,28 @@
                      <div class="mb-2 text-warning"><i class="fas fa-bell fa-4x"></i></div>
                      <h5 class="fw-bold mb-2">您有待回報的訂單</h5>
                      <p class="text-muted small mb-3">請勾選您已完成轉帳的訂單進行回報：</p>
-                     <div class="bg-light rounded-3 p-3 mb-4 text-start border" style="max-height: 200px; overflow-y: auto;">
-                         <div v-for="oid in validUnreportedOrders" :key="oid" class="form-check mb-2"><input class="form-check-input" type="checkbox" :value="oid" v-model="pendingSelection" :id="'chk-'+oid"><label class="form-check-label fw-bold text-dark" :for="'chk-'+oid">訂單編號 {{ oid }}</label></div>
+                     
+                     <div class="bg-light rounded-3 p-3 mb-4 text-start border" style="max-height: 300px; overflow-y: auto;">
+                         <!-- Grouped Orders Display -->
+                         <div v-for="group in groupedUnreportedOrders" :key="group.baseId" class="form-check mb-3 border-bottom pb-2">
+                            <input class="form-check-input mt-2" type="checkbox" :checked="isGroupSelected(group)" @change="toggleGroupSelection(group)" :id="'chk-group-'+group.baseId">
+                            <label class="form-check-label w-100" :for="'chk-group-'+group.baseId">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="fw-bold text-dark small">訂單編號 {{ group.baseId }} <span v-if="group.ids.length>1" class="text-muted">(合併)</span></div>
+                                    <div class="text-danger fw-bold">${{ group.totalAmount }}</div>
+                                </div>
+                                <div class="d-flex gap-2 mt-2 overflow-auto no-scrollbar">
+                                     <div v-for="(item, idx) in group.items" :key="idx" class="position-relative flex-shrink-0" style="width: 40px; height: 40px;">
+                                         <img :src="getProductImage(item.name)" class="w-100 h-100 rounded border object-fit-cover">
+                                         <span class="position-absolute bottom-0 end-0 badge bg-dark rounded-pill" style="font-size:8px; padding: 2px 4px;">x{{ item.quantity }}</span>
+                                     </div>
+                                </div>
+                            </label>
+                         </div>
+                         <div v-if="groupedUnreportedOrders.length === 0" class="text-muted small text-center">暫無待回報訂單</div>
                      </div>
+
                      <div class="d-grid gap-2">
-                         <!-- New Pay Button -->
                          <button class="btn btn-primary rounded-pill fw-bold" @click="goToPayFromPending" :disabled="pendingSelection.length === 0"><i class="fas fa-wallet me-2"></i>付款去 (查看匯款資訊)</button>
                          <button class="btn btn-warning rounded-pill fw-bold" @click="openReportForPending" :disabled="pendingSelection.length === 0"><i class="fas fa-edit me-2"></i>我已匯款 (直接回報)</button>
                          <button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">稍後再說</button>
@@ -1039,10 +1047,23 @@
                     } catch(e) { console.error('Bootstrap modal init error', e); }
                 });
 
-                // ... (rest of the script is unchanged for frontend logic, but labels in HTML above are updated)
-                // Need to ensure the getUserOrderStatus also returns deliveryMethod for history badge
-                
-                // ... (existing code)
+                watch(acceptTerms, (newVal) => { safeSetStorage('mm_accept_terms', newVal); });
+
+                const fetchWithRetry = async (url, retries = 3) => {
+                    for (let i = 0; i < retries; i++) {
+                        try {
+                            const res = await fetch(url);
+                            if (!res.ok) throw new Error('Network response was not ok');
+                            return await res.json();
+                        } catch (err) {
+                            retryCount.value = i + 1;
+                            console.warn(`Attempt ${i + 1} failed: ${err.message}`);
+                            if (i === retries - 1) throw err;
+                            const delay = 1000 * Math.pow(2, i);
+                            await new Promise(r => setTimeout(r, delay)); 
+                        }
+                    }
+                };
                 
                 const fetchOrderStatus = async (uid) => {
                     try {
@@ -1059,24 +1080,692 @@
                                      if (serverData) { return { ...h, ...serverData }; }
                                      return h;
                                  });
-                                 // ...
+                                 safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
+                                 const cleanPending = unreportedOrders.value.filter(oid => {
+                                     const s = statusMap[oid];
+                                     if (s && (s.isPaid || (s.paymentNote && (s.paymentNote.includes('取消') || s.paymentNote.includes('失效'))))) { return false; }
+                                     return true;
+                                 });
+                                 if (cleanPending.length !== unreportedOrders.value.length) {
+                                     unreportedOrders.value = cleanPending;
+                                     safeSetStorage('mm_pending_payment_orders', JSON.stringify(cleanPending));
+                                 }
                              }
                          }
                     } catch(e) { console.error('Status fetch failed', e); }
                 };
+
+                const initApp = async () => {
+                    isLoadingData.value = true;
+                    errorMsg.value = '';
+                    try {
+                        const prodRes = await fetchWithRetry(`${API_URL}?action=getInitData`);
+                        if (!prodRes || !prodRes.products) throw new Error("無效的資料格式");
+                        products.value = prodRes.products;
+                        if(prodRes.vendors) vendorInfoMap.value = prodRes.vendors;
+
+                        const setRes = await fetchWithRetry(`${API_URL}?action=getSettings`);
+                        settings.value = setRes;
+
+                        try {
+                            const savedCartJson = safeGetStorage('mm_cart_storage', '{}');
+                            const savedCart = JSON.parse(savedCartJson);
+                            const validCart = {};
+                            const alertItems = [];
+                            Object.keys(savedCart).forEach(pid => {
+                                const product = products.value.find(p => p.id === pid);
+                                if (product) {
+                                    const savedQty = Number(savedCart[pid]);
+                                    const currentStock = Number(product.stock);
+                                    if (currentStock <= 0) { alertItems.push(`「${product.name}」已售完，已從購物車移除`); } 
+                                    else if (currentStock < savedQty) { validCart[pid] = currentStock; alertItems.push(`「${product.name}」庫存不足，數量已調整為 ${currentStock}`); } 
+                                    else { validCart[pid] = savedQty; }
+                                }
+                            });
+                            cart.value = validCart;
+                            safeSetStorage('mm_cart_storage', JSON.stringify(validCart));
+                            if (alertItems.length > 0) { setTimeout(() => showAlert(alertItems), 800); }
+                        } catch(e) { console.error("Cart restore failed", e); safeSetStorage('mm_cart_storage', '{}'); }
+
+                        if (setRes.liffId) {
+                            try {
+                                await liff.init({ liffId: setRes.liffId });
+                                if (liff.isLoggedIn()) {
+                                    userProfile.value = await liff.getProfile();
+                                    try {
+                                        const decoded = liff.getDecodedIDToken();
+                                        if (decoded && decoded.email) userProfile.value.email = decoded.email;
+                                    } catch(e) {}
+                                    // Use userProfile ID
+                                    fetchOrderStatus(userProfile.value.userId);
+                                } else {
+                                    // Use Guest UUID
+                                    fetchOrderStatus(guestUuid.value);
+                                    checkGuestStatus();
+                                }
+                            } catch (e) { 
+                                console.warn("LIFF init failed", e);
+                                fetchOrderStatus(guestUuid.value); 
+                                checkGuestStatus(); 
+                            }
+                        }
+                    } catch (err) { 
+                        console.error(err);
+                        if (err.message === 'Network response was not ok' || err.message.includes('fetch') || err.message.includes('Failed to fetch')) {
+                             errorMsg.value = "連線失敗 (原因：權限未公開或網址錯誤)";
+                        } else { errorMsg.value = err.message; }
+                    } 
+                    finally {
+                        isLoadingData.value = false;
+                        hideStaticLoader();
+                        if (!safeGetStorage('mm_guided_v172', '')) { setTimeout(() => { if(guideModal) guideModal.show(); safeSetStorage('mm_guided_v172', 'true'); }, 600); }
+                        
+                        // Fix: Check valid (unexpired) unreported orders instead of all
+                        if (validUnreportedOrders.value.length > 0) {
+                             pendingSelection.value = [...validUnreportedOrders.value];
+                             setTimeout(() => { if (unreportedModal) unreportedModal.show(); }, 1500);
+                        }
+                    }
+                };
                 
-                // ... (rest of setup)
+                const reloadApp = () => { window.location.reload(); };
+                const getProductImage = (name) => { const p = products.value.find(prod => prod.name === name); return p ? p.image : 'https://via.placeholder.com/48?text=No+Img'; };
+                const checkGuestStatus = () => { const ua = navigator.userAgent || navigator.vendor || window.opera; if (!liff.isInClient() || (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1)) { setTimeout(() => { if(guestWarningModal) guestWarningModal.show(); }, 1000); } };
+                const hideStaticLoader = () => { const loader = document.getElementById('static-loader'); if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 300); } };
+                const showAlert = (msgs) => { alertMessages.value = Array.isArray(msgs) ? msgs : [msgs]; if(alertModalInstance) alertModalInstance.show(); else alert(msgs.join('\n')); };
+                const setViewMode = (mode) => { viewMode.value = mode; safeSetStorage('mm_view_mode', mode); showLayoutMenu.value = false; };
+                
+                const togglePayment = (code) => { selectedPayment.value = code; };
+                
+                const copyText = (txt) => { navigator.clipboard.writeText(txt).then(() => showToast('已複製帳號')).catch(() => showToast('複製失敗')); };
+
+                const gridModeClass = computed(() => `mode-${viewMode.value}`);
+                const gridRowClass = computed(() => (viewMode.value === 'small' || viewMode.value === 'medium') ? 'g-1' : 'g-2');
+                const gridColClass = computed(() => viewMode.value === 'large' ? 'col-6' : (viewMode.value === 'medium' ? 'col-4' : 'col-3'));
+
+                const categories = computed(() => [...new Set(products.value.map(p => p.category))]);
+                const filteredProducts = computed(() => {
+                    let res = currentCat.value === 'ALL' ? products.value : products.value.filter(p => p.category === currentCat.value);
+                    return res.slice().sort((a, b) => {
+                        const stockA = Number(a.stock) > 0;
+                        const stockB = Number(b.stock) > 0;
+                        if (stockA && !stockB) return -1;
+                        if (!stockA && stockB) return 1;
+                        return 0; 
+                    });
+                });
+                const cartItems = computed(() => Object.keys(cart.value).map(id => { const p = products.value.find(x => x.id === id); return p ? { ...p, quantity: cart.value[id] } : null; }).filter(x => x));
+                const totalQty = computed(() => cartItems.value.reduce((a, b) => a + b.quantity, 0));
+                const totalPrice = computed(() => cartItems.value.reduce((a, b) => a + (b.price * b.quantity), 0));
+                
+                // New: Savings Calculator Feature
+                const totalSavings = computed(() => {
+                    return cartItems.value.reduce((a, b) => {
+                         const orig = b.originalPrice && b.originalPrice > b.price ? b.originalPrice : b.price;
+                         return a + ((orig - b.price) * b.quantity);
+                    }, 0);
+                });
+
+                const reportingTotalAmount = computed(() => {
+                    if (lastOrderIds.value.length === 0) return 0;
+                    return orderHistory.value.filter(o => lastOrderIds.value.includes(o.id)).reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+                });
+
+                const selectedBankInfos = computed(() => {
+                    if (!selectedPayment.value) return bankAccounts.value; 
+                    return bankAccounts.value.filter(b => b.code === selectedPayment.value);
+                });
+
+                const hasGiftOnlyItems = computed(() => cartItems.value.some(item => item.driveStock < item.quantity && item.giftStock >= item.quantity));
+                const hasDriveOnlyItems = computed(() => cartItems.value.some(item => item.giftStock < item.quantity && item.driveStock >= item.quantity));
+                
+                // v2.42: Helper to get names of items that restrict the delivery method
+                const giftOnlyItemsNames = computed(() => cartItems.value.filter(item => item.driveStock < item.quantity && item.giftStock >= item.quantity).map(i => i.name));
+                const driveOnlyItemsNames = computed(() => cartItems.value.filter(item => item.giftStock < item.quantity && item.driveStock >= item.quantity).map(i => i.name));
+
+                const canSelectGift = computed(() => cartItems.value.some(i => i.giftStock > 0));
+                const canSelectDrive = computed(() => cartItems.value.some(i => i.driveStock > 0));
+
+                watch(canSelectGift, (val) => {
+                    if (!val && deliveryMethod.value === 'gift') { deliveryMethod.value = 'screenshot'; }
+                });
+                
+                // v2.48: Auto-select CTBC (822) when delivery is Screenshot
+                watch(deliveryMethod, (newVal) => {
+                    if (newVal === 'screenshot') {
+                        selectedPayment.value = '822';
+                    }
+                }, { immediate: true });
+                
+                const getStatusBadge = (h) => {
+                    if (h.isShipped === true || String(h.isShipped) === 'true') return { text: '✅ 已發貨', class: 'status-shipped', canReport: false, canCancel: false };
+                    if (h.paymentNote && (String(h.paymentNote).includes('取消') || String(h.paymentNote).includes('失效'))) return { text: '❌ 已失效', class: 'status-invalid', canReport: false, canCancel: false };
+                    if (h.isPaid === true || String(h.isPaid) === 'true') return { text: '💰 已付款', class: 'status-paid', canReport: false, canCancel: false };
+                    if (h.paymentNote && String(h.paymentNote).length > 1) return { text: '⏳ 待核對', class: 'status-pending', canReport: true, canCancel: true };
+                    return { text: '💰 待付款', class: 'status-pending', canReport: true, canCancel: true };
+                };
+                
+                const safeParseDate = (dateStr) => {
+                    if (!dateStr) return new Date();
+                    const parts = String(dateStr).match(/\d+/g);
+                    if (!parts || parts.length < 3) return new Date(); 
+                    const year = parseInt(parts[0]);
+                    const month = parseInt(parts[1]) - 1; 
+                    const day = parseInt(parts[2]);
+                    const hour = parts.length > 3 ? parseInt(parts[3]) : 0;
+                    const min = parts.length > 4 ? parseInt(parts[4]) : 0;
+                    const sec = parts.length > 5 ? parseInt(parts[5]) : 0;
+                    return new Date(year, month, day, hour, min, sec);
+                };
+
+                const isOrderExpired = (h) => {
+                     const badge = getStatusBadge(h);
+                     if (badge.class !== 'status-pending') return false;
+                     const orderDate = safeParseDate(h.timestamp);
+                     if (isNaN(orderDate.getTime())) return false; 
+                     const diffMs = now.value - orderDate.getTime();
+                     const diffMins = diffMs / (1000 * 60);
+                     return diffMins >= 30;
+                };
+
+                const getRemainingTime = (timestamp) => {
+                    const orderDate = safeParseDate(timestamp);
+                    if (isNaN(orderDate.getTime())) return "00:00";
+                    const targetTime = orderDate.getTime() + (30 * 60 * 1000);
+                    const remainingMs = targetTime - now.value;
+                    if (remainingMs <= 0) return "00:00";
+                    const totalSec = Math.floor(remainingMs / 1000);
+                    const min = Math.floor(totalSec / 60);
+                    const sec = totalSec % 60;
+                    return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+                };
+                
+                const groupedHistory = computed(() => {
+                    const groups = {};
+                    orderHistory.value.forEach(order => {
+                        const key = order.timestamp; 
+                        if (!groups[key]) groups[key] = [];
+                        groups[key].push(order);
+                    });
+                    return Object.entries(groups)
+                        .map(([ts, orders]) => ({ timestamp: ts, orders }))
+                        .sort((a, b) => {
+                             const dateA = safeParseDate(a.timestamp);
+                             const dateB = safeParseDate(b.timestamp);
+                             return dateB.getTime() - dateA.getTime();
+                        });
+                });
+                
+                const getGroupTimer = (group) => {
+                    const hasActivePending = group.orders.some(o => {
+                        const badge = getStatusBadge(o);
+                        return badge.class === 'status-pending' && !isOrderExpired(o);
+                    });
+                    if (hasActivePending) {
+                        return getRemainingTime(group.timestamp);
+                    }
+                    return null;
+                };
+                
+                const isGroupExpired = (group) => {
+                    const pendingOrders = group.orders.filter(o => getStatusBadge(o).class === 'status-pending');
+                    if (pendingOrders.length === 0) return false;
+                    return pendingOrders.every(o => isOrderExpired(o));
+                };
+                
+                const validUnreportedOrders = computed(() => {
+                    return unreportedOrders.value.filter(oid => {
+                        const order = orderHistory.value.find(o => o.id === oid);
+                        if (!order) return false;
+                        if (isOrderExpired(order)) return false;
+                        const badge = getStatusBadge(order);
+                        return badge.class === 'status-pending'; 
+                    });
+                });
+                
+                // v2.54: Grouped Unreported Orders
+                const groupedUnreportedOrders = computed(() => {
+                    const groups = {};
+                    validUnreportedOrders.value.forEach(oid => {
+                        const order = orderHistory.value.find(o => o.id === oid);
+                        if (!order) return;
+                        
+                        const baseId = oid.split('-')[0];
+                        if (!groups[baseId]) {
+                            groups[baseId] = {
+                                baseId: baseId,
+                                ids: [],
+                                items: [],
+                                totalAmount: 0,
+                                timestamp: order.timestamp
+                            };
+                        }
+                        groups[baseId].ids.push(oid);
+                        groups[baseId].totalAmount += (Number(order.totalAmount) || 0);
+                        if (order.items) {
+                            order.items.forEach(item => {
+                                groups[baseId].items.push(item);
+                            });
+                        }
+                    });
+                    return Object.values(groups).sort((a,b) => {
+                         return safeParseDate(b.timestamp).getTime() - safeParseDate(a.timestamp).getTime();
+                    });
+                });
+
+                // Helper for Group Checkbox
+                const isGroupSelected = (group) => {
+                    return group.ids.every(id => pendingSelection.value.includes(id));
+                };
+                
+                const toggleGroupSelection = (group) => {
+                    const allSelected = isGroupSelected(group);
+                    if (allSelected) {
+                        // Deselect all
+                        pendingSelection.value = pendingSelection.value.filter(id => !group.ids.includes(id));
+                    } else {
+                        // Select all (avoid duplicates)
+                        const newIds = group.ids.filter(id => !pendingSelection.value.includes(id));
+                        pendingSelection.value = [...pendingSelection.value, ...newIds];
+                    }
+                };
+                
+                const dismissPendingAlertForever = () => {
+                    isPendingAlertDismissed.value = true;
+                    if (unreportedModal) unreportedModal.hide();
+                };
+
+                const openReportForHistory = (h) => {
+                    if (historyModal) historyModal.hide();
+                    lastOrderIds.value = [h.id];
+                    openPaymentForm();
+                    if(successModal) successModal.show();
+                };
+                
+                const openCancelModal = (h) => {
+                    if (historyModal) historyModal.hide();
+                    orderToCancel.value = h;
+                    if(cancelModal) cancelModal.show();
+                };
+
+                const confirmCancel = async () => {
+                    if (!orderToCancel.value) return;
+                    const h = orderToCancel.value;
+                    if (cancelModal) cancelModal.hide();
+                    try {
+                        showToast('正在取消訂單...');
+                        const response = await fetch(API_URL, {
+                            method: 'POST', mode: 'no-cors',
+                            body: JSON.stringify({ 
+                                action: 'cancelOrder', 
+                                orderId: h.id, 
+                                userId: getEffectiveUserId() 
+                            })
+                        });
+                        orderHistory.value = orderHistory.value.map(o => { if (o.id === h.id) return { ...o, paymentNote: '用戶自行取消' }; return o; });
+                        safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
+                        const remPending = unreportedOrders.value.filter(id => id !== h.id);
+                        unreportedOrders.value = remPending;
+                        safeSetStorage('mm_pending_payment_orders', JSON.stringify(remPending));
+                        showToast('訂單已成功取消！謝謝您');
+                        setTimeout(() => { initApp(); }, 1200);
+                    } catch(e) { showToast('取消失敗，請聯繫客服'); console.error(e); }
+                };
+                
+                const showProductDetail = (p) => { selectedProduct.value = p; if (productDetailModal) productDetailModal.show(); };
+                
+                const openReportForPending = () => {
+                     if (unreportedModal) unreportedModal.hide();
+                     lastOrderIds.value = pendingSelection.value;
+                     openPaymentForm();
+                     if(successModal) successModal.show();
+                };
+                
+                const goToPayFromPending = () => {
+                     if (unreportedModal) unreportedModal.hide();
+                     lastOrderIds.value = pendingSelection.value;
+                     isRepaying.value = true;
+                     showPaymentForm.value = false;
+                     selectedPayment.value = ''; 
+                     if(successModal) successModal.show();
+                };
+
+                const getOrderItems = (oid) => {
+                    const o = orderHistory.value.find(x => x.id === oid);
+                    return o ? o.items : [];
+                };
+                const getOrderAmount = (oid) => {
+                    const o = orderHistory.value.find(x => x.id === oid);
+                    return o ? o.totalAmount : 0;
+                };
+
+                const updateCart = (p, d) => {
+                    if (d > 0) { const current = cart.value[p.id] || 0; if (current >= Number(p.stock)) { showToast('已達庫存上限'); return; } }
+                    const next = (cart.value[p.id] || 0) + d;
+                    if (next <= 0) delete cart.value[p.id]; else if (next <= Number(p.stock)) cart.value[p.id] = next;
+                    safeSetStorage('mm_cart_storage', JSON.stringify(cart.value));
+                };
+
+                const handleCheckout = async () => {
+                    const errors = [];
+                    if (!acceptTerms.value) errors.push("請先勾選「我已閱讀並同意購買需知」");
+                    if (totalPrice.value < 50) errors.push("訂單金額需滿 $50 才能出貨");
+                    const requiresGiftInfo = (deliveryMethod.value === 'gift') && !requestManualScreenshot.value;
+                    
+                    if (requiresGiftInfo) {
+                        if (!giftInfo.value.name || !giftInfo.value.phone) errors.push("選擇轉贈需填寫完整收件人姓名與電話");
+                        else {
+                            if (!/^[\u4e00-\u9fa5]+$/.test(giftInfo.value.name)) errors.push("momo 轉贈姓名必須為中文全名");
+                            if (!/^09\d{8}$/.test(giftInfo.value.phone)) errors.push("momo 轉贈電話格式錯誤");
+                        }
+                    }
+                    if (!selectedPayment.value) errors.push("請選擇一種付款方式");
+                    
+                    const isGuest = !userProfile.value.userId;
+                    if (isGuest && !userContact.value.phone) {
+                        if(cartModal) cartModal.hide(); showToast("訪客模式需填寫手機號碼才能購買");
+                        setTimeout(() => { if(guestWarningModal) guestWarningModal.show(); }, 300); return;
+                    }
+                    if (errors.length > 0) { showAlert(errors); return; }
+                    
+                    isSubmitting.value = true;
+                    safeSetStorage('mm_user_phone', userContact.value.phone);
+                    if (requiresGiftInfo) { safeSetStorage('mm_momo_name', giftInfo.value.name); safeSetStorage('mm_momo_phone', giftInfo.value.phone); }
+
+                    const driveItems = []; const giftItems = [];
+                    cartItems.value.forEach(item => {
+                        let allocated = false;
+                        if (deliveryMethod.value === 'gift') {
+                             if (item.giftStock >= item.quantity) { giftItems.push(item); allocated = true; } 
+                             else if (item.driveStock >= item.quantity) { driveItems.push(item); allocated = true; }
+                        } else {
+                             if (item.driveStock >= item.quantity) { driveItems.push(item); allocated = true; } 
+                             else if (item.giftStock >= item.quantity) { giftItems.push(item); allocated = true; }
+                        }
+                        if (!allocated) errors.push(`商品【${item.name}】庫存不足，無法結帳`);
+                    });
+                    if (errors.length > 0) { showAlert(errors); isSubmitting.value = false; return; }
+
+                    const now = new Date();
+                    const pad = (n) => String(n).padStart(2, '0');
+                    const timeStr = `${now.getFullYear()}/${pad(now.getMonth() + 1)}/${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+                    
+                    const baseOrderId = `M${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+                    const orderPromises = []; const lineMessages = []; const records = []; const generatedOrderIds = [];
+
+                    // v2.54: Get Initial Payment Description
+                    const selectedBank = bankAccounts.value.find(b => b.code === selectedPayment.value);
+                    const initialPaymentDesc = selectedBank ? `[待] ${selectedBank.name}` : '';
+
+                    if (driveItems.length > 0) {
+                         const oid = giftItems.length > 0 ? `${baseOrderId}-1` : baseOrderId;
+                         generatedOrderIds.push(oid);
+                         const total = driveItems.reduce((a,b) => a + (b.price*b.quantity), 0);
+                         const record = { id: oid, timestamp: timeStr, totalAmount: total, items: driveItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) };
+                         records.push(record);
+                         orderPromises.push(fetch(API_URL, { 
+                             method: 'POST', mode: 'no-cors', 
+                             body: JSON.stringify({ 
+                                 ...record, 
+                                 phone: userContact.value.phone, 
+                                 email: userProfile.value.email || '', 
+                                 deliveryMethod: '截圖發送', 
+                                 momoName: '', momoPhone: '', 
+                                 userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', 
+                                 userId: getEffectiveUserId(),
+                                 initialPaymentDesc: initialPaymentDesc // v2.54
+                             }) 
+                         }));
+                         let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：📸 截圖發送\n🍱 內容：\n`;
+                         driveItems.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${i.name} x${i.quantity}\n`; });
+                         msg += `💰 小計：$${total}`;
+                         lineMessages.push(msg);
+                    }
+
+                    if (giftItems.length > 0) {
+                         const oid = driveItems.length > 0 ? `${baseOrderId}-2` : baseOrderId;
+                         generatedOrderIds.push(oid);
+                         const total = giftItems.reduce((a,b) => a + (b.price*b.quantity), 0);
+                         const record = { id: oid, timestamp: timeStr, totalAmount: total, items: giftItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) };
+                         records.push(record);
+                         
+                         const isManual = requestManualScreenshot.value || deliveryMethod.value === 'screenshot';
+                         const methodStr = isManual ? '轉贈(手動截圖)' : 'momo 轉贈';
+                         const mName = isManual ? '' : giftInfo.value.name;
+                         const mPhone = isManual ? '' : giftInfo.value.phone;
+
+                         orderPromises.push(fetch(API_URL, { 
+                             method: 'POST', mode: 'no-cors', 
+                             body: JSON.stringify({ 
+                                 ...record, 
+                                 phone: userContact.value.phone, 
+                                 email: userProfile.value.email || '', 
+                                 deliveryMethod: methodStr, 
+                                 momoName: mName, momoPhone: mPhone, 
+                                 userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', 
+                                 userId: getEffectiveUserId(),
+                                 initialPaymentDesc: initialPaymentDesc // v2.54
+                             }) 
+                         }));
+                         
+                         let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：${methodStr}\n`;
+                         if(!isManual) msg += `👤 收件：${giftInfo.value.name} / ${giftInfo.value.phone}\n`;
+                         msg += `🍱 內容：\n`;
+                         giftItems.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${i.name} x${i.quantity}\n`; });
+                         msg += `💰 小計：$${total}`;
+                         lineMessages.push(msg);
+                    }
+                    
+                    Promise.all(orderPromises).then(() => {
+                         let finalMsg = `🎉 訂單已送出！\n\n`;
+                         if (lineMessages.length > 1) finalMsg += `⚠️ 因商品屬性不同，已自動拆分為兩筆訂單：\n\n`;
+                         finalMsg += lineMessages.join('\n\n----------------\n\n');
+                         finalMsg += `\n\n💰 應付總額：$${totalPrice.value}\n`;
+                         finalMsg += `🏦 匯款資訊：\n`;
+                         selectedBankInfos.value.forEach(b => { finalMsg += `${b.name}: ${b.account}\n`; });
+                         finalMsg += `⚠️ 請於匯款後告知客服匯款相關資訊`;
+                         
+                         if (liff.isInClient()) { liff.sendMessages([{ type: 'text', text: finalMsg }]).catch(e => console.error(e)); }
+                         
+                         orderHistory.value = [...records, ...orderHistory.value].slice(0, 30);
+                         safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
+                         
+                         lastOrderIds.value = generatedOrderIds; 
+                         const newPending = [...unreportedOrders.value, ...generatedOrderIds];
+                         unreportedOrders.value = [...new Set(newPending)];
+                         safeSetStorage('mm_pending_payment_orders', JSON.stringify(unreportedOrders.value));
+
+                         isSubmitting.value = false;
+                         isRepaying.value = false; 
+                         if(cartModal) cartModal.hide(); 
+                         if(successModal) successModal.show();
+                         
+                    }).catch(e => { console.error(e); isSubmitting.value = false; showToast('連線錯誤，請稍後再試'); });
+                };
+
+                const openPaymentForm = () => {
+                    if (selectedBankInfos.value.length === 1) { paymentForm.value.bankCode = selectedBankInfos.value[0].code; }
+                    showPaymentForm.value = true;
+                };
+
+                const paymentFormPlaceholder = computed(() => { if (paymentForm.value.bankCode === '396') return '請輸入您的街口暱稱/名稱'; return '請輸入您帳號的後五碼'; });
+                const paymentFormLabel = computed(() => { if (paymentForm.value.bankCode === '396') return '街口名稱：'; return '帳號末五碼：'; });
+
+                const submitPayment = async () => {
+                    if (!paymentForm.value.bankCode || !paymentForm.value.accountInfo) { showToast('請完整填寫資訊'); return; }
+                    isSubmittingPayment.value = true;
+                    const bank = bankAccounts.value.find(b => b.code === paymentForm.value.bankCode);
+                    const bankName = bank ? bank.name : '未知銀行';
+                    try {
+                        await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'submitPayment', orderIds: lastOrderIds.value, bankName: bankName, accountInfo: paymentForm.value.accountInfo }) });
+                        if (liff.isInClient()) {
+                             const msg = `💰【付款回報】\n單號：${lastOrderIds.value.join(', ')}\n銀行：${bankName}\n帳號/名稱：${paymentForm.value.accountInfo}\n總金額：$${reportingTotalAmount.value}`;
+                             liff.sendMessages([{ type: 'text', text: msg }]).then(() => console.log('Message sent')).catch(err => console.error('LIFF Send Error', err));
+                        }
+                        showToast('回報成功！我們會盡快處理');
+                        const remaining = unreportedOrders.value.filter(id => !lastOrderIds.value.includes(id));
+                        unreportedOrders.value = remaining;
+                        safeSetStorage('mm_pending_payment_orders', JSON.stringify(remaining));
+                        if(successModal) successModal.hide();
+                        resetCart();
+                        showPaymentForm.value = false;
+                        paymentForm.value = { bankCode: '', accountInfo: '' };
+                        orderHistory.value = orderHistory.value.map(h => { if (lastOrderIds.value.includes(h.id)) return { ...h, paymentNote: '已回報' }; return h; });
+                        safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
+                    } catch(e) { showToast('傳送失敗，請直接聯繫客服'); console.error(e); } finally { isSubmittingPayment.value = false; }
+                };
+
+                const reBuy = (h) => {
+                    cart.value = {};
+                    h.items.forEach(it => { const p = products.value.find(x => x.name === it.name); if (p) cart.value[p.id] = it.quantity; });
+                    safeSetStorage('mm_cart_storage', JSON.stringify(cart.value));
+                    if(historyModal) historyModal.hide(); 
+                    if(cartModal) cartModal.show();
+                };
+
+                const resendHistory = (h) => {
+                    let msg = `🛒【歷史訂單補傳】單號：#${h.id}\n品項：\n`;
+                    h.items.forEach((it, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${it.name} x${it.quantity}\n`; });
+                    msg += `總額：$${h.totalAmount}`;
+                    if (liff.isInClient()) { liff.sendMessages([{ type: 'text', text: msg }]).then(() => liff.closeWindow()); } 
+                    else { window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msg)}`, '_blank'); }
+                };
+
+                const resetCart = () => { 
+                    cart.value = {}; 
+                    safeSetStorage('mm_cart_storage', '{}'); 
+                    deliveryMethod.value = 'screenshot'; 
+                    // v2.48: Let the watcher handle default payment for screenshot
+                    if(deliveryMethod.value !== 'screenshot') selectedPayment.value = ''; 
+                    showPaymentForm.value = false; 
+                    requestManualScreenshot.value = false;
+                };
+                
+                const getHistoryItemName = (order, idx) => {
+                    if (!order.items) return '';
+                    const expanded = [];
+                    order.items.forEach(it => {
+                        const qty = Number(it.quantity) || 1;
+                        for(let k=0; k<qty; k++) expanded.push(it.name);
+                    });
+                    return expanded[idx] || '商品項';
+                };
+
+                // ... Ticket Logic ... (unchanged logic)
+                const allTickets = computed(() => {
+                    const items = [];
+                    orderHistory.value.forEach(order => {
+                        if ((order.isShipped === true || String(order.isShipped) === 'true') && order.fulfillment) {
+                            const links = order.fulfillment.split('\n').filter(l => l.trim().length > 0);
+                            const totalItemQty = order.items ? order.items.reduce((sum, it) => sum + (Number(it.quantity)||0), 0) : 0;
+                            const isMergedOrder = totalItemQty > links.length;
+                            const serverLog = order.redemptionLog || "";
+                            
+                            links.forEach((url, i) => {
+                                const isServerRedeemed = serverLog.includes(`[${i+1}]已核銷`);
+                                const isLocalRedeemed = !!redeemedStatus.value[url];
+                                const isRedeemed = isServerRedeemed || isLocalRedeemed;
+                                let redeemedAt = null;
+                                if (isServerRedeemed) {
+                                    const match = serverLog.match(new RegExp(`\\[${i+1}\\]已核銷\\s*(.*)`));
+                                    if (match) redeemedAt = match[1].split('\n')[0];
+                                } else if (isLocalRedeemed) {
+                                    redeemedAt = redeemedStatus.value[url];
+                                }
+                                let pName = '商品票券';
+                                let vendorName = '';
+                                let expiryDate = '';
+                                if (order.items && order.items.length > 0) {
+                                     const expandedItems = [];
+                                     order.items.forEach(it => { for(let k=0; k<it.quantity; k++) expandedItems.push(it); });
+                                     if(expandedItems[i]) { pName = expandedItems[i].name; expiryDate = expandedItems[i].expiryDate; } 
+                                     else { pName = order.items[0].name; expiryDate = order.items[0].expiryDate; }
+                                }
+                                const product = products.value.find(p => p.name === pName);
+                                let productImage = product ? product.image : 'https://via.placeholder.com/150?text=No+Image';
+                                if(product) vendorName = product.vendor;
+                                const purchaseDate = order.timestamp ? order.timestamp.split(' ')[0] : '';
+                                if (ticketSearchQuery.value && !pName.includes(ticketSearchQuery.value) && !order.id.includes(ticketSearchQuery.value)) return;
+
+                                items.push({
+                                    url: url, orderId: order.id, ticketIndex: i, name: pName, vendor: vendorName,
+                                    productImage: productImage, isRedeemed: isRedeemed, redeemedAt: redeemedAt,
+                                    purchaseDate: purchaseDate, expiryDate: expiryDate, fullTimestamp: order.timestamp, isMergedOrder: isMergedOrder
+                                });
+                            });
+                        }
+                    });
+                    return items;
+                });
+
+                const availableTickets = computed(() => {
+                    let list = allTickets.value.filter(t => !t.isRedeemed);
+                    return list.sort((a, b) => {
+                        if (ticketSortType.value === 'expiry') {
+                             const validA = a.expiryDate && a.expiryDate.match(/\d{4}\/\d{2}\/\d{2}/);
+                             const validB = b.expiryDate && b.expiryDate.match(/\d{4}\/\d{2}\/\d{2}/);
+                             if (validA && !validB) return -1;
+                             if (!validA && validB) return 1;
+                             if (validA && validB) return a.expiryDate.localeCompare(b.expiryDate);
+                             return b.orderId.localeCompare(a.orderId);
+                        }
+                        if (ticketSortType.value === 'purchase') return b.fullTimestamp.localeCompare(a.fullTimestamp) || b.orderId.localeCompare(a.orderId);
+                        if (ticketSortType.value === 'order') return b.orderId.localeCompare(a.orderId);
+                        if (ticketSortType.value === 'vendor') return a.vendor.localeCompare(b.vendor) || b.orderId.localeCompare(a.orderId);
+                        return b.orderId.localeCompare(a.orderId);
+                    });
+                });
+
+                const usedTickets = computed(() => {
+                    return allTickets.value.filter(t => t.isRedeemed).sort((a, b) => {
+                        const timeA = a.redeemedAt || '';
+                        const timeB = b.redeemedAt || '';
+                        if (timeA && timeB) return timeB.localeCompare(timeA);
+                        if (timeA && !timeB) return -1;
+                        if (!timeA && timeB) return 1;
+                        return b.orderId.localeCompare(a.orderId);
+                    });
+                });
+                
+                const currentDisplayTickets = computed(() => {
+                    return walletFilter.value === 'available' ? availableTickets.value : usedTickets.value;
+                });
+                
+                // ... remaining exports ...
+                const openWallet = () => { ticketSearchQuery.value = ''; if (ticketModal) ticketModal.show(); };
+                const showTicketImage = (item) => {
+                    if (item.isMergedOrder && !item.isRedeemed) alert("⚠️【多張合併提醒】\n\n此畫面包含兩張(或以上)票券！\n\n請務必「放大」要兌換的 QRCODE，或用手遮擋不使用的部分，避免店家掃描設備重複掃到同一張。");
+                    window.open(item.url, '_blank');
+                    if (!item.isRedeemed) setTimeout(() => { openRedeemConfirm(item); }, 800);
+                };
+                const openRedeemConfirm = (item) => { itemToRedeem.value = item; if (redeemConfirmModal) redeemConfirmModal.show(); };
+                const confirmRedeemAction = async () => {
+                    if (!itemToRedeem.value) return;
+                    isRedeeming.value = true;
+                    const item = itemToRedeem.value;
+                    const now = new Date();
+                    const timeStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+                    redeemedStatus.value[item.url] = timeStr;
+                    redeemedStatus.value = { ...redeemedStatus.value };
+                    safeSetStorage('mm_redeemed_map', JSON.stringify(redeemedStatus.value));
+                    try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'redeemTicket', orderId: item.orderId, ticketIndex: item.ticketIndex, timestamp: timeStr }) }); fetchOrderStatus(userProfile.value.userId); } catch(e) {}
+                    isRedeeming.value = false; if (redeemConfirmModal) redeemConfirmModal.hide(); showToast("核銷成功！"); itemToRedeem.value = null;
+                };
+                const openVendorGuide = (item) => {
+                     const vendor = item.vendor;
+                     if(vendor && vendorInfoMap.value[vendor]) { currentVendorGuide.value = { name: vendor, ...vendorInfoMap.value[vendor] }; if(vendorGuideModal) vendorGuideModal.show(); } else { showToast("此廠商暫無詳細說明"); }
+                };
+                const linkifiedGuideInstruction = computed(() => {
+                    if (!currentVendorGuide.value) return '';
+                    let text = currentVendorGuide.value.instruction || '暫無詳細說明';
+                    return text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="word-break:break-all; text-decoration:underline;">$1</a>');
+                });
 
                 return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayment, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, canSelectDrive, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, fetchOrderStatus, showToast, errorMsg, requestManualScreenshot,
-                openWallet, walletFilter, showTicketImage,
-                openVendorGuide, currentVendorGuide,
-                availableTickets, usedTickets, currentDisplayTickets,
-                openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery, 
-                linkifiedGuideInstruction,
-                giftOnlyItemsNames, driveOnlyItemsNames,
-                getHistoryItemName,
-                ticketSortType,
-                totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, validUnreportedOrders, isPendingAlertDismissed, isGroupExpired, dismissPendingAlertForever, isRepaying, goToPayFromPending, getOrderItems, getOrderAmount,
+                openWallet, walletFilter, showTicketImage, openVendorGuide, currentVendorGuide, availableTickets, usedTickets, currentDisplayTickets, openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery, linkifiedGuideInstruction,
+                giftOnlyItemsNames, driveOnlyItemsNames, getHistoryItemName, ticketSortType, totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, validUnreportedOrders, isPendingAlertDismissed, isGroupExpired, dismissPendingAlertForever, isRepaying, goToPayFromPending, getOrderItems, getOrderAmount,
+                // v2.54 Exports
+                groupedUnreportedOrders, isGroupSelected, toggleGroupSelection
                  };
             }
         }).mount('#app');
