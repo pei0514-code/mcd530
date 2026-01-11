@@ -250,6 +250,11 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+        /* Custom Badge Styles for Delivery Methods */
+        .badge-method { font-size: 10px; padding: 3px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .badge-method.momo { background: #D61F5E; color: white; border: 1px solid #c9104b; } /* Momo Pink */
+        .badge-method.screenshot { background: #2C3E50; color: white; border: 1px solid #1a252f; } /* Dark Midnight Blue */
+
         [v-cloak] { display: none; }
     </style>
 <script type="importmap">
@@ -266,7 +271,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.55</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.56</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -313,7 +318,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.55</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.56</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -393,7 +398,6 @@
             </div>
         </div>
 
-        <!-- ... (Cart Bar, Layout Switcher, Line Float, Cart Modal - No Changes) ... -->
         <div class="layout-switcher">
             <div class="layout-options" :class="{ show: showLayoutMenu }">
                 <div class="opt-item" :class="{ active: viewMode === 'large' }" @click="setViewMode('large')">
@@ -689,8 +693,9 @@
                             <div v-for="(h, idx) in group.orders" :key="h.id" :class="{ 'border-top pt-3 mt-3': idx > 0 }">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <div class="d-flex flex-column text-start">
-                                        <span class="fw-bold text-muted small" style="font-size: 11px;">訂單編號 {{ h.id }} 
-                                            <span class="badge bg-secondary ms-1" style="font-size: 10px;">{{ h.deliveryMethod }}</span>
+                                        <span class="fw-bold text-muted small" style="font-size: 11px;">
+                                            訂單編號 {{ h.id }} 
+                                            <span class="badge-method" :class="h.deliveryMethod && h.deliveryMethod.includes('momo') ? 'momo' : 'screenshot'">{{ h.deliveryMethod }}</span>
                                         </span>
                                     </div>
                                     <div class="d-flex flex-column align-items-end">
