@@ -84,8 +84,11 @@
         
         .layout-switcher { position: fixed; bottom: 85px; left: 20px; z-index: 1001; }
         .btn-layout { width: 54px; height: 54px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--brand-red); font-size: 22px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); border: 2px solid #eee; transition: 0.2s; cursor: pointer; }
-        .layout-options { position: absolute; bottom: 65px; left: 0; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid #eee; padding: 5px; display: none; flex-direction: column; gap: 5px; min-width: 100px; }
-        .layout-options.show { display: flex; }
+        
+        .sort-switcher { position: fixed; bottom: 85px; left: 85px; z-index: 1001; }
+        
+        .layout-options, .sort-options { position: absolute; bottom: 65px; left: 0; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid #eee; padding: 5px; display: none; flex-direction: column; gap: 5px; min-width: 140px; }
+        .layout-options.show, .sort-options.show { display: flex; }
         .opt-item { padding: 10px 15px; font-size: 13px; font-weight: 800; border-radius: 10px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: space-between; color: #555; }
         .opt-item:active { background: #f5f5f5; }
         .opt-item.active { background: var(--brand-red); color: white; }
@@ -271,7 +274,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.56</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.57</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -318,13 +321,15 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.56</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.57</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <button class="btn-wallet" @click="openWallet">
+                        <span v-if="availableTickets.length > 0">(!) </span>
                         <i class="fas fa-ticket-alt me-1"></i>我的票券
+                        <span v-if="availableTickets.length > 0"> ({{ availableTickets.length }})</span>
                     </button>
                     <button class="btn-help" @click="showGuide"><i class="fas fa-question-circle me-1"></i></button>
                     <div class="text-muted p-2" @click="openHistory" style="cursor: pointer;"><i class="fas fa-history fa-lg"></i></div>
@@ -410,8 +415,23 @@
                     <span>小圖示</span><i class="fas fa-border-all"></i>
                 </div>
             </div>
-            <div class="btn-layout" @click="showLayoutMenu = !showLayoutMenu">
+            <div class="btn-layout" @click="showLayoutMenu = !showLayoutMenu; showSortMenu = false;">
                 <i class="fas fa-columns"></i>
+            </div>
+        </div>
+
+        <div class="sort-switcher">
+            <div class="sort-options" :class="{ show: showSortMenu }">
+                <div class="opt-item" :class="{ active: sortType === 'default' }" @click="setSortType('default')"><span>預設 (種類)</span></div>
+                <div class="opt-item" :class="{ active: sortType === 'price_desc' }" @click="setSortType('price_desc')"><span>金額 (高到低)</span></div>
+                <div class="opt-item" :class="{ active: sortType === 'can_screenshot' }" @click="setSortType('can_screenshot')"><span>可截圖</span></div>
+                <div class="opt-item" :class="{ active: sortType === 'can_gift' }" @click="setSortType('can_gift')"><span>可轉贈</span></div>
+                <div class="opt-item" :class="{ active: sortType === 'stock_screenshot_desc' }" @click="setSortType('stock_screenshot_desc')"><span>依數量 (截圖)</span></div>
+                <div class="opt-item" :class="{ active: sortType === 'stock_gift_desc' }" @click="setSortType('stock_gift_desc')"><span>依數量 (轉贈)</span></div>
+                <div class="opt-item" :class="{ active: sortType === 'stock_total_desc' }" @click="setSortType('stock_total_desc')"><span>依數量 (全部)</span></div>
+            </div>
+            <div class="btn-layout" @click="showSortMenu = !showSortMenu; showLayoutMenu = false;">
+                <i class="fas fa-sort-amount-down"></i>
             </div>
         </div>
 
@@ -974,6 +994,8 @@
                 const acceptTerms = ref(safeGetStorage('mm_accept_terms', 'false') === 'true');
                 const viewMode = ref(safeGetStorage('mm_view_mode', 'medium'));
                 const showLayoutMenu = ref(false);
+                const showSortMenu = ref(false); // New Ref
+                const sortType = ref('default'); // New Ref
                 const deliveryMethod = ref('screenshot'); 
                 const errorMsg = ref(''); 
                 const requestManualScreenshot = ref(false);
@@ -1155,6 +1177,7 @@
                 const hideStaticLoader = () => { const loader = document.getElementById('static-loader'); if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 300); } };
                 const showAlert = (msgs) => { alertMessages.value = Array.isArray(msgs) ? msgs : [msgs]; if(alertModalInstance) alertModalInstance.show(); else alert(msgs.join('\n')); };
                 const setViewMode = (mode) => { viewMode.value = mode; safeSetStorage('mm_view_mode', mode); showLayoutMenu.value = false; };
+                const setSortType = (type) => { sortType.value = type; showSortMenu.value = false; };
                 const togglePayment = (code) => { selectedPayment.value = code; };
                 const copyText = (txt) => { navigator.clipboard.writeText(txt).then(() => showToast('已複製帳號')).catch(() => showToast('複製失敗')); };
 
@@ -1163,16 +1186,36 @@
                 const gridRowClass = computed(() => (viewMode.value === 'small' || viewMode.value === 'medium') ? 'g-1' : 'g-2');
                 const gridColClass = computed(() => viewMode.value === 'large' ? 'col-6' : (viewMode.value === 'medium' ? 'col-4' : 'col-3'));
                 const categories = computed(() => [...new Set(products.value.map(p => p.category))]);
+                
                 const filteredProducts = computed(() => {
                     let res = currentCat.value === 'ALL' ? products.value : products.value.filter(p => p.category === currentCat.value);
-                    return res.slice().sort((a, b) => {
-                        const stockA = Number(a.stock) > 0;
-                        const stockB = Number(b.stock) > 0;
-                        if (stockA && !stockB) return -1;
-                        if (!stockA && stockB) return 1;
-                        return 0; 
-                    });
+                    
+                    // Sort logic
+                    if (sortType.value === 'price_desc') {
+                        res.sort((a, b) => b.price - a.price);
+                    } else if (sortType.value === 'can_screenshot') {
+                        res.sort((a, b) => b.driveStock - a.driveStock);
+                    } else if (sortType.value === 'can_gift') {
+                        res.sort((a, b) => b.giftStock - a.giftStock);
+                    } else if (sortType.value === 'stock_screenshot_desc') {
+                        res.sort((a, b) => b.driveStock - a.driveStock);
+                    } else if (sortType.value === 'stock_gift_desc') {
+                        res.sort((a, b) => b.giftStock - a.giftStock);
+                    } else if (sortType.value === 'stock_total_desc') {
+                        res.sort((a, b) => b.stock - a.stock);
+                    } else {
+                        // Default sorting: Stock Availability priority, then original order
+                        res.sort((a, b) => {
+                            const stockA = Number(a.stock) > 0;
+                            const stockB = Number(b.stock) > 0;
+                            if (stockA && !stockB) return -1;
+                            if (!stockA && stockB) return 1;
+                            return 0; 
+                        });
+                    }
+                    return res;
                 });
+
                 const cartItems = computed(() => Object.keys(cart.value).map(id => { const p = products.value.find(x => x.id === id); return p ? { ...p, quantity: cart.value[id] } : null; }).filter(x => x));
                 const totalQty = computed(() => cartItems.value.reduce((a, b) => a + b.quantity, 0));
                 const totalPrice = computed(() => cartItems.value.reduce((a, b) => a + (b.price * b.quantity), 0));
@@ -1224,6 +1267,10 @@
                 const isOrderExpired = (h) => {
                      const badge = getStatusBadge(h);
                      if (badge.class !== 'status-pending') return false;
+                     
+                     // If user reported payment, it is NOT expired visually even if time passed
+                     if (h.paymentNote && h.paymentNote.trim().length > 0) return false;
+
                      const orderDate = safeParseDate(h.timestamp);
                      if (isNaN(orderDate.getTime())) return false; 
                      const diffMs = now.value - orderDate.getTime();
@@ -1255,6 +1302,10 @@
                         });
                 });
                 const getGroupTimer = (group) => {
+                    // Check if any order in the group is reported. If so, stop timer.
+                    const isReported = group.orders.some(o => o.paymentNote && o.paymentNote.trim().length > 0);
+                    if (isReported) return null;
+
                     const hasActivePending = group.orders.some(o => {
                         const badge = getStatusBadge(o);
                         return badge.class === 'status-pending' && !isOrderExpired(o);
@@ -1699,7 +1750,7 @@
                 return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart: () => cartModal && cartModal.show(), openHistory: () => historyModal && historyModal.show(), showGuide: () => guideModal && guideModal.show(), orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayment, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, canSelectDrive, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, fetchOrderStatus, showToast, errorMsg, requestManualScreenshot,
                 openWallet, walletFilter, showTicketImage, openVendorGuide, currentVendorGuide, availableTickets, usedTickets, currentDisplayTickets, openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery, linkifiedGuideInstruction,
                 giftOnlyItemsNames, driveOnlyItemsNames, getHistoryItemName, ticketSortType, totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, validUnreportedOrders, isPendingAlertDismissed, isGroupExpired, dismissPendingAlertForever, isRepaying, goToPayFromPending, getOrderItems, getOrderAmount,
-                groupedUnreportedOrders, isGroupSelected, toggleGroupSelection, relatedOrdersToCancel
+                groupedUnreportedOrders, isGroupSelected, toggleGroupSelection, relatedOrdersToCancel, showSortMenu, sortType, setSortType
                  };
             }
         }).mount('#app');
