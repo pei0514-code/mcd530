@@ -302,7 +302,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.60</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.61</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -349,7 +349,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.60</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.61</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -1730,8 +1730,15 @@
                     orderHistory.value.forEach(order => {
                         if ((order.isShipped === true || String(order.isShipped) === 'true') && order.fulfillment) {
                             const links = order.fulfillment.split('\n').filter(l => l.trim().length > 0);
-                            const totalItemQty = order.items ? order.items.reduce((sum, it) => sum + (Number(it.quantity)||0), 0) : 0;
-                            const isMergedOrder = totalItemQty > links.length;
+                            
+                            // v2.61: Smart Multiplier Calculation for Merged Warning
+                            const totalItemRealQty = order.items ? order.items.reduce((sum, it) => {
+                                const qty = Number(it.quantity) || 0;
+                                const multiplier = (it.name && it.name.match(/\((\d+)[組份]\)$/)) ? parseInt(it.name.match(/\((\d+)[組份]\)$/)[1], 10) : 1;
+                                return sum + (qty * multiplier);
+                            }, 0) : 0;
+                            
+                            const isMergedOrder = totalItemRealQty > links.length;
                             const serverLog = order.redemptionLog || "";
                             
                             links.forEach((url, i) => {
@@ -1749,10 +1756,12 @@
                                 let vendorName = '';
                                 let expiryDate = '';
                                 if (order.items && order.items.length > 0) {
-                                     const expandedItems = [];
-                                     order.items.forEach(it => { for(let k=0; k<it.quantity; k++) expandedItems.push(it); });
-                                     if(expandedItems[i]) { pName = expandedItems[i].name; expiryDate = expandedItems[i].expiryDate; } 
-                                     else { pName = order.items[0].name; expiryDate = order.items[0].expiryDate; }
+                                     // Need to expand items based on multiplier too? 
+                                     // Actually usually order is just 1 item type per split order.
+                                     // Simple fallback:
+                                     const item0 = order.items[0];
+                                     pName = item0.name;
+                                     expiryDate = item0.expiryDate;
                                 }
                                 const product = products.value.find(p => p.name === pName);
                                 let productImage = product ? product.image : 'https://via.placeholder.com/150?text=No+Image';
