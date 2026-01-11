@@ -302,7 +302,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.63</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.65</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -349,7 +349,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.63</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.65</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -1732,13 +1732,8 @@
                             
                             // v2.63 Update: Use backend-provided structured tickets if available
                             if (order.generatedTickets && order.generatedTickets.length > 0) {
-                                // Calculate total logic for merged warning (kept from v2.61)
-                                const totalItemRealQty = order.items ? order.items.reduce((sum, it) => {
-                                    const qty = Number(it.quantity) || 0;
-                                    const multiplier = (it.name && it.name.match(/\((\d+)[組份]/)) ? parseInt(it.name.match(/\((\d+)[組份]/)[1], 10) : 1;
-                                    return sum + (qty * multiplier);
-                                }, 0) : 0;
-                                const isMergedOrder = totalItemRealQty > order.generatedTickets.length;
+                                
+                                // v2.65 Update: Simply check the isMerged flag from backend
                                 const serverLog = order.redemptionLog || "";
 
                                 order.generatedTickets.forEach((t, i) => {
@@ -1768,9 +1763,18 @@
                                     if (ticketSearchQuery.value && !t.name.includes(ticketSearchQuery.value) && !order.id.includes(ticketSearchQuery.value)) return;
 
                                     items.push({
-                                        url: t.url, orderId: order.id, ticketIndex: i, name: t.name, vendor: vendorName,
-                                        productImage: productImage, isRedeemed: isRedeemed, redeemedAt: redeemedAt,
-                                        purchaseDate: purchaseDate, expiryDate: t.expiry || '', fullTimestamp: order.timestamp, isMergedOrder: isMergedOrder
+                                        url: t.url, 
+                                        orderId: order.id, 
+                                        ticketIndex: i, 
+                                        name: t.name, 
+                                        vendor: vendorName,
+                                        productImage: productImage, 
+                                        isRedeemed: isRedeemed, 
+                                        redeemedAt: redeemedAt,
+                                        purchaseDate: purchaseDate, 
+                                        expiryDate: t.expiry || '', 
+                                        fullTimestamp: order.timestamp, 
+                                        isMergedOrder: t.isMerged // v2.65: Use flag from backend
                                     });
                                 });
                             } 
