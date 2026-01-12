@@ -984,11 +984,21 @@
                      <h5 class="fw-bold mb-2">訪客模式提醒</h5>
                      <p class="text-muted small mb-3">您目前未使用 LINE 登入，訂單將無法自動連結至您的帳號。</p>
                      <p class="text-muted small mb-4">建議您使用 LINE 開啟本商城，以享有完整服務與訂單查詢功能。</p>
-                     <!-- New Join LINE Button -->
+                     
+                     <!-- Direct Link -->
                      <a href="https://lin.ee/ejXmXDl" target="_blank" class="btn btn-success w-100 rounded-pill fw-bold mb-2 shadow-sm" style="background-color:#06C755; border:none;">
                         <i class="fab fa-line me-2"></i>點我加入麥麥小舖 LINE@
                      </a>
-                     <button class="btn btn-outline-danger w-100 rounded-pill fw-bold" onclick="copyGuestLink()">複製商城連結去 LINE 開啟</button>
+
+                     <!-- Copy LINE ID Button -->
+                     <button class="btn btn-outline-success w-100 rounded-pill fw-bold mb-2" onclick="copyLineId()">
+                        <i class="far fa-copy me-1"></i>複製商城LINE去LINE加入
+                     </button>
+
+                     <!-- Copy URL Button -->
+                     <button class="btn btn-outline-danger w-100 rounded-pill fw-bold" onclick="copyGuestLink()">
+                        <i class="fas fa-link me-1"></i>複製商城連結去瀏覽器開啟
+                     </button>
                  </div>
             </div>
         </div>
@@ -1035,8 +1045,12 @@
             }
         }
         
+        // v2.68: Updated copy functions for guest modal
         window.copyGuestLink = function() {
-            navigator.clipboard.writeText('https://lin.ee/ejXmXDl').then(() => { showToast('複製成功！'); }).catch(() => { showToast('複製失敗'); });
+            navigator.clipboard.writeText('https://lin.ee/ejXmXDl').then(() => { showToast('連結已複製！'); }).catch(() => { showToast('複製失敗'); });
+        };
+        window.copyLineId = function() {
+            navigator.clipboard.writeText('@034qefaf').then(() => { showToast('LINE ID 已複製！'); }).catch(() => { showToast('複製失敗'); });
         };
 
         const { createApp, ref, computed, onMounted, watch } = Vue;
