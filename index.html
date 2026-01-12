@@ -352,7 +352,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.76</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.77</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -399,7 +399,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.76</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.77</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -1188,10 +1188,10 @@
                     if (modal) modal.hide();
                 };
 
-                // Define these explicitly to ensure binding
                 const openHistory = () => {
                     hideModalSafe('ticketModal'); 
                     openModalSafe('historyModal');
+                    fetchOrderStatus(getEffectiveUserId());
                 };
 
                 const showGuide = () => {
@@ -1682,6 +1682,9 @@
                          hideModalSafe('cartModal');
                          openModalSafe('successModal');
                          
+                         // Fix: Fetch latest status immediately to ensure tickets appear if auto-shipped
+                         setTimeout(() => { fetchOrderStatus(getEffectiveUserId()); }, 1000);
+                         
                     }).catch(e => { console.error(e); isSubmitting.value = false; showToast('連線錯誤，請稍後再試'); });
                 };
 
@@ -1873,6 +1876,7 @@
                     return walletFilter.value === 'available' ? availableTickets.value : usedTickets.value;
                 });
                 
+                // Fix: Fetch latest status when opening wallet to ensure tickets appear
                 const openWallet = () => { 
                     ticketSearchQuery.value = ''; 
                     walletUnread.value = false;
@@ -1881,6 +1885,8 @@
                     
                     hideModalSafe('historyModal');
                     openModalSafe('ticketModal');
+                    
+                    fetchOrderStatus(getEffectiveUserId());
                 };
                 
                 watch(availableTickets, (newVal) => {
