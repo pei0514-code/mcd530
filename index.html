@@ -1931,17 +1931,15 @@
                             if (count > 1) {
                                 // Append numbering (1/N)
                                 item.name = `${item.originalName} (${localIndex + 1}/${count})`;
-                                
-                                // v2.88 FIX: DO NOT reset isMergedOrder to false.
-                                // If the individual file is marked as merged (e.g., [2張合併]), it should still warn user.
-                                // Previously: item.isMergedOrder = false; (This was removing the warning for grouped distinct merged files)
-                            } else {
-                                // Only 1 file found. 
-                                // Trust backend 'isMerged' flag OR check filename/info for [xxxx][xxxx] pattern
-                                // v2.86 FIX: Also check if name has multi-date tags which implies merged file
-                                if (item.name && /\[\d{4}\].*\[\d{4}\]/.test(item.name)) {
-                                    item.isMergedOrder = true;
-                                }
+                            } 
+                            
+                            // v2.89 FIX: Check strict keywords in the name that indicate merging for ALL items
+                            // This ensures that even if it's item 2/2, if it says "2張合併", it flags as merged.
+                            const nameHasMergedKeywords = /合併|\[\d{4}\].*\[\d{4}\]|\[[xX]?\d+(組|張|份)?\]/.test(item.originalName);
+
+                            // If backend says it's merged OR name implies it, set to true.
+                            if (nameHasMergedKeywords) {
+                                item.isMergedOrder = true;
                             }
                         });
                     });
