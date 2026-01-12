@@ -352,7 +352,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.80</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.81</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -399,7 +399,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.80</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.81</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -1782,10 +1782,10 @@
                 };
 
                 const allTickets = computed(() => {
-                    const items = [];
+                    let tempTickets = [];
+                    
+                    // 1. Collect all raw tickets from history
                     orderHistory.value.forEach(order => {
-                        // Use 'tickets' from backend instead of 'generatedTickets'
-                        // This property contains row-based correct product names
                         if ((order.isShipped === true || String(order.isShipped) === 'true') && (order.fulfillment || (order.tickets && order.tickets.length > 0))) {
                             if (order.tickets && order.tickets.length > 0) {
                                 const serverLog = order.redemptionLog || "";
@@ -1811,13 +1811,16 @@
                                     let vendorName = product ? product.vendor : '';
                                     const purchaseDate = order.timestamp ? order.timestamp.split(' ')[0] : '';
                                     
-                                    if (ticketSearchQuery.value && !t.name.includes(ticketSearchQuery.value) && !order.id.includes(ticketSearchQuery.value)) return;
+                                    // Strip quantity info from name for grouping (e.g. "Burger (2 sets)" -> "Burger")
+                                    const groupingName = t.name.replace(/[\(（]\d+[組份張].*?[\)）]/g, '').trim();
 
-                                    items.push({
+                                    tempTickets.push({
                                         url: t.url, 
                                         orderId: order.id, 
                                         ticketIndex: i, 
                                         name: t.name, 
+                                        originalName: t.name, // Keep original for numbering
+                                        groupingName: groupingName,
                                         vendor: vendorName,
                                         productImage: productImage, 
                                         isRedeemed: isRedeemed, 
@@ -1825,11 +1828,10 @@
                                         purchaseDate: purchaseDate, 
                                         expiryDate: t.expiry || '', 
                                         fullTimestamp: order.timestamp, 
-                                        isMergedOrder: t.isMerged 
+                                        isMergedOrder: t.isMerged // Initially trust backend
                                     });
                                 });
                             } else if (order.fulfillment) {
-                                // Fallback only if 'tickets' array is missing (should not happen in new version)
                                 const links = order.fulfillment.split('\n').filter(l => l.trim().length > 0);
                                 const totalItemRealQty = order.items ? order.items.reduce((sum, it) => {
                                     const qty = Number(it.quantity) || 0;
@@ -1840,6 +1842,7 @@
                                 const serverLog = order.redemptionLog || "";
                                 
                                 links.forEach((url, i) => {
+                                    // Similar fallback logic...
                                     const isServerRedeemed = serverLog.includes(`[${i+1}]已核銷`);
                                     const isLocalRedeemed = !!redeemedStatus.value[url];
                                     const isRedeemed = isServerRedeemed || isLocalRedeemed;
@@ -1847,9 +1850,8 @@
                                     if (isServerRedeemed) {
                                         const match = serverLog.match(new RegExp(`\\[${i+1}\\]已核銷\\s*(.*)`));
                                         if (match) redeemedAt = match[1].split('\n')[0];
-                                    } else if (isLocalRedeemed) {
-                                        redeemedAt = redeemedStatus.value[url];
-                                    }
+                                    } else if (isLocalRedeemed) redeemedAt = redeemedStatus.value[url];
+
                                     let pName = '商品票券';
                                     let vendorName = '';
                                     let expiryDate = '';
@@ -1861,19 +1863,52 @@
                                     const product = products.value.find(p => p.name === pName);
                                     let productImage = product ? product.image : 'https://via.placeholder.com/150?text=No+Image';
                                     if(product) vendorName = product.vendor;
-                                    const purchaseDate = order.timestamp ? order.timestamp.split(' ')[0] : '';
-                                    if (ticketSearchQuery.value && !pName.includes(ticketSearchQuery.value) && !order.id.includes(ticketSearchQuery.value)) return;
+                                    const groupingName = pName.replace(/[\(（]\d+[組份張].*?[\)）]/g, '').trim();
 
-                                    items.push({
-                                        url: url, orderId: order.id, ticketIndex: i, name: pName, vendor: vendorName,
+                                    tempTickets.push({
+                                        url: url, orderId: order.id, ticketIndex: i, name: pName, originalName: pName, groupingName: groupingName, vendor: vendorName,
                                         productImage: productImage, isRedeemed: isRedeemed, redeemedAt: redeemedAt,
-                                        purchaseDate: purchaseDate, expiryDate: expiryDate, fullTimestamp: order.timestamp, isMergedOrder: isMergedOrder
+                                        purchaseDate: order.timestamp ? order.timestamp.split(' ')[0] : '', expiryDate: expiryDate, fullTimestamp: order.timestamp, isMergedOrder: isMergedOrder
                                     });
                                 });
                             }
                         }
                     });
-                    return items;
+
+                    // 2. Group by (OrderId + GroupingName) to identify split files
+                    const grouped = {};
+                    tempTickets.forEach((item, index) => {
+                        const key = `${item.orderId}_${item.groupingName}`;
+                        if (!grouped[key]) grouped[key] = [];
+                        grouped[key].push(index); // Store index in tempTickets array
+                    });
+
+                    // 3. Process groups to apply numbering and correct merged warning
+                    Object.values(grouped).forEach(indices => {
+                        const count = indices.length;
+                        indices.forEach((arrayIndex, localIndex) => {
+                            const item = tempTickets[arrayIndex];
+                            
+                            // If we have multiple separate files for what is logically one product type in this order
+                            if (count > 1) {
+                                // Append numbering (1/N)
+                                item.name = `${item.originalName} (${localIndex + 1}/${count})`;
+                                // Explicitly disable "Merged" warning because they are split files
+                                item.isMergedOrder = false; 
+                            } else {
+                                // Only 1 file found. 
+                                // Trust backend 'isMerged' flag (which is true only if filename has multiple date tags like [0330][0330])
+                                item.name = item.originalName;
+                            }
+                        });
+                    });
+
+                    // 4. Apply search filter
+                    if (ticketSearchQuery.value) {
+                        return tempTickets.filter(t => t.name.includes(ticketSearchQuery.value) || t.orderId.includes(ticketSearchQuery.value));
+                    }
+
+                    return tempTickets;
                 });
 
                 const availableTickets = computed(() => {
@@ -1992,6 +2027,7 @@
                 
                 const executeBatchRedeem = () => {
                     if (batchSelection.value.size === 0) return;
+                    // REPLACED ALERT WITH MODAL
                     openModalSafe('batchRedeemConfirmModal');
                 };
 
