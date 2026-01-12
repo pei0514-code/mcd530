@@ -352,7 +352,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.79</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.80</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -399,7 +399,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.79</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.80</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -744,6 +744,29 @@
                                 <span v-else>確認核銷</span>
                             </button>
                             <button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">還沒使用</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Batch Redeem Confirm Modal (Replaces window.confirm) -->
+        <div class="modal fade" id="batchRedeemConfirmModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;">
+                <div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden">
+                     <div class="modal-header border-0 pb-0 justify-content-end"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                    <div class="modal-body px-4 pb-4">
+                        <div class="mb-3 text-warning"><i class="fas fa-check-double fa-4x"></i></div>
+                        <h5 class="fw-bold mb-2">批量核銷確認</h5>
+                        <p class="text-muted small mb-2">您選取了 <span class="text-danger fw-bold fs-5">{{ batchSelection.size }}</span> 張票券</p>
+                        <p class="text-dark fw-bold mb-4">請確認您已向店家出示所有畫面！</p>
+                        
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-warning rounded-pill fw-bold shadow-sm" @click="confirmBatchRedeemAction" :disabled="isRedeeming">
+                                <span v-if="isRedeeming"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</span>
+                                <span v-else>確認全部核銷</span>
+                            </button>
+                            <button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">取消</button>
                         </div>
                     </div>
                 </div>
@@ -1761,10 +1784,12 @@
                 const allTickets = computed(() => {
                     const items = [];
                     orderHistory.value.forEach(order => {
-                        if ((order.isShipped === true || String(order.isShipped) === 'true') && (order.fulfillment || (order.generatedTickets && order.generatedTickets.length > 0))) {
-                            if (order.generatedTickets && order.generatedTickets.length > 0) {
+                        // Use 'tickets' from backend instead of 'generatedTickets'
+                        // This property contains row-based correct product names
+                        if ((order.isShipped === true || String(order.isShipped) === 'true') && (order.fulfillment || (order.tickets && order.tickets.length > 0))) {
+                            if (order.tickets && order.tickets.length > 0) {
                                 const serverLog = order.redemptionLog || "";
-                                order.generatedTickets.forEach((t, i) => {
+                                order.tickets.forEach((t, i) => {
                                     const isServerRedeemed = serverLog.includes(`[${i+1}]已核銷`);
                                     const isLocalRedeemed = !!redeemedStatus.value[t.url];
                                     const isRedeemed = isServerRedeemed || isLocalRedeemed;
@@ -1804,6 +1829,7 @@
                                     });
                                 });
                             } else if (order.fulfillment) {
+                                // Fallback only if 'tickets' array is missing (should not happen in new version)
                                 const links = order.fulfillment.split('\n').filter(l => l.trim().length > 0);
                                 const totalItemRealQty = order.items ? order.items.reduce((sum, it) => {
                                     const qty = Number(it.quantity) || 0;
@@ -1963,10 +1989,13 @@
                     }
                     batchSelection.value = new Set(batchSelection.value);
                 };
-                const executeBatchRedeem = async () => {
+                
+                const executeBatchRedeem = () => {
                     if (batchSelection.value.size === 0) return;
-                    if (!confirm(`確定要核銷選取的 ${batchSelection.value.size} 張票券嗎？\n請確認您已向店家出示！`)) return;
-                    
+                    openModalSafe('batchRedeemConfirmModal');
+                };
+
+                const confirmBatchRedeemAction = async () => {
                     isRedeeming.value = true;
                     const now = new Date();
                     const timeStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
@@ -2002,6 +2031,7 @@
                     }
                     
                     isRedeeming.value = false;
+                    hideModalSafe('batchRedeemConfirmModal');
                     isBatchMode.value = false;
                     batchSelection.value.clear();
                     showToast(`成功核銷 ${ticketsToProcess.length} 張票券！`);
@@ -2012,7 +2042,7 @@
                 giftOnlyItemsNames, driveOnlyItemsNames, getHistoryItemName, ticketSortType, totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, validUnreportedOrders, isPendingAlertDismissed, isGroupExpired, dismissPendingAlertForever, isRepaying, goToPayFromPending, getOrderItems, getOrderAmount,
                 groupedUnreportedOrders, isGroupSelected, toggleGroupSelection, relatedOrdersToCancel, showSortMenu, sortType, setSortType, walletUnread,
                 confirmMergedWarning,
-                isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, executeBatchRedeem
+                isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, executeBatchRedeem, confirmBatchRedeemAction
                  };
             }
         }).mount('#app');
