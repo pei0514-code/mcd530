@@ -284,17 +284,16 @@
 
         [v-cloak] { display: none; }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
-  }
-}
-</script>
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@^19.2.3",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+        "react/": "https://esm.sh/react@^19.2.3/",
+        "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
+      }
+    }
+    </script>
 </head>
 <body>
 
@@ -379,7 +378,16 @@
                 <div class="text-danger mb-3"><i class="fas fa-exclamation-triangle fa-3x"></i></div>
                 <h5 class="fw-bold">無法讀取資料</h5>
                 <p class="text-muted small mb-2">{{ errorMsg }}</p>
-                <button class="btn btn-outline-danger rounded-pill px-4" @click="reloadApp">重試</button>
+                <div class="alert alert-light border d-inline-block text-start p-3 rounded-3 shadow-sm" style="max-width:300px; font-size:12px;">
+                    <strong>🔧 解決方法：</strong><br>
+                    請至 Apps Script 檢查部署設定：<br>
+                    1. 管理部署作業 > 編輯<br>
+                    2. 確認「誰可以存取 (Who has access)」<br>
+                    3. 務必選取 <strong>「任何人 (Anyone)」</strong>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-outline-danger rounded-pill px-4" @click="reloadApp">重試</button>
+                </div>
             </div>
             
             <div v-else-if="products.length === 0" class="text-center py-5">
@@ -422,11 +430,21 @@
 
         <div class="layout-switcher">
             <div class="layout-options" :class="{ show: showLayoutMenu }">
-                <div class="opt-item" :class="{ active: viewMode === 'xlarge' }" @click="setViewMode('xlarge')"><span>超大圖</span><i class="fas fa-square"></i></div>
-                <div class="opt-item" :class="{ active: viewMode === 'large' }" @click="setViewMode('large')"><span>大圖示</span><i class="fas fa-th-large"></i></div>
-                <div class="opt-item" :class="{ active: viewMode === 'medium' }" @click="setViewMode('medium')"><span>中圖示</span><i class="fas fa-th"></i></div>
-                <div class="opt-item" :class="{ active: viewMode === 'small' }" @click="setViewMode('small')"><span>小圖示</span><i class="fas fa-border-all"></i></div>
-                <div class="opt-item" :class="{ active: viewMode === 'xsmall' }" @click="setViewMode('xsmall')"><span>超小圖</span><i class="fas fa-border-none"></i></div>
+                <div class="opt-item" :class="{ active: viewMode === 'xlarge' }" @click="setViewMode('xlarge')">
+                    <span>超大圖</span><i class="fas fa-square"></i>
+                </div>
+                <div class="opt-item" :class="{ active: viewMode === 'large' }" @click="setViewMode('large')">
+                    <span>大圖示</span><i class="fas fa-th-large"></i>
+                </div>
+                <div class="opt-item" :class="{ active: viewMode === 'medium' }" @click="setViewMode('medium')">
+                    <span>中圖示</span><i class="fas fa-th"></i>
+                </div>
+                <div class="opt-item" :class="{ active: viewMode === 'small' }" @click="setViewMode('small')">
+                    <span>小圖示</span><i class="fas fa-border-all"></i>
+                </div>
+                <div class="opt-item" :class="{ active: viewMode === 'xsmall' }" @click="setViewMode('xsmall')">
+                    <span>超小圖</span><i class="fas fa-border-none"></i>
+                </div>
             </div>
             <div class="btn-layout" @click="showLayoutMenu = !showLayoutMenu; showSortMenu = false;">
                 <i class="fas fa-columns"></i>
@@ -497,6 +515,22 @@
                             <div class="option-btn btn btn-outline-danger w-50 rounded-pill" :class="{ active: deliveryMethod === 'screenshot', disabled: !canSelectDrive }" @click="canSelectDrive && (deliveryMethod = 'screenshot')">📸 優先截圖</div>
                             <div class="option-btn btn btn-outline-danger w-50 rounded-pill" :class="{ active: deliveryMethod === 'gift', disabled: !canSelectGift }" @click="canSelectGift && (deliveryMethod = 'gift')">🎁 優先momo轉贈</div>
                         </div>
+                        <div v-if="!canSelectGift && !canSelectDrive" class="text-danger small text-center mb-2 fw-bold">⚠️ 所選商品庫存不足</div>
+                        <div v-else-if="!canSelectGift" class="text-muted small text-center mb-2" style="font-size: 11px;">* 您選擇的商品目前無轉贈庫存，僅支援截圖發送</div>
+                        <div v-else-if="!canSelectDrive" class="text-muted small text-center mb-2" style="font-size: 11px;">* 此商品目前截圖庫存不足，惟仍可改手動截圖發送(需人工處理)</div>
+
+                        <div v-if="deliveryMethod === 'screenshot' && giftOnlyItemsNames.length > 0" class="alert alert-warning d-flex align-items-center p-2 mb-3" style="font-size: 12px; font-weight: 700;">
+                             <i class="fas fa-exclamation-triangle me-2 text-warning fs-5"></i>
+                             <div>⚠️ {{ giftOnlyItemsNames.join('、') }} 為轉贈商品，截圖發送需等待客服人工處理，建議改選「優先轉贈」以加速領取。</div>
+                        </div>
+                        <div v-if="deliveryMethod === 'gift' && driveOnlyItemsNames.length > 0" class="alert alert-warning d-flex align-items-center p-2 mb-3" style="font-size: 12px; font-weight: 700;">
+                             <i class="fas fa-exclamation-circle me-2 text-warning fs-5"></i>
+                             <div>⚠️ {{ driveOnlyItemsNames.join('、') }} 僅支援截圖發送，系統將自動分成2個訂單，並各別進行發貨。</div>
+                        </div>
+
+                        <div class="alert alert-danger d-flex align-items-center p-2 mb-3" style="font-size: 13px; font-weight: 700;">
+                             <i class="fas fa-stopwatch me-2 fs-4"></i><div>⚠️ 為維護庫存管理，訂單成立後請於 <span class="text-decoration-underline">30 分鐘內</span> 完成付款，逾時系統將自動取消訂單。優先截圖使用中信轉帳將採取自動發券。</div>
+                        </div>
                         
                         <div v-if="deliveryMethod === 'gift' || (deliveryMethod === 'screenshot' && giftOnlyItemsNames.length > 0 && false)" class="mb-3 p-3 bg-light rounded-4 border" :style="{ display: deliveryMethod === 'screenshot' ? 'none' : 'block' }">
                             <div class="form-check mb-3" v-if="!canSelectDrive">
@@ -508,15 +542,20 @@
                             <div v-if="!requestManualScreenshot">
                                 <div class="mb-2"><label class="form-label-small text-danger">您的momo姓名 (必填)</label><input type="text" v-model="giftInfo.name" class="form-control rounded-pill" placeholder="請輸入收件人姓名"></div>
                                 <div><label class="form-label-small text-danger">您的momo電話 (必填)</label><input type="tel" v-model="giftInfo.phone" class="form-control rounded-pill" placeholder="請輸入收件人電話"></div>
+                                <div class="text-danger small fw-bold mt-1">※如不確定有無momo會員請使用優先截圖</div>
+                            </div>
+                            <div v-else class="small text-muted mb-2">
+                                <i class="fas fa-info-circle me-1"></i>已選擇手動截圖，無須填寫 momo 資料。
                             </div>
                         </div>
-                        <label class="form-label-small">付款帳號資訊</label>
+                        <label class="form-label-small">付款帳號資訊(並非您的匯款銀行)</label>
                         <div class="mb-3 payment-grid">
                              <div v-for="bank in bankAccounts" :key="bank.code" class="payment-option" :class="{ active: selectedPayment === bank.code }" @click="togglePayment(bank.code)">
                                   <i class="fas fa-university text-muted payment-icon"></i>
                                   <div style="overflow: hidden; flex: 1;">
                                       <div class="small fw-bold text-truncate">{{ bank.name }}</div>
                                       <div v-if="bank.note && !(deliveryMethod === 'gift' && bank.code === '822')" class="text-danger fw-bold" style="font-size: 10px;">{{ bank.note }}</div>
+                                      <div v-if="bank.code === '396'" class="text-muted" style="font-size: 10px;">戶名：sue</div>
                                   </div>
                                   <i class="fas fa-dot-circle text-danger ms-1" v-if="selectedPayment === bank.code"></i><i class="far fa-circle text-muted ms-1" v-else></i>
                              </div>
@@ -556,12 +595,6 @@
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <div class="fw-bold text-dark" style="font-size: 13px;">單號：#{{ h.id }}</div>
                                     <div class="d-flex gap-1">
-                                        <button v-if="!h.isShipped && (h.isPaid || (h.paymentNote && h.paymentNote.length > 1))" 
-                                                class="btn btn-sm btn-outline-primary fw-bold" 
-                                                style="font-size: 10px; padding: 2px 6px; border-radius: 4px;"
-                                                @click="triggerShipment(h.id)">
-                                            <i class="fas fa-tools me-1"></i>嘗試補發
-                                        </button>
                                         <span class="status-badge" :class="getStatusBadge(h).class">{{ getStatusBadge(h).text }}</span>
                                     </div>
                                 </div>
@@ -662,16 +695,6 @@
             </div>
         </div>
 
-        <!-- Hidden payment form modal triggers logic but UI is separate or reused? -->
-        <!-- Based on code, openPaymentForm sets showPaymentForm=true, which might be another modal or view? -->
-        <!-- Looking at original vue code, payment form seems to be inside cart or separate? -->
-        <!-- Actually in the provided code in turn 2, there is no separate payment modal HTML block shown except "unreportedModal". -->
-        <!-- But "successModal" calls "openPaymentForm". Let's assume there is a payment input area either in cart or a separate modal I need to restore? -->
-        <!-- The user's code had "showPaymentForm" ref. And in the Cart Modal there was payment-grid. -->
-        <!-- Wait, looking at "openPaymentForm" function in previous turn: it sets showPaymentForm=true. -->
-        <!-- AND there was a `v-if="showPaymentForm"` section presumably? -->
-        <!-- I will add a Payment Report Modal to be safe. -->
-        
         <div class="modal fade" id="paymentReportModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;">
                  <div class="modal-content border-0 rounded-4 shadow-lg">
