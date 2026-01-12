@@ -90,7 +90,6 @@
         .layout-options, .sort-options { position: absolute; bottom: 65px; left: 0; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid #eee; padding: 5px; display: none; flex-direction: column; gap: 5px; min-width: 140px; }
         .layout-options.show, .sort-options.show { display: flex; }
         .opt-item { padding: 10px 15px; font-size: 13px; font-weight: 800; border-radius: 10px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: space-between; color: #555; }
-        .opt-item:active { background: #f5f5f5; }
         .opt-item.active { background: var(--brand-red); color: white; }
 
         .line-float { position: fixed; bottom: 85px; right: 20px; width: 54px; height: 54px; background: var(--line-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 26px; box-shadow: 0 8px 20px rgba(6, 199, 85, 0.3); z-index: 1001; text-decoration: none; border: 2px solid white; transition: 0.2s; }
@@ -302,7 +301,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.71</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.72</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -349,7 +348,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.71</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.72</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -1285,7 +1284,7 @@
                     if (viewMode.value === 'xsmall') return 'col-2'; // 6 per row
                     return 'col-4';
                 });
-                const categories = computed(() => [...new Set(products.value.map(p => p.category))]);
+                const categories = computed(() => [...new Set(products.value.map(p.category))]);
                 
                 const filteredProducts = computed(() => {
                     let res = currentCat.value === 'ALL' ? products.value : products.value.filter(p => p.category === currentCat.value);
