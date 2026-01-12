@@ -352,7 +352,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.77</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.79</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -399,7 +399,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.77</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.79</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -614,7 +614,7 @@
                                   <i class="fas fa-dot-circle text-danger ms-1" v-if="selectedPayment === bank.code"></i><i class="far fa-circle text-muted ms-1" v-else></i>
                              </div>
                         </div>
-                        <div class="mb-3 input-group"><span class="input-group-text bg-white border-end-0 rounded-start-pill"><i class="fas fa-mobile-alt text-muted"></i></span><input type="tel" v-model="userContact.phone" class="form-control form-control-pill border-start-0" placeholder="聯絡手機 (選填，方便客服核對)"></div>
+                        <div class="mb-3 input-group"><span class="input-group-text bg-white border-end-0 rounded-start-pill"><i class="fas fa-mobile-alt text-muted"></i></span><input type="tel" v-model="userContact.phone" class="form-control form-control-pill border-start-0" :placeholder="userProfile.email ? '聯絡手機 (Email: ' + userProfile.email + ')' : '聯絡手機 (選填，方便客服核對)'"></div>
                         <div class="terms-box"><div class="terms-title">📜 購買需知</div>1. 電子票券履約期限為取得後約 30 天內兌換，為免遺忘，請儘速兌換。<br>2. 票券兌換依商家不同，請參考客服訊息，截圖畫面通常即可使用。<br>3. 逾期將失效恕無法補發或退款。<br>4. 麥當勞每次交易最多兌換 5 張，可重複多次兌換。<br>5. 取消兌換後序號會鎖定 5 分鐘。<br>6. 自備環保杯可依店家規定折抵 5-10 元。<br>7. 效期以客服提供之圖片或說明為主。</div>
                         <label class="d-flex align-items-center gap-2 mb-3"><input type="checkbox" v-model="acceptTerms"><span class="small fw-bold">我已閱讀並同意「購買需知」</span></label>
                     </div>
@@ -1281,6 +1281,13 @@
                                 await liff.init({ liffId: setRes.liffId });
                                 if (liff.isLoggedIn()) {
                                     userProfile.value = await liff.getProfile();
+                                    
+                                    // Fetch email from decoded ID Token
+                                    const idToken = liff.getDecodedIDToken();
+                                    if (idToken && idToken.email) {
+                                        userProfile.value.email = idToken.email;
+                                    }
+                                    
                                     fetchOrderStatus(userProfile.value.userId);
                                 } else {
                                     fetchOrderStatus(guestUuid.value);
