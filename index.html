@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -717,7 +719,12 @@
                     </div>
                     
                     <div v-if="isBatchMode" class="batch-bar">
-                        <div class="fw-bold">已選 <span class="text-danger fs-5">{{ batchSelection.size }}</span> 張</div>
+                        <div class="d-flex flex-column justify-content-center">
+                            <div class="fw-bold mb-1">已選 <span class="text-danger fs-5">{{ batchSelection.size }}</span> 張</div>
+                            <button class="btn btn-outline-dark btn-sm rounded-pill fw-bold" @click="selectAllTickets">
+                                <i class="fas fa-check-double me-1"></i>{{ batchSelection.size === currentDisplayTickets.filter(t => !t.isRedeemed).length && batchSelection.size > 0 ? '取消全選' : '全選' }}
+                            </button>
+                        </div>
                         <button class="btn btn-warning rounded-pill fw-bold shadow px-4" @click="executeBatchRedeem" :disabled="batchSelection.size === 0 || isRedeeming">
                             <span v-if="isRedeeming"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</span>
                             <span v-else><i class="fas fa-check-circle me-2"></i>確認核銷 ({{ batchSelection.size }})</span>
@@ -1897,8 +1904,11 @@
                                 item.isMergedOrder = false; 
                             } else {
                                 // Only 1 file found. 
-                                // Trust backend 'isMerged' flag (which is true only if filename has multiple date tags like [0330][0330])
-                                item.name = item.originalName;
+                                // Trust backend 'isMerged' flag OR check filename/info for [xxxx][xxxx] pattern
+                                // v2.86 FIX: Also check if name has multi-date tags which implies merged file
+                                if (item.name && /\[\d{4}\].*\[\d{4}\]/.test(item.name)) {
+                                    item.isMergedOrder = true;
+                                }
                             }
                         });
                     });
@@ -2025,6 +2035,23 @@
                     batchSelection.value = new Set(batchSelection.value);
                 };
                 
+                // NEW: Select All
+                const selectAllTickets = () => {
+                    const allKeys = currentDisplayTickets.value
+                        .filter(t => !t.isRedeemed)
+                        .map(t => `${t.orderId}_${t.ticketIndex}`);
+                    
+                    // Check if already all selected
+                    const allSelected = allKeys.length > 0 && allKeys.every(k => batchSelection.value.has(k));
+                    
+                    if (allSelected) {
+                        batchSelection.value.clear();
+                    } else {
+                        allKeys.forEach(k => batchSelection.value.add(k));
+                    }
+                    batchSelection.value = new Set(batchSelection.value);
+                };
+                
                 const executeBatchRedeem = () => {
                     if (batchSelection.value.size === 0) return;
                     // REPLACED ALERT WITH MODAL
@@ -2078,7 +2105,7 @@
                 giftOnlyItemsNames, driveOnlyItemsNames, getHistoryItemName, ticketSortType, totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, validUnreportedOrders, isPendingAlertDismissed, isGroupExpired, dismissPendingAlertForever, isRepaying, goToPayFromPending, getOrderItems, getOrderAmount,
                 groupedUnreportedOrders, isGroupSelected, toggleGroupSelection, relatedOrdersToCancel, showSortMenu, sortType, setSortType, walletUnread,
                 confirmMergedWarning,
-                isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, executeBatchRedeem, confirmBatchRedeemAction
+                isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, executeBatchRedeem, confirmBatchRedeemAction, selectAllTickets
                  };
             }
         }).mount('#app');
