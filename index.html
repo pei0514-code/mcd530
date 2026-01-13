@@ -1636,11 +1636,63 @@
                         fallbackCopyTextToClipboard(text);
                     }
                 };
+const triggerStockSync = async () => {
+    isAdminSyncing.value = true;
+    try {
+        await fetch(API_URL, {
+            method: 'POST',
+            // mode: 'no-cors', 
+            body: JSON.stringify({ action: 'adminSyncStock' })
+        });
+        showToast('已觸發同步指令');
+        
+        // ✅ 這裡使用了正確的箭頭函數寫法，不會再觸發 CSP 錯誤
+        setTimeout(() => {
+            initApp();
+        }, 3000);
+    } catch (e) {
+        showToast('同步請求失敗');
+    } finally {
+        isAdminSyncing.value = false;
+    }
+}; // ⬅️ 這裡補上了分號，防止影響下一行
 
-                const triggerStockSync = async () => { isAdminSyncing.value = true; try { await fetch(API_URL, { method: 'POST', // mode: 'no-cors', body: JSON.stringify({ action: 'adminSyncStock' }) }); showToast('已觸發同步指令'); setTimeout(() => { initApp(); }, 3000); } catch(e) { showToast('同步請求失敗'); } finally { isAdminSyncing.value = false; } };
-                const triggerTimeoutCheck = async () => { isAdminCleaning.value = true; try { await fetch(API_URL, { method: 'POST', // mode: 'no-cors', body: JSON.stringify({ action: 'adminCheckTimeout' }) }); showToast('已觸發清理指令'); } catch(e) { showToast('清理請求失敗'); } finally { isAdminCleaning.value = false; } };
-                const triggerPaymentCheck = async () => { isAdminChecking.value = true; try { await fetch(API_URL, { method: 'POST', // mode: 'no-cors', body: JSON.stringify({ action: 'adminCheckPayments' }) }); showToast('已觸發查帳指令'); setTimeout(() => { fetchAdminDashboard(); }, 2000); } catch(e) { showToast('查帳請求失敗'); } finally { isAdminChecking.value = false; } };
+const triggerTimeoutCheck = async () => {
+    isAdminCleaning.value = true;
+    try {
+        await fetch(API_URL, {
+            method: 'POST',
+            // mode: 'no-cors', 
+            body: JSON.stringify({ action: 'adminCheckTimeout' })
+        });
+        showToast('已觸發清理指令');
+    } catch (e) {
+        showToast('清理請求失敗');
+    } finally {
+        isAdminCleaning.value = false;
+    }
+}; // ⬅️ 這裡補上了分號
 
+const triggerPaymentCheck = async () => {
+    isAdminChecking.value = true;
+    try {
+        await fetch(API_URL, {
+            method: 'POST',
+            // mode: 'no-cors', 
+            body: JSON.stringify({ action: 'adminCheckPayments' })
+        });
+        showToast('已觸發查帳指令');
+        
+        // ✅ 正確寫法
+        setTimeout(() => {
+            fetchAdminDashboard();
+        }, 2000);
+    } catch (e) {
+        showToast('查帳請求失敗');
+    } finally {
+        isAdminChecking.value = false;
+    }
+}; // ⬅️ 這裡補上了分號
                 onMounted(() => { initApp(); setInterval(() => { now.value = Date.now(); }, 1000); });
                 watch(acceptTerms, (newVal) => { safeSetStorage('mm_accept_terms', newVal); });
 
@@ -2095,6 +2147,7 @@
     </script>
 </body>
 </html>
+
 
 
 
