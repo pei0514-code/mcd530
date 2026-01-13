@@ -597,6 +597,14 @@
                                 </div>
                             </div>
                         </div>
+                        <div v-if="isAdmin" class="bg-warning bg-opacity-10 p-2 rounded border border-warning mb-3">
+    <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="cartTestMode" v-model="isCartTestMode">
+        <label class="form-check-label fw-bold text-dark small" for="cartTestMode">
+            🛠️ 管理員測試下單 (並不會扣庫存)
+        </label>
+    </div>
+</div>
                         <label class="form-label-small">領取方式優先順序</label>
                         <div class="option-group d-flex gap-2 mb-3">
                             <div class="option-btn btn btn-outline-danger w-50 rounded-pill" :class="{ active: deliveryMethod === 'screenshot', disabled: !canSelectDrive }" @click="canSelectDrive && (deliveryMethod = 'screenshot')">📸 優先截圖</div>
@@ -1205,6 +1213,7 @@
                 const isLoadingData = ref(true);
                 const retryCount = ref(0);
                 const isSubmitting = ref(false);
+                const isCartTestMode = ref(false);
                 const acceptTerms = ref(safeGetStorage('mm_accept_terms', 'false') === 'true');
                 const viewMode = ref(safeGetStorage('mm_view_mode', 'medium'));
                 const showLayoutMenu = ref(false);
@@ -1804,7 +1813,7 @@
 
                     if (driveItems.length > 0) {
                          const oid = giftItems.length > 0 ? `${baseOrderId}-1` : baseOrderId; generatedOrderIds.push(oid); const total = driveItems.reduce((a,b) => a + (b.price*b.quantity), 0); const record = { id: oid, timestamp: timeStr, totalAmount: total, items: driveItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) }; records.push(record);
-                         orderPromises.push(fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ ...record, phone: userContact.value.phone, email: userProfile.value.email || '', deliveryMethod: '截圖發送', momoName: '', momoPhone: '', userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', userId: getEffectiveUserId(), initialPaymentDesc: initialPaymentDesc }) }));
+                         orderPromises.push(fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ ...record, phone: userContact.value.phone, email: userProfile.value.email,testMode: isCartTestMode.value || '', deliveryMethod: '截圖發送', momoName: '', momoPhone: '', userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', userId: getEffectiveUserId(), initialPaymentDesc: initialPaymentDesc }) }));
                          let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：📸 截圖發送\n🍱 內容：\n`; driveItems.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${i.name} x${i.quantity}\n`; }); msg += `💰 小計：$${total}`; lineMessages.push(msg);
                     }
                     if (giftItems.length > 0) {
@@ -1941,7 +1950,7 @@
                 openWallet, walletFilter, showTicketImage, openVendorGuide, currentVendorGuide, availableTickets, usedTickets, currentDisplayTickets, openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery, linkifiedGuideInstruction,
                 giftOnlyItemsNames, driveOnlyItemsNames, getHistoryItemName, ticketSortType, totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, validUnreportedOrders, isPendingAlertDismissed, isGroupExpired, dismissPendingAlertForever, isRepaying, goToPayFromPending, getOrderItems, getOrderAmount,
                 groupedUnreportedOrders, isGroupSelected, toggleGroupSelection, relatedOrdersToCancel, showSortMenu, sortType, setSortType, walletUnread,
-                confirmMergedWarning,
+                confirmMergedWarning,isCartTestMode,
                 isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, executeBatchRedeem, confirmBatchRedeemAction, selectAllTickets,
                 isAdmin, openAdminLogin, verifyAdminPassword, adminPasswordInput, adminPendingOrders, fetchAdminDashboard, onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, adminStats, adminLowStockItems,
                 triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning, triggerPaymentCheck, isAdminChecking, isAdminFetchingStock, fetchLowStock,
@@ -1961,4 +1970,5 @@
     </script>
 </body>
 </html>
+
 
