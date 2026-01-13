@@ -2110,12 +2110,58 @@ if (driveItems.length > 0) {
     msg += `💰 小計：$${total}`;
     lineMessages.push(msg);
 }
-                    if (giftItems.length > 0) {
-                         const oid = driveItems.length > 0 ? `${baseOrderId}-2` : baseOrderId; generatedOrderIds.push(oid); const total = giftItems.reduce((a,b) => a + (b.price*b.quantity), 0); const record = { id: oid, timestamp: timeStr, totalAmount: total, items: giftItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) }; records.push(record);
-                         const isManual = requestManualScreenshot.value || deliveryMethod.value === 'screenshot'; const methodStr = isManual ? '轉贈(手動截圖)' : 'momo 轉贈'; const mName = isManual ? '' : giftInfo.value.name; const mPhone = isManual ? '' : giftInfo.value.phone;
-                         orderPromises.push(fetch(API_URL, { method: 'POST', // mode: 'no-cors', body: JSON.stringify({ ...record, phone: userContact.value.phone, email: userProfile.value.email || '', deliveryMethod: methodStr, momoName: mName, momoPhone: mPhone, userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', userId: getEffectiveUserId(), initialPaymentDesc: initialPaymentDesc }) }));
-                         let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：${methodStr}\n`; if(!isManual) msg += `👤 收件：${giftInfo.value.name} / ${giftInfo.value.phone}\n`; msg += `🍱 內容：\n`; giftItems.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${i.name} x${i.quantity}\n`; }); msg += `💰 小計：$${total}`; lineMessages.push(msg);
-                    }
+               if (giftItems.length > 0) {
+    const oid = driveItems.length > 0 ? `${baseOrderId}-2` : baseOrderId;
+    generatedOrderIds.push(oid);
+
+    const total = giftItems.reduce((a, b) => a + (b.price * b.quantity), 0);
+
+    const record = {
+        id: oid,
+        timestamp: timeStr,
+        totalAmount: total,
+        items: giftItems.map(i => ({
+            name: i.name,
+            quantity: i.quantity,
+            price: i.price,
+            expiryDate: i.expiryDate
+        }))
+    };
+    records.push(record);
+
+    const isManual = requestManualScreenshot.value || deliveryMethod.value === 'screenshot';
+    const methodStr = isManual ? '轉贈(手動截圖)' : 'momo 轉贈';
+    const mName = isManual ? '' : giftInfo.value.name;
+    const mPhone = isManual ? '' : giftInfo.value.phone;
+
+    // ✅ 修正點：這裡已排版，註解不會再吃掉程式碼
+    orderPromises.push(fetch(API_URL, {
+        method: 'POST',
+        // mode: 'no-cors', 
+        body: JSON.stringify({
+            ...record,
+            phone: userContact.value.phone,
+            email: userProfile.value.email || '',
+            deliveryMethod: methodStr,
+            momoName: mName,
+            momoPhone: mPhone,
+            userName: (userProfile.value && userProfile.value.displayName) || 'GUEST',
+            userId: getEffectiveUserId(),
+            initialPaymentDesc: initialPaymentDesc
+        })
+    }));
+
+    let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：${methodStr}\n`;
+    if (!isManual) msg += `👤 收件：${giftInfo.value.name} / ${giftInfo.value.phone}\n`;
+    msg += `🍱 內容：\n`;
+    
+    giftItems.forEach((i, idx) => {
+        msg += `${NUMBERS[idx] || (idx + 1)} ${i.name} x${i.quantity}\n`;
+    });
+    
+    msg += `💰 小計：$${total}`;
+    lineMessages.push(msg);
+}
                     Promise.all(orderPromises).then(() => {
                          let finalMsg = `🎉 訂單已送出！\n\n`; if (lineMessages.length > 1) finalMsg += `⚠️ 因商品屬性不同，已自動拆分為兩筆訂單：\n\n`; finalMsg += lineMessages.join('\n\n----------------\n\n'); finalMsg += `\n\n💰 應付總額：$${totalPrice.value}\n`; finalMsg += `🏦 匯款資訊：\n`; selectedBankInfos.value.forEach(b => { finalMsg += `${b.name}: ${b.account}\n`; }); finalMsg += `⚠️ 請於匯款後告知客服匯款相關資訊`;
                          if (liff.isInClient()) { liff.sendMessages([{ type: 'text', text: finalMsg }]).catch(e => console.error(e)); }
@@ -2342,6 +2388,7 @@ if (driveItems.length > 0) {
     </script>
 </body>
 </html>
+
 
 
 
