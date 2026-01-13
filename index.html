@@ -354,7 +354,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.91</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.92</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -402,7 +402,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.91</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.92</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -766,7 +766,7 @@
             </div>
         </div>
         
-        <!-- FIXED: Added Batch Redeem Confirm Modal -->
+        <!-- Batch Redeem Confirm Modal -->
         <div class="modal fade" id="batchRedeemConfirmModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;">
                 <div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden">
@@ -781,6 +781,28 @@
                             <button class="btn btn-warning rounded-pill fw-bold shadow-sm" @click="confirmBatchRedeemAction" :disabled="isRedeeming">
                                 <span v-if="isRedeeming"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</span>
                                 <span v-else>確認全部核銷</span>
+                            </button>
+                            <button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- NEW: Clear History Confirm Modal -->
+        <div class="modal fade" id="clearHistoryConfirmModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;">
+                <div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden">
+                     <div class="modal-header border-0 pb-0 justify-content-end"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                    <div class="modal-body px-4 pb-4">
+                        <div class="mb-3 text-secondary"><i class="fas fa-trash-alt fa-4x"></i></div>
+                        <h5 class="fw-bold mb-2">確定清除已核銷紀錄？</h5>
+                        <p class="text-muted small mb-2">清除後將無法在列表中查看，<br>但後台紀錄仍會保留。</p>
+                        <p class="text-danger fw-bold mb-4 fs-5">⚠️ 此操作不可恢復</p>
+                        
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-danger rounded-pill fw-bold shadow-sm" @click="confirmClearHistoryAction">
+                                確認清除
                             </button>
                             <button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">取消</button>
                         </div>
@@ -1866,6 +1888,19 @@
                     if (next <= 0) delete cart.value[p.id]; else if (next <= Number(p.stock)) cart.value[p.id] = next;
                     safeSetStorage('mm_cart_storage', JSON.stringify(cart.value));
                 };
+                
+                // Helper functions for shared stock logic
+                const getCleanName = (name) => {
+                    if (!name) return "";
+                    // Removes (2組), (2份), etc. similar to backend logic
+                    return name.replace(/\s*[\(（]\d+[組份張].*?[\)）]/g, '').trim();
+                };
+                
+                const getMultiplier = (name) => {
+                    if (!name) return 1;
+                    const match = name.match(/[\(（](\d+)[組份張]/);
+                    return match ? parseInt(match[1], 10) : 1;
+                };
 
                 const handleCheckout = async () => {
                     const errors = [];
@@ -1886,6 +1921,44 @@
                         hideModalSafe('cartModal'); showToast("訪客模式需填寫手機號碼才能購買");
                         setTimeout(() => { openModalSafe('guestWarningModal'); }, 300); return;
                     }
+                    
+                    // --- NEW: Shared Stock Validation Logic (Frontend) ---
+                    const stockCheckMap = {};
+                    
+                    // 1. Calculate Aggregate Demand
+                    cartItems.value.forEach(item => {
+                        const clean = getCleanName(item.name);
+                        const mult = getMultiplier(item.name);
+                        if (!stockCheckMap[clean]) {
+                            stockCheckMap[clean] = { required: 0, maxRawStock: 0, familyName: clean };
+                        }
+                        stockCheckMap[clean].required += (item.quantity * mult);
+                    });
+                    
+                    // 2. Determine Max Raw Supply for each family from products list
+                    products.value.forEach(p => {
+                        const clean = getCleanName(p.name);
+                        if (stockCheckMap[clean]) {
+                            const mult = getMultiplier(p.name);
+                            // Backend sends calculated stock = floor(raw / multiplier)
+                            // So raw stock approx = p.stock * multiplier. 
+                            // We take the MAX of these estimates for the family to be safe/lenient, 
+                            // or ideally the one with multiplier=1 if it exists.
+                            const estimatedRaw = Number(p.stock) * mult;
+                            if (estimatedRaw > stockCheckMap[clean].maxRawStock) {
+                                stockCheckMap[clean].maxRawStock = estimatedRaw;
+                            }
+                        }
+                    });
+                    
+                    // 3. Compare Demand vs Supply
+                    Object.values(stockCheckMap).forEach(group => {
+                        if (group.required > group.maxRawStock) {
+                            errors.push(`商品【${group.familyName}】系列加總數量超過庫存上限 (需求:${group.required}, 庫存:${group.maxRawStock})`);
+                        }
+                    });
+                    // -----------------------------------------------------
+
                     if (errors.length > 0) { showAlert(errors); return; }
                     
                     isSubmitting.value = true;
@@ -2210,14 +2283,19 @@
                     });
                 });
                 
-                // NEW: Clear History Function
+                // NEW: Clear History Function replaced by Modal Trigger
                 const clearRedeemedHistory = () => {
-                    if (confirm('確定要隱藏目前已顯示的核銷紀錄嗎？\n(此操作僅隱藏顯示，不影響後台資料)')) {
-                        const currentUsed = usedTickets.value;
-                        currentUsed.forEach(t => hiddenTicketKeys.value.add(`${t.orderId}_${t.ticketIndex}`));
-                        safeSetStorage('mm_hidden_tickets', JSON.stringify([...hiddenTicketKeys.value]));
-                        showToast('紀錄已清除');
-                    }
+                    // Open Modal instead of confirm()
+                    openModalSafe('clearHistoryConfirmModal');
+                };
+                
+                // NEW: Actual Action for Clear History
+                const confirmClearHistoryAction = () => {
+                    const currentUsed = usedTickets.value;
+                    currentUsed.forEach(t => hiddenTicketKeys.value.add(`${t.orderId}_${t.ticketIndex}`));
+                    safeSetStorage('mm_hidden_tickets', JSON.stringify([...hiddenTicketKeys.value]));
+                    showToast('紀錄已清除');
+                    hideModalSafe('clearHistoryConfirmModal');
                 };
                 
                 const currentDisplayTickets = computed(() => {
@@ -2379,7 +2457,7 @@
                 isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, executeBatchRedeem, confirmBatchRedeemAction, selectAllTickets,
                 isAdmin, openAdminLogin, verifyAdminPassword, adminPasswordInput, adminPendingOrders, fetchAdminDashboard, onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, adminStats,
                 triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning, triggerPaymentCheck, isAdminChecking,
-                clearRedeemedHistory // Export new function
+                clearRedeemedHistory, confirmClearHistoryAction // Export new function
                  };
             }
         }).mount('#app');
