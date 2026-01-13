@@ -407,7 +407,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.99 P2</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.99 P3</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -841,16 +841,18 @@
                                     <i class="fas fa-calendar-times me-1"></i>即將到期
                                  </button>
                              </div>
-                             <button class="btn btn-sm btn-dark rounded-pill fw-bold shadow-sm w-100" @click="openAdminProductManager">
-                                <i class="fas fa-boxes me-1"></i>商品管理
-                             </button>
+                             <div class="d-flex gap-2">
+                                 <button class="btn btn-sm btn-dark rounded-pill fw-bold shadow-sm w-100" @click="openAdminProductManager">
+                                    <i class="fas fa-boxes me-1"></i>商品管理
+                                 </button>
+                                 <button class="btn btn-sm btn-outline-dark rounded-pill fw-bold shadow-sm w-100" @click="triggerStockSync" :disabled="isAdminSyncing">
+                                    <i class="fas fa-sync me-1"></i>{{ isAdminSyncing ? '同步中' : '強制同步庫存' }}
+                                 </button>
+                             </div>
                         </div>
 
                         <!-- Quick Actions -->
                         <div class="d-grid gap-2 mb-3">
-                             <button class="btn btn-sm btn-outline-dark rounded-pill fw-bold shadow-sm" @click="triggerStockSync" :disabled="isAdminSyncing">
-                                <i class="fas fa-sync me-1"></i>{{ isAdminSyncing ? '同步中' : '強制同步庫存' }}
-                             </button>
                              <div class="d-flex gap-2">
                                  <button class="btn btn-sm btn-outline-secondary rounded-pill flex-fill fw-bold shadow-sm" @click="triggerTimeoutCheck" :disabled="isAdminCleaning">
                                     <i class="fas fa-broom me-1"></i>{{ isAdminCleaning ? '清理中...' : '清理逾時訂單' }}
@@ -949,8 +951,8 @@
                             <div class="col-6"><label class="form-label-small">原價</label><input type="number" class="form-control rounded-pill" v-model="editingProduct.originalPrice"></div>
                         </div>
                         <div class="row g-2 mb-2">
-                            <div class="col-6"><label class="form-label-small">截圖庫存</label><input type="number" class="form-control rounded-pill" v-model="editingProduct.driveStock"></div>
-                            <div class="col-6"><label class="form-label-small">轉贈庫存</label><input type="number" class="form-control rounded-pill" v-model="editingProduct.giftStock"></div>
+                            <div class="col-6"><label class="form-label-small">截圖庫存 (M欄)</label><input type="number" class="form-control rounded-pill" v-model="editingProduct.driveStock"></div>
+                            <div class="col-6"><label class="form-label-small">轉贈庫存 (K欄)</label><input type="number" class="form-control rounded-pill" v-model="editingProduct.giftStock"></div>
                         </div>
                         <div class="mb-2"><label class="form-label-small">圖片連結</label><input type="text" class="form-control rounded-pill" v-model="editingProduct.image"></div>
                         <div class="mb-2"><label class="form-label-small">效期 (文字)</label><input type="text" class="form-control rounded-pill" v-model="editingProduct.expiry"></div>
@@ -1445,8 +1447,14 @@
                     if (h.isShipped === true || String(h.isShipped) === 'true') return { text: '✅ 已發貨', class: 'status-shipped', canReport: false, canCancel: false };
                     if (h.paymentNote && (String(h.paymentNote).includes('取消') || String(h.paymentNote).includes('失效'))) return { text: '❌ 已失效', class: 'status-invalid', canReport: false, canCancel: false };
                     if (h.isPaid === true || String(h.isPaid) === 'true') return { text: '💰 已付款', class: 'status-paid', canReport: false, canCancel: false };
-                    if (h.paymentNote && String(h.paymentNote).length > 1) return { text: '⏳ 待核對', class: 'status-pending', canReport: true, canCancel: true };
-                    return { text: '💰 待付款', class: 'status-pending', canReport: true, canCancel: true };
+                    
+                    // v2.99 P3: Strict check for initial payment note
+                    // If note is empty or starts with [待] (initial auto-fill), treat as Pending Payment
+                    const note = String(h.paymentNote || "");
+                    const isInitial = note.trim() === "" || note.startsWith("[待]");
+                    
+                    if (!isInitial) return { text: '⏳ 待核對', class: 'status-pending', canReport: true, canCancel: true }; // User reported
+                    return { text: '💰 待付款', class: 'status-pending', canReport: true, canCancel: true }; // Not reported yet
                 };
                 // v2.99 Patch 2: Improved Date Parsing for Timer Stability
                 const safeParseDate = (dateStr) => { 
@@ -1458,10 +1466,27 @@
                     }
                     return new Date(dateStr); 
                 };
-                const isOrderExpired = (h) => { const badge = getStatusBadge(h); if (badge.class !== 'status-pending') return false; if (h.paymentNote && h.paymentNote.trim().length > 0) return false; const orderDate = safeParseDate(h.timestamp); if (isNaN(orderDate.getTime())) return false; const diffMs = now.value - orderDate.getTime(); return diffMs >= (30 * 60 * 1000); };
+                const isOrderExpired = (h) => { 
+                    const badge = getStatusBadge(h); 
+                    // v2.99 P3: Only count down if status is strictly "待付款" (Pending Payment)
+                    if (badge.text !== '💰 待付款') return false; 
+                    
+                    const orderDate = safeParseDate(h.timestamp); 
+                    if (isNaN(orderDate.getTime())) return false; 
+                    const diffMs = now.value - orderDate.getTime(); 
+                    return diffMs >= (30 * 60 * 1000); 
+                };
                 const getRemainingTime = (timestamp) => { const orderDate = safeParseDate(timestamp); if (isNaN(orderDate.getTime())) return "00:00"; const targetTime = orderDate.getTime() + (30 * 60 * 1000); const remainingMs = targetTime - now.value; if (remainingMs <= 0) return "00:00"; const totalSec = Math.floor(remainingMs / 1000); const min = Math.floor(totalSec / 60); const sec = totalSec % 60; return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`; };
                 const groupedHistory = computed(() => { const groups = {}; orderHistory.value.forEach(order => { const key = order.timestamp; if (!groups[key]) groups[key] = []; groups[key].push(order); }); return Object.entries(groups).map(([ts, orders]) => ({ timestamp: ts, orders })).sort((a, b) => { const dateA = safeParseDate(a.timestamp); const dateB = safeParseDate(b.timestamp); return dateB.getTime() - dateA.getTime(); }); });
-                const getGroupTimer = (group) => { const isReported = group.orders.some(o => o.paymentNote && o.paymentNote.trim().length > 0); if (isReported) return null; const hasActivePending = group.orders.some(o => { const badge = getStatusBadge(o); return badge.class === 'status-pending' && !isOrderExpired(o); }); if (hasActivePending) { return getRemainingTime(group.timestamp); } return null; };
+                const getGroupTimer = (group) => { 
+                    // v2.99 P3: Timer logic update
+                    const hasPendingPayment = group.orders.some(o => {
+                        const badge = getStatusBadge(o);
+                        return badge.text === '💰 待付款' && !isOrderExpired(o);
+                    });
+                    if (hasPendingPayment) { return getRemainingTime(group.timestamp); } 
+                    return null; 
+                };
                 const isGroupExpired = (group) => { const pendingOrders = group.orders.filter(o => getStatusBadge(o).class === 'status-pending'); if (pendingOrders.length === 0) return false; return pendingOrders.every(o => isOrderExpired(o)); };
                 const validUnreportedOrders = computed(() => { return unreportedOrders.value.filter(oid => { const order = orderHistory.value.find(o => o.id === oid); if (!order) return false; if (isOrderExpired(order)) return false; const badge = getStatusBadge(order); return badge.class === 'status-pending'; }); });
                 const groupedUnreportedOrders = computed(() => { const groups = {}; validUnreportedOrders.value.forEach(oid => { const order = orderHistory.value.find(o => o.id === oid); if (!order) return; const baseId = oid.split('-')[0]; if (!groups[baseId]) { groups[baseId] = { baseId: baseId, ids: [], items: [], totalAmount: 0, timestamp: order.timestamp }; } groups[baseId].ids.push(oid); groups[baseId].totalAmount += (Number(order.totalAmount) || 0); if (order.items) { order.items.forEach(item => { groups[baseId].items.push(item); }); } }); return Object.values(groups).sort((a,b) => { return safeParseDate(b.timestamp).getTime() - safeParseDate(a.timestamp).getTime(); }); });
