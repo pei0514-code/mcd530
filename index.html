@@ -363,7 +363,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.99 P8</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.99 P9</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -1536,7 +1536,7 @@
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
-            mode: 'no-cors',
+           // mode: 'no-cors',
             body: JSON.stringify({
                 action: 'adminShipOrder',
                 orderId: adminShipTarget.value.orderId,
@@ -1980,6 +1980,7 @@
     </script>
 </body>
 </html>
+
 
 
 
