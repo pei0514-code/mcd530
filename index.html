@@ -407,7 +407,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.99 P3</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.99 P4</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -845,6 +845,9 @@
                                  <button class="btn btn-sm btn-dark rounded-pill fw-bold shadow-sm w-100" @click="openAdminProductManager">
                                     <i class="fas fa-boxes me-1"></i>商品管理
                                  </button>
+                                 <button class="btn btn-sm btn-primary rounded-pill fw-bold shadow-sm w-100" @click="openAdminOrderManager">
+                                    <i class="fas fa-clipboard-list me-1"></i>訂單管理
+                                 </button>
                                  <button class="btn btn-sm btn-outline-dark rounded-pill fw-bold shadow-sm w-100" @click="triggerStockSync" :disabled="isAdminSyncing">
                                     <i class="fas fa-sync me-1"></i>{{ isAdminSyncing ? '同步中' : '強制同步庫存' }}
                                  </button>
@@ -966,8 +969,80 @@
             </div>
         </div>
 
+        <!-- Admin Order Manager Modal (v2.99 Patch 4) -->
+        <div class="modal fade" id="adminOrderManagerModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+                <div class="modal-content border-0 rounded-4 shadow-lg">
+                    <div class="modal-header border-0 bg-primary text-white">
+                        <h5 class="fw-bold fs-6"><i class="fas fa-clipboard-list me-2"></i>訂單管理 (最近100筆)</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <div v-if="adminAllOrders.length === 0" class="text-center py-5 text-muted">讀取中或無訂單...</div>
+                        <div v-else class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 text-nowrap small">
+                                <thead class="table-light"><tr><th>單號</th><th>用戶</th><th>商品</th><th>金額</th><th>狀態</th><th>操作</th></tr></thead>
+                                <tbody>
+                                    <tr v-for="o in adminAllOrders" :key="o.orderId + o.productName">
+                                        <td>{{ o.orderId }}<br><span class="text-muted" style="font-size:10px;">{{ o.timestamp.substring(0,10) }}</span></td>
+                                        <td>{{ o.userName }}</td>
+                                        <td class="text-truncate" style="max-width: 120px;">{{ o.productName }} x{{ o.quantity }}</td>
+                                        <td class="text-danger fw-bold">${{ o.totalAmount }}</td>
+                                        <td>
+                                            <span v-if="o.isShipped" class="badge bg-success">已發貨</span>
+                                            <span v-else-if="o.isPaid" class="badge bg-primary">已付款</span>
+                                            <span v-else class="badge bg-secondary">待處理</span>
+                                        </td>
+                                        <td><button class="btn btn-sm btn-outline-primary rounded-pill px-3" @click="openAdminOrderEdit(o)">管理</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Order Edit Modal (v2.99 Patch 4) -->
+        <div class="modal fade" id="adminOrderEditModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 rounded-4 shadow-lg">
+                    <div class="modal-header border-0"><h5 class="fw-bold">編輯訂單</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                    <div class="modal-body p-4">
+                        <div class="mb-3 p-3 bg-light rounded border">
+                            <div class="d-flex justify-content-between mb-1"><strong>單號：</strong><span>{{ editingOrder.orderId }}</span></div>
+                            <div class="d-flex justify-content-between mb-1"><strong>商品：</strong><span>{{ editingOrder.productName }} x{{ editingOrder.quantity }}</span></div>
+                            <div class="d-flex justify-content-between"><strong>金額：</strong><span class="text-danger fw-bold">${{ editingOrder.totalAmount }}</span></div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-small">付款備註 (後五碼)</label>
+                            <input type="text" class="form-control rounded-pill" v-model="editingOrder.paymentNote">
+                        </div>
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" v-model="editingOrder.isPaid" id="editPaidCheck">
+                            <label class="form-check-label fw-bold" for="editPaidCheck">已付款</label>
+                        </div>
+                        <div class="form-check form-switch mb-4">
+                            <input class="form-check-input" type="checkbox" v-model="editingOrder.isShipped" id="editShippedCheck">
+                            <label class="form-check-label fw-bold" for="editShippedCheck">已發貨</label>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary rounded-pill fw-bold" @click="saveAdminOrder" :disabled="isSavingOrder">
+                                <span v-if="isSavingOrder"><i class="fas fa-spinner fa-spin me-2"></i>儲存中...</span>
+                                <span v-else>確認修改</span>
+                            </button>
+                            <button class="btn btn-outline-danger rounded-pill fw-bold" @click="deleteAdminOrder" :disabled="isSavingOrder">
+                                <i class="fas fa-trash-alt me-2"></i>刪除此訂單
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Admin Shipment Confirmation Modal -->
-        <div class="modal fade" id="adminShipConfirmModal" tabindex="-1">
+        <div class="modal fade" id="adminShipConfirmModal" tabindex="-1" style="z-index: 2000;">
             <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 300px;">
                 <div class="modal-content border-0 rounded-4 shadow-lg text-center">
                     <div class="modal-body p-4">
@@ -1168,6 +1243,11 @@
                 const adminProducts = ref([]);
                 const editingProduct = ref({});
                 const isSavingProduct = ref(false);
+                
+                // v2.99 Patch 4: Order Manager
+                const adminAllOrders = ref([]);
+                const editingOrder = ref({});
+                const isSavingOrder = ref(false);
 
                 const getModal = (id) => { const el = document.getElementById(id); if (!el) return null; if (typeof bootstrap !== 'undefined') { let instance = bootstrap.Modal.getInstance(el); if (!instance) { instance = new bootstrap.Modal(el); } return instance; } return null; };
                 const openModalSafe = (id) => { const modal = getModal(id); if (modal) modal.show(); };
@@ -1257,6 +1337,64 @@
                     } finally {
                         isSavingProduct.value = false;
                     }
+                };
+
+                // v2.99 Patch 4: Order Manager Functions
+                const openAdminOrderManager = async () => {
+                    openModalSafe('adminOrderManagerModal');
+                    adminAllOrders.value = [];
+                    try {
+                        const response = await fetch(`${API_URL}?action=adminGetAllOrders`);
+                        const data = await response.json();
+                        if (data.orders) adminAllOrders.value = data.orders;
+                    } catch(e) { showToast('讀取訂單失敗'); }
+                };
+
+                const openAdminOrderEdit = (o) => {
+                    editingOrder.value = { ...o };
+                    openModalSafe('adminOrderEditModal');
+                };
+
+                const saveAdminOrder = async () => {
+                    isSavingOrder.value = true;
+                    try {
+                        await fetch(API_URL, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            body: JSON.stringify({
+                                action: 'adminUpdateOrder',
+                                orderId: editingOrder.value.orderId,
+                                productName: editingOrder.value.productName,
+                                paymentNote: editingOrder.value.paymentNote,
+                                isPaid: editingOrder.value.isPaid,
+                                isShipped: editingOrder.value.isShipped
+                            })
+                        });
+                        showToast('已更新訂單');
+                        hideModalSafe('adminOrderEditModal');
+                        setTimeout(openAdminOrderManager, 1000);
+                    } catch(e) { showToast('更新失敗'); }
+                    finally { isSavingOrder.value = false; }
+                };
+
+                const deleteAdminOrder = async () => {
+                    if(!confirm('確定要刪除此訂單嗎？刪除後無法復原！')) return;
+                    isSavingOrder.value = true;
+                    try {
+                        await fetch(API_URL, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            body: JSON.stringify({
+                                action: 'adminDeleteOrder',
+                                orderId: editingOrder.value.orderId,
+                                productName: editingOrder.value.productName
+                            })
+                        });
+                        showToast('已刪除訂單');
+                        hideModalSafe('adminOrderEditModal');
+                        setTimeout(openAdminOrderManager, 1000);
+                    } catch(e) { showToast('刪除失敗'); }
+                    finally { isSavingOrder.value = false; }
                 };
 
                 const onAdminShipClick = (order) => {
@@ -1448,13 +1586,13 @@
                     if (h.paymentNote && (String(h.paymentNote).includes('取消') || String(h.paymentNote).includes('失效'))) return { text: '❌ 已失效', class: 'status-invalid', canReport: false, canCancel: false };
                     if (h.isPaid === true || String(h.isPaid) === 'true') return { text: '💰 已付款', class: 'status-paid', canReport: false, canCancel: false };
                     
-                    // v2.99 P3: Strict check for initial payment note
-                    // If note is empty or starts with [待] (initial auto-fill), treat as Pending Payment
-                    const note = String(h.paymentNote || "");
-                    const isInitial = note.trim() === "" || note.startsWith("[待]");
+                    // v2.99 Patch 3: Simplified logic for Pending Payment
+                    const note = String(h.paymentNote || "").trim();
+                    // If note is empty OR starts with [待], it's Pending Payment
+                    const isInitial = note === "" || note.startsWith("[待]");
                     
-                    if (!isInitial) return { text: '⏳ 待核對', class: 'status-pending', canReport: true, canCancel: true }; // User reported
-                    return { text: '💰 待付款', class: 'status-pending', canReport: true, canCancel: true }; // Not reported yet
+                    if (isInitial) return { text: '💰 待付款', class: 'status-pending', canReport: true, canCancel: true }; 
+                    return { text: '⏳ 待核對', class: 'status-pending', canReport: true, canCancel: true }; 
                 };
                 // v2.99 Patch 2: Improved Date Parsing for Timer Stability
                 const safeParseDate = (dateStr) => { 
@@ -1468,7 +1606,7 @@
                 };
                 const isOrderExpired = (h) => { 
                     const badge = getStatusBadge(h); 
-                    // v2.99 P3: Only count down if status is strictly "待付款" (Pending Payment)
+                    // Only count down if status is strictly "待付款"
                     if (badge.text !== '💰 待付款') return false; 
                     
                     const orderDate = safeParseDate(h.timestamp); 
@@ -1479,7 +1617,7 @@
                 const getRemainingTime = (timestamp) => { const orderDate = safeParseDate(timestamp); if (isNaN(orderDate.getTime())) return "00:00"; const targetTime = orderDate.getTime() + (30 * 60 * 1000); const remainingMs = targetTime - now.value; if (remainingMs <= 0) return "00:00"; const totalSec = Math.floor(remainingMs / 1000); const min = Math.floor(totalSec / 60); const sec = totalSec % 60; return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`; };
                 const groupedHistory = computed(() => { const groups = {}; orderHistory.value.forEach(order => { const key = order.timestamp; if (!groups[key]) groups[key] = []; groups[key].push(order); }); return Object.entries(groups).map(([ts, orders]) => ({ timestamp: ts, orders })).sort((a, b) => { const dateA = safeParseDate(a.timestamp); const dateB = safeParseDate(b.timestamp); return dateB.getTime() - dateA.getTime(); }); });
                 const getGroupTimer = (group) => { 
-                    // v2.99 P3: Timer logic update
+                    // v2.99 Patch 3: Timer logic update
                     const hasPendingPayment = group.orders.some(o => {
                         const badge = getStatusBadge(o);
                         return badge.text === '💰 待付款' && !isOrderExpired(o);
@@ -1685,7 +1823,9 @@
                 clearRedeemedHistory, confirmClearHistoryAction,
                 fetchExpiringItems, adminExpiringItems, adminBestSellers, openModalSafe,
                 // v2.99 Patch 2: Product Manager Exports
-                openAdminProductManager, adminProducts, adminEditProduct, editingProduct, saveProduct, isSavingProduct
+                openAdminProductManager, adminProducts, adminEditProduct, editingProduct, saveProduct, isSavingProduct,
+                // v2.99 Patch 4: Order Manager Exports
+                openAdminOrderManager, adminAllOrders, openAdminOrderEdit, editingOrder, saveAdminOrder, deleteAdminOrder, isSavingOrder
                  };
             }
         }).mount('#app');
