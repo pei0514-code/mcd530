@@ -1292,8 +1292,59 @@
                 const openCart = () => { openModalSafe('cartModal'); };
                 const isAdmin = computed(() => { return userProfile.value && userProfile.value.userId && ADMIN_IDS.includes(userProfile.value.userId); });
                 const openAdminLogin = () => { hideModalSafe('guideModal'); if (safeGetStorage('mm_admin_auth', '') === 'true') { fetchAdminDashboard(); openModalSafe('adminPanelModal'); } else { adminPasswordInput.value = ''; openModalSafe('adminLoginModal'); } };
-                const verifyAdminPassword = () => { if (adminPasswordInput.value === '0187') { safeSetStorage('mm_admin_auth', 'true'); hideModalSafe('adminLoginModal'); fetchAdminDashboard(); openModalSafe('adminPanelModal'); } else { showToast('密碼錯誤'); } };
+              // --- 修改後的安全驗證函式 (開始) ---
+                const verifyAdminPassword = async () => {
+                    // 1. 檢查是否有輸入
+                    if (!adminPasswordInput.value) {
+                        showToast('請輸入密碼');
+                        return;
+                    }
 
+                    // 2. 按鈕狀態：顯示讀取中，避免重複點擊
+                    const loginBtn = document.querySelector('#adminLoginModal button');
+                    const originalBtnText = loginBtn ? loginBtn.innerText : '進入';
+                    if(loginBtn) {
+                        loginBtn.disabled = true;
+                        loginBtn.innerText = '驗證中...';
+                    }
+
+                    try {
+                        // 3. 透過 GET 請求發送密碼給後端檢查 (不會在前端暴露密碼)
+                        const verifyResponse = await fetch(`${API_URL}?action=verifyAdmin&p=${encodeURIComponent(adminPasswordInput.value)}`);
+                        
+                        // 檢查網路回應
+                        if (!verifyResponse.ok) throw new Error('Network response was not ok');
+                        
+                        const verifyResult = await verifyResponse.json();
+
+                        // 4. 根據後端回傳的結果決定是否放行
+                        if (verifyResult.status === 'OK') {
+                            safeSetStorage('mm_admin_auth', 'true');
+                            hideModalSafe('adminLoginModal');
+                            
+                            // 驗證成功後，拉取後台數據
+                            fetchAdminDashboard();
+                            openModalSafe('adminPanelModal');
+                            
+                            showToast('登入成功');
+                            adminPasswordInput.value = ''; 
+                        } else {
+                            showToast('密碼錯誤');
+                            adminPasswordInput.value = ''; 
+                        }
+
+                    } catch (e) {
+                        console.error(e);
+                        showToast('驗證連線失敗，請檢查網路');
+                    } finally {
+                        // 5. 無論成功失敗，恢復按鈕狀態
+                        if(loginBtn) {
+                            loginBtn.disabled = false;
+                            loginBtn.innerText = originalBtnText;
+                        }
+                    }
+                };
+                // --- 修改後的安全驗證函式 (結束) ---
                 // Updated Admin Dashboard Fetch
                 const fetchAdminDashboard = async () => {
                     adminPendingOrders.value = [];
@@ -1910,3 +1961,4 @@
     </script>
 </body>
 </html>
+
