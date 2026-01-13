@@ -1980,15 +1980,16 @@
                 const confirmClearHistoryAction = () => { const currentUsed = usedTickets.value; currentUsed.forEach(t => hiddenTicketKeys.value.add(`${t.orderId}_${t.ticketIndex}`)); safeSetStorage('mm_hidden_tickets', JSON.stringify([...hiddenTicketKeys.value])); showToast('紀錄已清除'); hideModalSafe('clearHistoryConfirmModal'); };
                 const currentDisplayTickets = computed(() => { return walletFilter.value === 'available' ? availableTickets.value : usedTickets.value; });
                 const openWallet = () => { ticketSearchQuery.value = ''; walletUnread.value = false; safeSetStorage('mm_last_ticket_count', availableTickets.value.length); lastKnownTicketCount.value = availableTickets.value.length; hideModalSafe('historyModal'); openModalSafe('ticketModal'); fetchOrderStatus(getEffectiveUserId()); };
-                watch(availableTickets, (newVal) => { 
-                    if (newVal.length > lastKnownTicketCount.value) { 
-                        walletUnread.value = true; 
-                    } else if (newVal.length < lastKnownTicketCount.value) { 
-                        safeSetStorage('mm_last_ticket_count', newVal.length); 
-                        lastKnownTicketCount.value = newVal.length; 
+             watch(availableTickets, (newVal) => {
+                    // 1. 檢查是否有新票券 (顯示紅點)
+                    if (newVal.length > lastKnownTicketCount.value) {
+                        walletUnread.value = true;
+                    } else if (newVal.length < lastKnownTicketCount.value) {
+                        safeSetStorage('mm_last_ticket_count', newVal.length);
+                        lastKnownTicketCount.value = newVal.length;
                     }
                     
-                    // ★★★ 新增這一行：當票券列表更新時，檢查有沒有快過期的 ★★★
+                    // 2. 檢查是否有快過期的票券 (這是我們剛加的新功能)
                     if (newVal.length > 0) checkExpiryReminders();
                 });
                 const showTicketImage = (item) => { if (item.isMergedOrder && !item.isRedeemed) { pendingTicketUrl.value = item.url; itemToRedeem.value = item; openModalSafe('mergedWarningModal'); } else { window.open(item.url, '_blank'); if (!item.isRedeemed) setTimeout(() => { openRedeemConfirm(item); }, 800); } };
@@ -2094,6 +2095,7 @@
     </script>
 </body>
 </html>
+
 
 
 
