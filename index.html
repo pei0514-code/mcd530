@@ -338,6 +338,11 @@
             justify-content: space-between;
         }
 
+        /* Updated Z-Index for Manual Copy Backup Modal to appear above Admin Panel */
+        #manualCopyBackupModal {
+            z-index: 1065 !important;
+        }
+
         [v-cloak] { display: none; }
     </style>
 <script type="importmap">
@@ -354,7 +359,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.97</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.98</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -402,7 +407,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.97</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.98</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -537,7 +542,7 @@
 
         <!-- Modals -->
         
-        <!-- Manual Copy Backup Modal -->
+        <!-- Manual Copy Backup Modal (Higher Z-Index) -->
         <div class="modal fade" id="manualCopyBackupModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 300px;">
                 <div class="modal-content border-0 rounded-4 shadow-lg text-center">
@@ -823,6 +828,24 @@
                             </div>
                         </div>
 
+                        <!-- v2.98 Best Sellers Section -->
+                        <div v-if="adminBestSellers.length > 0" class="mb-3">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-white fw-bold py-2 border-bottom-0">
+                                    <i class="fas fa-fire text-danger me-2"></i>熱銷排行 (Top 5)
+                                </div>
+                                <div class="list-group list-group-flush small">
+                                    <div v-for="(item, index) in adminBestSellers" :key="index" class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center" style="max-width: 80%;">
+                                            <span class="badge bg-secondary rounded-pill me-2" style="font-size: 10px; width: 20px;">{{ index + 1 }}</span>
+                                            <span class="text-truncate">{{ item.name }}</span>
+                                        </div>
+                                        <span class="fw-bold text-dark">{{ item.qty }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Low Stock Alert Section -->
                         <div v-if="adminLowStockItems.length > 0" class="mb-3">
                             <div class="alert alert-warning p-2 mb-0 border shadow-sm">
@@ -838,6 +861,25 @@
                             </div>
                         </div>
 
+                        <!-- v2.97 New: Expiring Items Alert Section -->
+                        <div v-if="adminExpiringItems.length > 0" class="mb-3">
+                            <div class="alert alert-danger p-2 mb-0 border shadow-sm">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div class="fw-bold text-dark" style="font-size: 13px;"><i class="fas fa-calendar-times me-1 text-danger"></i>將到期品項</div>
+                                    <button class="btn btn-close btn-sm" @click="adminExpiringItems = []"></button>
+                                </div>
+                                <div style="max-height: 100px; overflow-y: auto;">
+                                    <div v-for="item in adminExpiringItems" :key="item.name" class="d-flex justify-content-between align-items-center border-bottom py-1 small">
+                                        <span class="text-truncate" style="max-width: 60%;">{{ item.name }}</span>
+                                        <div>
+                                            <span class="text-muted me-1">{{ item.expiry }}</span>
+                                            <span class="badge bg-danger rounded-pill">{{ item.stock }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Quick Actions -->
                         <div class="d-grid grid-cols-2 gap-2 mb-2">
                              <div class="d-flex gap-2">
@@ -849,6 +891,17 @@
                                  </button>
                              </div>
                         </div>
+                        
+                        <!-- v2.97 New: Expiring Check Buttons -->
+                        <div class="d-flex gap-2 mb-2">
+                             <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white fw-bold text-danger"><i class="fas fa-calendar-alt me-1"></i>即將到期</span>
+                                <button class="btn btn-outline-secondary fw-bold" @click="fetchExpiringItems(1)">1個月</button>
+                                <button class="btn btn-outline-secondary fw-bold" @click="fetchExpiringItems(2)">2個月</button>
+                                <button class="btn btn-outline-secondary fw-bold" @click="fetchExpiringItems(3)">3個月</button>
+                             </div>
+                        </div>
+
                         <div class="d-flex gap-2 mb-3">
                              <button class="btn btn-sm btn-outline-secondary rounded-pill flex-fill fw-bold shadow-sm" @click="triggerTimeoutCheck" :disabled="isAdminCleaning">
                                 <i class="fas fa-broom me-1"></i>{{ isAdminCleaning ? '清理中...' : '清理逾時訂單' }}
@@ -923,7 +976,16 @@
         <div class="modal fade" id="batchRedeemConfirmModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;"><div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden"><div class="modal-header border-0 pb-0 justify-content-end"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body px-4 pb-4"><div class="mb-3 text-warning"><i class="fas fa-check-double fa-4x"></i></div><h5 class="fw-bold mb-2">批量核銷確認</h5><p class="text-muted small mb-2">您選擇了 <span class="text-danger fw-bold fs-5">{{ batchSelection.size }}</span> 張票券。</p><p class="text-danger fw-bold mb-4 fs-5">⚠️ 確定全部核銷？</p><div class="d-grid gap-2"><button class="btn btn-warning rounded-pill fw-bold shadow-sm" @click="confirmBatchRedeemAction" :disabled="isRedeeming"><span v-if="isRedeeming"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</span><span v-else>確認全部核銷</span></button><button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">取消</button></div></div></div></div></div>
         <div class="modal fade" id="clearHistoryConfirmModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;"><div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden"><div class="modal-header border-0 pb-0 justify-content-end"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body px-4 pb-4"><div class="mb-3 text-secondary"><i class="fas fa-trash-alt fa-4x"></i></div><h5 class="fw-bold mb-2">確定清除已核銷紀錄？</h5><p class="text-muted small mb-2">清除後將無法在列表中查看，<br>但後台紀錄仍會保留。</p><p class="text-danger fw-bold mb-4 fs-5">⚠️ 此操作不可恢復</p><div class="d-grid gap-2"><button class="btn btn-danger rounded-pill fw-bold shadow-sm" @click="confirmClearHistoryAction">確認清除</button><button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">取消</button></div></div></div></div></div>
         <div class="modal fade" id="mergedWarningModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;"><div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden"><div class="modal-body p-4"><div class="mb-3 text-primary"><i class="fas fa-layer-group fa-3x"></i></div><h5 class="fw-bold mb-2">多張合併提醒</h5><div class="text-muted small mb-4">此畫面包含兩張(或以上)票券！<br>請務必「放大」要兌換的 QRCODE，<br>或用手遮擋不使用的部分，<br>避免店家掃描設備重複掃到同一張。</div><button class="btn btn-primary w-100 rounded-pill fw-bold" @click="confirmMergedWarning">我瞭解了</button></div></div></div></div>
-        <div class="modal fade" id="historyModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0 pt-4 px-4 bg-light d-flex justify-content-between align-items-center"><h5 class="fw-bold fs-4 mb-0"><i class="fas fa-history me-2"></i>歷史訂單</h5><div class="d-flex align-items-center gap-2"><button class="btn btn-outline-danger btn-sm rounded-pill fw-bold" @click="() => { fetchOrderStatus(userProfile.userId); showToast('已刷新訂單狀態'); }"><i class="fas fa-sync-alt me-1"></i>刷新</button><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div></div><div class="modal-body px-4 py-3" style="max-height: 60vh; overflow-y: auto;"><div v-if="orderHistory.length === 0" class="text-center py-5 text-muted">尚未有紀錄</div><div v-if="validUnreportedOrders.length > 0 && !isPendingAlertDismissed" class="alert alert-danger d-flex align-items-center mb-3 shadow-sm border-0 position-relative" role="alert"><i class="fas fa-exclamation-circle fa-lg me-2"></i><div class="small fw-bold">您有 {{ validUnreportedOrders.length }} 筆訂單尚未付款或回報！<br><span class="text-muted" style="font-size: 10px;">請儘速完成以免訂單自動取消。</span></div><button type="button" class="btn-close position-absolute top-0 end-0 m-2 small" style="width: 8px; height: 8px; opacity: 0.5;" @click="isPendingAlertDismissed = true"></button></div><div v-for="group in groupedHistory" :key="group.timestamp" class="history-group-card"><div class="mb-2 border-bottom pb-2 d-flex justify-content-between align-items-center"><small class="fw-bold text-muted"><i class="far fa-calendar-alt me-1"></i>{{ group.timestamp }}</small><div><span v-if="getGroupTimer(group)" class="timer-badge"><i class="fas fa-clock me-1"></i>{{ getGroupTimer(group) }}</span><span v-else-if="isGroupExpired(group)" class="badge bg-secondary" style="font-size: 11px;">已逾時失效</span></div></div><div v-for="(h, idx) in group.orders" :key="h.id" :class="{ 'border-top pt-3 mt-3': idx > 0 }"><div class="d-flex justify-content-between align-items-center mb-2"><div class="d-flex flex-column text-start"><span class="fw-bold text-muted small" style="font-size: 11px;">訂單編號 {{ h.id }} <span class="badge-method" :class="h.deliveryMethod && h.deliveryMethod.includes('momo') ? 'momo' : 'screenshot'">{{ h.deliveryMethod }}</span></span></div><div class="d-flex flex-column align-items-end"><span :class="getStatusBadge(h).class" class="status-badge mb-1">{{ getStatusBadge(h).text }}</span></div></div><div class="text-end mb-2"><span class="text-danger fw-bold" style="font-size: 18px;">${{ h.totalAmount }}</span></div><div class="history-imgs-container mb-3"><div v-for="item in h.items" :key="item.name" class="h-thumb-box" @click="showToast(item.name)"><img :src="getProductImage(item.name)" class="h-thumb" onerror="this.src='https://via.placeholder.com/48'"><div class="h-qty-badge">x{{ item.quantity }}</div></div></div><div v-if="h.fulfillment" class="mt-2 mb-3 p-3 bg-light rounded border text-center"><div class="small fw-bold text-success mb-2"><i class="fas fa-gift me-1"></i>商品已發貨</div><button class="btn btn-sm btn-outline-primary w-100 rounded-pill fw-bold" @click="openWallet"><i class="fas fa-wallet me-1"></i>📂 開啟【我的票券】查看與核銷</button></div><div class="d-flex gap-2 flex-wrap" v-if="!isOrderExpired(h)"><button class="btn btn-outline-success btn-sm flex-grow-1 rounded-pill" @click="resendHistory(h)">補傳訂單</button><button class="btn btn-outline-danger btn-sm flex-grow-1 rounded-pill" @click="reBuy(h)">再次購買</button><button v-if="getStatusBadge(h).canReport" class="btn btn-warning btn-sm flex-grow-1 rounded-pill fw-bold text-dark" @click="openReportForHistory(h)">{{ h.paymentNote ? '修改回報' : '回報付款' }}</button><button v-if="getStatusBadge(h).canCancel" class="btn btn-secondary btn-sm flex-grow-1 rounded-pill fw-bold" @click="openCancelModal(h)">取消訂單</button></div><div v-else class="text-center"><span class="text-muted small fw-bold">此訂單已超過付款期限 (30分鐘)</span></div></div></div></div></div></div></div>
+        
+        <!-- Restored History Modal with Timer Logic -->
+        <div class="modal fade" id="historyModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0 pt-4 px-4 bg-light d-flex justify-content-between align-items-center"><h5 class="fw-bold fs-4 mb-0"><i class="fas fa-history me-2"></i>歷史訂單</h5><div class="d-flex align-items-center gap-2"><button class="btn btn-outline-danger btn-sm rounded-pill fw-bold" @click="() => { fetchOrderStatus(userProfile.userId); showToast('已刷新訂單狀態'); }"><i class="fas fa-sync-alt me-1"></i>刷新</button><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div></div><div class="modal-body px-4 py-3" style="max-height: 60vh; overflow-y: auto;"><div v-if="orderHistory.length === 0" class="text-center py-5 text-muted">尚未有紀錄</div><div v-if="validUnreportedOrders.length > 0 && !isPendingAlertDismissed" class="alert alert-danger d-flex align-items-center mb-3 shadow-sm border-0 position-relative" role="alert"><i class="fas fa-exclamation-circle fa-lg me-2"></i><div class="small fw-bold">您有 {{ validUnreportedOrders.length }} 筆訂單尚未付款或回報！<br><span class="text-muted" style="font-size: 10px;">請儘速完成以免訂單自動取消。</span></div><button type="button" class="btn-close position-absolute top-0 end-0 m-2 small" style="width: 8px; height: 8px; opacity: 0.5;" @click="isPendingAlertDismissed = true"></button></div>
+        <div v-for="group in groupedHistory" :key="group.timestamp" class="history-group-card">
+            <div class="mb-2 border-bottom pb-2 d-flex justify-content-between align-items-center">
+                <small class="fw-bold text-muted"><i class="far fa-calendar-alt me-1"></i>{{ group.timestamp }}</small>
+                <div><span v-if="getGroupTimer(group)" class="timer-badge"><i class="fas fa-clock me-1"></i>{{ getGroupTimer(group) }}</span><span v-else-if="isGroupExpired(group)" class="badge bg-secondary" style="font-size: 11px;">已逾時失效</span></div>
+            </div>
+            <div v-for="(h, idx) in group.orders" :key="h.id" :class="{ 'border-top pt-3 mt-3': idx > 0 }"><div class="d-flex justify-content-between align-items-center mb-2"><div class="d-flex flex-column text-start"><span class="fw-bold text-muted small" style="font-size: 11px;">訂單編號 {{ h.id }} <span class="badge-method" :class="h.deliveryMethod && h.deliveryMethod.includes('momo') ? 'momo' : 'screenshot'">{{ h.deliveryMethod }}</span></span></div><div class="d-flex flex-column align-items-end"><span :class="getStatusBadge(h).class" class="status-badge mb-1">{{ getStatusBadge(h).text }}</span></div></div><div class="text-end mb-2"><span class="text-danger fw-bold" style="font-size: 18px;">${{ h.totalAmount }}</span></div><div class="history-imgs-container mb-3"><div v-for="item in h.items" :key="item.name" class="h-thumb-box" @click="showToast(item.name)"><img :src="getProductImage(item.name)" class="h-thumb" onerror="this.src='https://via.placeholder.com/48'"><div class="h-qty-badge">x{{ item.quantity }}</div></div></div><div v-if="h.fulfillment" class="mt-2 mb-3 p-3 bg-light rounded border text-center"><div class="small fw-bold text-success mb-2"><i class="fas fa-gift me-1"></i>商品已發貨</div><button class="btn btn-sm btn-outline-primary w-100 rounded-pill fw-bold" @click="openWallet"><i class="fas fa-wallet me-1"></i>📂 開啟【我的票券】查看與核銷</button></div><div class="d-flex gap-2 flex-wrap" v-if="!isOrderExpired(h)"><button class="btn btn-outline-success btn-sm flex-grow-1 rounded-pill" @click="resendHistory(h)">補傳訂單</button><button class="btn btn-outline-danger btn-sm flex-grow-1 rounded-pill" @click="reBuy(h)">再次購買</button><button v-if="getStatusBadge(h).canReport" class="btn btn-warning btn-sm flex-grow-1 rounded-pill fw-bold text-dark" @click="openReportForHistory(h)">{{ h.paymentNote ? '修改回報' : '回報付款' }}</button><button v-if="getStatusBadge(h).canCancel" class="btn btn-secondary btn-sm flex-grow-1 rounded-pill fw-bold" @click="openCancelModal(h)">取消訂單</button></div><div v-else class="text-center"><span class="text-muted small fw-bold">此訂單已超過付款期限 (30分鐘)</span></div></div></div></div></div></div></div>
+        
         <div class="modal fade" id="vendorGuideModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0 bg-light"><h5 class="fw-bold"><i class="fas fa-info-circle me-2"></i>使用說明</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-0" v-if="currentVendorGuide"><div v-if="currentVendorGuide.image" class="w-100 bg-dark position-relative" style="min-height:200px; cursor: pointer;" onclick="window.open(this.querySelector('img').src, '_blank')"><img :src="currentVendorGuide.image" class="w-100 object-fit-contain" style="max-height: 40vh;"><div class="position-absolute bottom-0 end-0 m-2 badge bg-dark opacity-75"><i class="fas fa-search-plus me-1"></i>點擊放大</div></div><div class="p-4"><h5 class="fw-bold mb-3 text-danger">{{ currentVendorGuide.name }}</h5><div class="text-muted small" style="white-space: pre-wrap; line-height: 1.6;" v-html="linkifiedGuideInstruction"></div></div></div><div class="modal-footer border-0 p-3"><button class="btn btn-dark w-100 rounded-pill fw-bold" data-bs-dismiss="modal">我瞭解了</button></div></div></div></div>
         <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered"><div class="modal-content text-center p-4 border-0 rounded-4 shadow-lg"><div v-if="!showPaymentForm"><div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div><h4 class="fw-bold">{{ isRepaying ? '待付款資訊' : '訂單已成功送出！' }}</h4><div class="my-3 text-center p-2" style="background: #fdf2f2; border-radius: 12px; border: 1px dashed #f5c6cb;"><div class="text-muted small fw-bold text-uppercase">應付金額</div><div class="text-danger fw-bold" style="font-size: 28px;">${{ reportingTotalAmount }}</div></div><div v-if="isRepaying" class="alert alert-secondary p-2 mb-3 text-start small"><div v-for="oid in lastOrderIds" :key="oid" class="mb-1 border-bottom pb-1"><strong>訂單編號 {{ oid }}</strong><br><span v-for="item in getOrderItems(oid)" :key="item.name">{{ item.name }} x{{ item.quantity }}<br></span></div></div><p class="small text-muted mb-4">請完成付款後，點擊下方按鈕回報。</p><div class="bg-light rounded-3 p-3 text-start mb-4 border"><div class="fw-bold text-dark border-bottom pb-2 mb-2"><i class="fas fa-wallet me-2"></i>匯款帳號 (點擊複製)</div><div v-for="bank in selectedBankInfos" :key="bank.code" class="mb-2 d-flex justify-content-between align-items-center bg-white p-2 rounded border" @click="copyText(bank.account)"><div><div class="small text-muted">{{ bank.name }}</div><div class="fw-bold text-danger">{{ bank.account }}</div><div v-if="bank.code === '396'" class="text-muted" style="font-size: 11px; margin-top:2px;">街口名稱：Sue</div></div><i class="far fa-copy text-secondary"></i></div></div><button class="btn btn-warning w-100 rounded-pill py-2 fw-bold mb-2 shadow-sm text-dark" @click="openPaymentForm"><i class="fas fa-money-bill-wave me-2"></i>我已付款 (回報後五碼)</button><button class="btn btn-outline-dark w-100 rounded-pill py-2 fw-bold" data-bs-dismiss="modal" @click="resetCart">稍後回報 / 關閉視窗</button></div><div v-else><h5 class="fw-bold mb-3"><i class="fas fa-edit me-2"></i>回報付款資訊</h5><div class="alert alert-primary fw-bold text-center fs-5 mb-3">本次回報總金額：<span class="text-danger">${{ reportingTotalAmount }}</span></div><div class="text-start mb-3"><label class="form-label-small fw-bold">您匯入的帳戶：</label><select v-model="paymentForm.bankCode" class="form-select rounded-pill mb-3" :disabled="selectedBankInfos.length === 1"><option v-for="bank in selectedBankInfos" :key="bank.code" :value="bank.code">{{ bank.name }}</option></select><label class="form-label-small fw-bold">{{ paymentFormLabel }}</label><input type="text" v-model="paymentForm.accountInfo" class="form-control rounded-pill" :placeholder="paymentFormPlaceholder"></div><button class="btn btn-success w-100 rounded-pill py-2 fw-bold mb-2 shadow" @click="submitPayment" :disabled="isSubmittingPayment"><span v-if="isSubmittingPayment"><i class="fas fa-spinner fa-spin me-2"></i>傳送中...</span><span v-else>送出回報</span></button><button class="btn btn-link text-muted small" @click="showPaymentForm = false">返回上一頁</button></div></div></div></div>
         <div class="modal fade" id="unreportedModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 rounded-4 shadow-lg text-center p-4"><div class="mb-2 text-warning"><i class="fas fa-bell fa-4x"></i></div><h5 class="fw-bold mb-2">您有待回報的訂單</h5><p class="text-muted small mb-3">請勾選您已完成轉帳的訂單進行回報：</p><div class="bg-light rounded-3 p-3 mb-4 text-start border" style="max-height: 300px; overflow-y: auto;"><div v-for="group in groupedUnreportedOrders" :key="group.baseId" class="form-check mb-3 border-bottom pb-2"><input class="form-check-input mt-2" type="checkbox" :checked="isGroupSelected(group)" @change="toggleGroupSelection(group)" :id="'chk-group-'+group.baseId"><label class="form-check-label w-100" :for="'chk-group-'+group.baseId"><div class="d-flex justify-content-between align-items-center"><div class="fw-bold text-dark small">訂單編號 {{ group.baseId }} <span v-if="group.ids.length>1" class="text-muted">(合併)</span></div><div class="text-danger fw-bold">${{ group.totalAmount }}</div></div><div class="d-flex gap-2 mt-2 overflow-auto no-scrollbar"><div v-for="(item, idx) in group.items" :key="idx" class="position-relative flex-shrink-0" style="width: 40px; height: 40px;"><img :src="getProductImage(item.name)" class="w-100 h-100 rounded border object-fit-cover"><span class="position-absolute bottom-0 end-0 badge bg-dark rounded-pill" style="font-size:8px; padding: 2px 4px;">x{{ item.quantity }}</span></div></div></label></div><div v-if="groupedUnreportedOrders.length === 0" class="text-muted small text-center">暫無待回報訂單</div></div><div class="d-grid gap-2"><button class="btn btn-primary rounded-pill fw-bold" @click="goToPayFromPending" :disabled="pendingSelection.length === 0"><i class="fas fa-wallet me-2"></i>付款去 (查看匯款資訊)</button><button class="btn btn-warning rounded-pill fw-bold" @click="openReportForPending" :disabled="pendingSelection.length === 0"><i class="fas fa-edit me-2"></i>我已匯款 (直接回報)</button><button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">稍後再說</button><button class="btn btn-link text-muted small text-decoration-none mt-1" @click="dismissPendingAlertForever">不再提醒</button></div></div></div></div>
@@ -1076,6 +1138,8 @@
                 const adminPendingOrders = ref([]);
                 const adminStats = ref({ today: 0, week: 0, month: 0, total: 0 });
                 const adminLowStockItems = ref([]);
+                const adminExpiringItems = ref([]);
+                const adminBestSellers = ref([]); // v2.98 New state
                 const adminShipTarget = ref(null);
                 const isAdminShipping = ref(false);
                 const isAdminSyncing = ref(false);
@@ -1096,6 +1160,7 @@
                 // Updated Admin Dashboard Fetch
                 const fetchAdminDashboard = async () => {
                     adminPendingOrders.value = [];
+                    adminBestSellers.value = [];
                     // Reset Low Stock on load to force user to click
                     // adminLowStockItems.value = []; 
                     try {
@@ -1103,7 +1168,7 @@
                         const data = await response.json();
                         if (data.orders) adminPendingOrders.value = data.orders;
                         if (data.stats) adminStats.value = data.stats;
-                        // Don't auto-fetch low stock anymore
+                        if (data.bestSellers) adminBestSellers.value = data.bestSellers; // v2.98
                     } catch (e) { showToast('讀取後台失敗'); }
                 };
                 
@@ -1118,6 +1183,18 @@
                         }
                     } catch (e) { showToast('讀取庫存失敗'); }
                     finally { isAdminFetchingStock.value = false; }
+                };
+                
+                const fetchExpiringItems = async (months) => {
+                    showToast(`讀取${months}個月內到期品...`);
+                    try {
+                        const response = await fetch(`${API_URL}?action=getExpiringItems&months=${months}`);
+                        const data = await response.json();
+                        if (data.expiringItems) {
+                            adminExpiringItems.value = data.expiringItems;
+                            if (adminExpiringItems.value.length === 0) showToast('無即將到期商品');
+                        }
+                    } catch(e) { showToast('讀取失敗'); }
                 };
 
                 const onAdminShipClick = (order) => {
@@ -1458,7 +1535,8 @@
                 isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, executeBatchRedeem, confirmBatchRedeemAction, selectAllTickets,
                 isAdmin, openAdminLogin, verifyAdminPassword, adminPasswordInput, adminPendingOrders, fetchAdminDashboard, onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, adminStats, adminLowStockItems,
                 triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning, triggerPaymentCheck, isAdminChecking, isAdminFetchingStock, fetchLowStock,
-                clearRedeemedHistory, confirmClearHistoryAction // Export new function
+                clearRedeemedHistory, confirmClearHistoryAction,
+                fetchExpiringItems, adminExpiringItems, adminBestSellers // v2.98 New Exports
                  };
             }
         }).mount('#app');
