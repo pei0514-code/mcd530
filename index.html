@@ -1991,7 +1991,6 @@
                     // ★★★ 新增這一行：當票券列表更新時，檢查有沒有快過期的 ★★★
                     if (newVal.length > 0) checkExpiryReminders();
                 });
-                                                                                                                                                                                                                                                                                                                                              (newVal) => { if (newVal.length > lastKnownTicketCount.value) { walletUnread.value = true; } else if (newVal.length < lastKnownTicketCount.value) { safeSetStorage('mm_last_ticket_count', newVal.length); lastKnownTicketCount.value = newVal.length; } });
                 const showTicketImage = (item) => { if (item.isMergedOrder && !item.isRedeemed) { pendingTicketUrl.value = item.url; itemToRedeem.value = item; openModalSafe('mergedWarningModal'); } else { window.open(item.url, '_blank'); if (!item.isRedeemed) setTimeout(() => { openRedeemConfirm(item); }, 800); } };
                 const confirmMergedWarning = () => { hideModalSafe('mergedWarningModal'); if(pendingTicketUrl.value) { window.open(pendingTicketUrl.value, '_blank'); if(itemToRedeem.value && !itemToRedeem.value.isRedeemed) { setTimeout(() => { openModalSafe('redeemConfirmModal'); }, 800); } } };
                 const openRedeemConfirm = (item) => { itemToRedeem.value = item; openModalSafe('redeemConfirmModal'); };
@@ -2095,6 +2094,7 @@
     </script>
 </body>
 </html>
+
 
 
 
