@@ -294,6 +294,10 @@
         .badge-method.momo { background: #D61F5E; color: white; border: 1px solid #c9104b; } /* Momo Pink */
         .badge-method.screenshot { background: #2C3E50; color: white; border: 1px solid #1a252f; } /* Dark Midnight Blue */
 
+        /* New MOMO Button Style */
+        .btn-momo { background: #D61F5E; color: white; border: none; }
+        .btn-momo:active { background: #b0184b; transform: scale(0.96); }
+
         /* Pulsing Animation */
         @keyframes pulse-icon {
             0% { transform: scale(1); opacity: 1; }
@@ -407,7 +411,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.99 P4.1</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.99 P5</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -892,9 +896,18 @@
                                         <span class="position-absolute bottom-0 end-0 badge bg-dark rounded-pill" style="font-size:7px; padding: 1px 3px;">x{{ item.quantity }}</span>
                                     </div>
                                 </div>
-                                <button class="btn btn-dark btn-sm rounded-pill fw-bold px-3" @click="onAdminShipClick(order)">
-                                    發貨 <i class="fas fa-paper-plane ms-1"></i>
-                                </button>
+                                
+                                <div class="d-flex align-items-center">
+                                    <button v-if="order.deliveryMethod && (order.deliveryMethod.includes('momo') || order.deliveryMethod.includes('轉贈'))" 
+                                            class="btn btn-momo btn-sm rounded-pill fw-bold px-3 me-2" 
+                                            @click="copyMomoInfo(order)">
+                                        <i class="fas fa-copy me-1"></i>轉贈
+                                    </button>
+
+                                    <button class="btn btn-dark btn-sm rounded-pill fw-bold px-3" @click="onAdminShipClick(order)">
+                                        發貨 <i class="fas fa-paper-plane ms-1"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1471,6 +1484,19 @@
                     }
                 };
                 
+                const copyMomoInfo = (order) => {
+                    // Try to get clean phone number by removing ' just in case, though usually handled by frontend
+                    let phone = String(order.momoPhone || "").replace(/'/g, '');
+                    const name = order.momoName || "";
+                    const text = `${name} ${phone}`;
+                    
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(text).then(() => showToast('已複製 MOMO 資料')).catch(() => fallbackCopyTextToClipboard(text));
+                    } else {
+                        fallbackCopyTextToClipboard(text);
+                    }
+                };
+
                 const triggerStockSync = async () => { isAdminSyncing.value = true; try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'adminSyncStock' }) }); showToast('已觸發同步指令'); setTimeout(() => { initApp(); }, 3000); } catch(e) { showToast('同步請求失敗'); } finally { isAdminSyncing.value = false; } };
                 const triggerTimeoutCheck = async () => { isAdminCleaning.value = true; try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'adminCheckTimeout' }) }); showToast('已觸發清理指令'); } catch(e) { showToast('清理請求失敗'); } finally { isAdminCleaning.value = false; } };
                 const triggerPaymentCheck = async () => { isAdminChecking.value = true; try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'adminCheckPayments' }) }); showToast('已觸發查帳指令'); setTimeout(() => { fetchAdminDashboard(); }, 2000); } catch(e) { showToast('查帳請求失敗'); } finally { isAdminChecking.value = false; } };
@@ -1825,7 +1851,9 @@
                 // v2.99 Patch 2: Product Manager Exports
                 openAdminProductManager, adminProducts, adminEditProduct, editingProduct, saveProduct, isSavingProduct,
                 // v2.99 Patch 4: Order Manager Exports
-                openAdminOrderManager, adminAllOrders, openAdminOrderEdit, editingOrder, saveAdminOrder, deleteAdminOrder, isSavingOrder
+                openAdminOrderManager, adminAllOrders, openAdminOrderEdit, editingOrder, saveAdminOrder, deleteAdminOrder, isSavingOrder,
+                // v2.99 Patch 5: MOMO Copy
+                copyMomoInfo
                  };
             }
         }).mount('#app');
