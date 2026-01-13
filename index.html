@@ -359,7 +359,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.98</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.99</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -407,7 +407,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.98</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.99</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -828,87 +828,34 @@
                             </div>
                         </div>
 
-                        <!-- v2.98 Best Sellers Section -->
-                        <div v-if="adminBestSellers.length > 0" class="mb-3">
-                            <div class="card border-0 shadow-sm">
-                                <div class="card-header bg-white fw-bold py-2 border-bottom-0">
-                                    <i class="fas fa-fire text-danger me-2"></i>熱銷排行 (Top 5)
-                                </div>
-                                <div class="list-group list-group-flush small">
-                                    <div v-for="(item, index) in adminBestSellers" :key="index" class="list-group-item d-flex justify-content-between align-items-center">
-                                        <div class="d-flex align-items-center" style="max-width: 80%;">
-                                            <span class="badge bg-secondary rounded-pill me-2" style="font-size: 10px; width: 20px;">{{ index + 1 }}</span>
-                                            <span class="text-truncate">{{ item.name }}</span>
-                                        </div>
-                                        <span class="fw-bold text-dark">{{ item.qty }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Low Stock Alert Section -->
-                        <div v-if="adminLowStockItems.length > 0" class="mb-3">
-                            <div class="alert alert-warning p-2 mb-0 border shadow-sm">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <div class="fw-bold text-dark" style="font-size: 13px;"><i class="fas fa-exclamation-triangle me-1 text-danger"></i>低庫存預警 (剩餘 < 5)</div>
-                                    <button class="btn btn-close btn-sm" @click="adminLowStockItems = []"></button>
-                                </div>
-                                <div class="d-flex flex-wrap gap-1">
-                                    <span v-for="item in adminLowStockItems" :key="item.name" class="badge bg-white text-dark border">
-                                        {{ item.name }} <span class="text-danger fw-bold">({{ item.stock }})</span>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- v2.97 New: Expiring Items Alert Section -->
-                        <div v-if="adminExpiringItems.length > 0" class="mb-3">
-                            <div class="alert alert-danger p-2 mb-0 border shadow-sm">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <div class="fw-bold text-dark" style="font-size: 13px;"><i class="fas fa-calendar-times me-1 text-danger"></i>將到期品項</div>
-                                    <button class="btn btn-close btn-sm" @click="adminExpiringItems = []"></button>
-                                </div>
-                                <div style="max-height: 100px; overflow-y: auto;">
-                                    <div v-for="item in adminExpiringItems" :key="item.name" class="d-flex justify-content-between align-items-center border-bottom py-1 small">
-                                        <span class="text-truncate" style="max-width: 60%;">{{ item.name }}</span>
-                                        <div>
-                                            <span class="text-muted me-1">{{ item.expiry }}</span>
-                                            <span class="badge bg-danger rounded-pill">{{ item.stock }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <!-- v2.99 Menu Buttons for Separate Modals -->
+                        <div class="d-grid grid-cols-2 gap-2 mb-3">
+                             <div class="d-flex gap-2">
+                                 <button class="btn btn-sm btn-outline-danger rounded-pill fw-bold shadow-sm w-100" @click="openModalSafe('adminBestSellersModal'); fetchAdminDashboard();">
+                                    <i class="fas fa-fire me-1"></i>熱銷排行
+                                 </button>
+                                 <button class="btn btn-sm btn-outline-warning text-dark rounded-pill fw-bold shadow-sm w-100" @click="openModalSafe('adminLowStockModal'); fetchLowStock();">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>低庫存
+                                 </button>
+                                 <button class="btn btn-sm btn-outline-secondary rounded-pill fw-bold shadow-sm w-100" @click="openModalSafe('adminExpiringModal'); fetchExpiringItems(1);">
+                                    <i class="fas fa-calendar-times me-1"></i>即將到期
+                                 </button>
+                             </div>
                         </div>
 
                         <!-- Quick Actions -->
-                        <div class="d-grid grid-cols-2 gap-2 mb-2">
+                        <div class="d-grid gap-2 mb-3">
+                             <button class="btn btn-sm btn-outline-dark rounded-pill fw-bold shadow-sm" @click="triggerStockSync" :disabled="isAdminSyncing">
+                                <i class="fas fa-sync me-1"></i>{{ isAdminSyncing ? '同步中' : '強制同步庫存' }}
+                             </button>
                              <div class="d-flex gap-2">
-                                 <button class="btn btn-sm btn-outline-dark rounded-pill fw-bold shadow-sm w-50" @click="triggerStockSync" :disabled="isAdminSyncing">
-                                    <i class="fas fa-sync me-1"></i>{{ isAdminSyncing ? '同步中' : '強制同步' }}
+                                 <button class="btn btn-sm btn-outline-secondary rounded-pill flex-fill fw-bold shadow-sm" @click="triggerTimeoutCheck" :disabled="isAdminCleaning">
+                                    <i class="fas fa-broom me-1"></i>{{ isAdminCleaning ? '清理中...' : '清理逾時訂單' }}
                                  </button>
-                                 <button class="btn btn-sm btn-outline-danger rounded-pill fw-bold shadow-sm w-50" @click="fetchLowStock" :disabled="isAdminFetchingStock">
-                                    <i class="fas fa-exclamation-triangle me-1"></i>{{ isAdminFetchingStock ? '讀取中' : '⚠️ 低庫存' }}
+                                 <button class="btn btn-sm btn-outline-primary rounded-pill flex-fill fw-bold shadow-sm" @click="triggerPaymentCheck" :disabled="isAdminChecking">
+                                    <i class="fas fa-envelope me-1"></i>{{ isAdminChecking ? '查帳中...' : '執行 MAIL 查帳' }}
                                  </button>
                              </div>
-                        </div>
-                        
-                        <!-- v2.97 New: Expiring Check Buttons -->
-                        <div class="d-flex gap-2 mb-2">
-                             <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-white fw-bold text-danger"><i class="fas fa-calendar-alt me-1"></i>即將到期</span>
-                                <button class="btn btn-outline-secondary fw-bold" @click="fetchExpiringItems(1)">1個月</button>
-                                <button class="btn btn-outline-secondary fw-bold" @click="fetchExpiringItems(2)">2個月</button>
-                                <button class="btn btn-outline-secondary fw-bold" @click="fetchExpiringItems(3)">3個月</button>
-                             </div>
-                        </div>
-
-                        <div class="d-flex gap-2 mb-3">
-                             <button class="btn btn-sm btn-outline-secondary rounded-pill flex-fill fw-bold shadow-sm" @click="triggerTimeoutCheck" :disabled="isAdminCleaning">
-                                <i class="fas fa-broom me-1"></i>{{ isAdminCleaning ? '清理中...' : '清理逾時訂單' }}
-                             </button>
-                             <button class="btn btn-sm btn-outline-primary rounded-pill flex-fill fw-bold shadow-sm" @click="triggerPaymentCheck" :disabled="isAdminChecking">
-                                <i class="fas fa-envelope me-1"></i>{{ isAdminChecking ? '查帳中...' : '執行 MAIL 查帳' }}
-                             </button>
                         </div>
 
                         <!-- Pending Orders List -->
@@ -946,6 +893,11 @@
                 </div>
             </div>
         </div>
+
+        <!-- New Admin Modals (v2.99) -->
+        <div class="modal fade" id="adminBestSellersModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0"><h5 class="fw-bold"><i class="fas fa-fire text-danger me-2"></i>熱銷排行 (Top 5)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><div v-if="adminBestSellers.length > 0" class="list-group list-group-flush small"><div v-for="(item, index) in adminBestSellers" :key="index" class="list-group-item d-flex justify-content-between align-items-center"><div class="d-flex align-items-center" style="max-width: 80%;"><span class="badge bg-secondary rounded-pill me-2" style="font-size: 10px; width: 20px;">{{ index + 1 }}</span><span class="text-truncate">{{ item.name }}</span></div><span class="fw-bold text-dark">{{ item.qty }}</span></div></div><div v-else class="text-center text-muted py-3">暫無數據</div></div></div></div></div>
+        <div class="modal fade" id="adminLowStockModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0"><h5 class="fw-bold"><i class="fas fa-exclamation-triangle text-warning me-2"></i>低庫存預警 (<5)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><div v-if="adminLowStockItems.length > 0" class="d-flex flex-wrap gap-2"><span v-for="item in adminLowStockItems" :key="item.name" class="badge bg-white text-dark border p-2">{{ item.name }} <span class="text-danger fw-bold fs-6 ms-1">({{ item.stock }})</span></span></div><div v-else class="text-center text-muted py-3">目前無低庫存商品</div></div></div></div></div>
+        <div class="modal fade" id="adminExpiringModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0 d-block"><div class="d-flex justify-content-between align-items-center mb-2"><h5 class="fw-bold"><i class="fas fa-calendar-times text-danger me-2"></i>即將到期</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="btn-group w-100"><button class="btn btn-sm btn-outline-secondary" @click="fetchExpiringItems(1)">1個月</button><button class="btn btn-sm btn-outline-secondary" @click="fetchExpiringItems(2)">2個月</button><button class="btn btn-sm btn-outline-secondary" @click="fetchExpiringItems(3)">3個月</button></div></div><div class="modal-body p-3"><div v-if="adminExpiringItems.length > 0" style="max-height: 300px; overflow-y: auto;"><div v-for="item in adminExpiringItems" :key="item.name" class="d-flex justify-content-between align-items-center border-bottom py-2 small"><span class="text-truncate" style="max-width: 60%;">{{ item.name }}</span><div class="text-end"><span class="d-block text-muted" style="font-size:10px;">{{ item.expiry }}</span><span class="badge bg-danger rounded-pill">{{ item.stock }}</span></div></div></div><div v-else class="text-center text-muted py-3">無相關商品</div></div></div></div></div>
 
         <!-- Admin Shipment Confirmation Modal -->
         <div class="modal fade" id="adminShipConfirmModal" tabindex="-1">
@@ -1139,7 +1091,7 @@
                 const adminStats = ref({ today: 0, week: 0, month: 0, total: 0 });
                 const adminLowStockItems = ref([]);
                 const adminExpiringItems = ref([]);
-                const adminBestSellers = ref([]); // v2.98 New state
+                const adminBestSellers = ref([]); 
                 const adminShipTarget = ref(null);
                 const isAdminShipping = ref(false);
                 const isAdminSyncing = ref(false);
@@ -1160,19 +1112,19 @@
                 // Updated Admin Dashboard Fetch
                 const fetchAdminDashboard = async () => {
                     adminPendingOrders.value = [];
-                    adminBestSellers.value = [];
-                    // Reset Low Stock on load to force user to click
-                    // adminLowStockItems.value = []; 
+                    // Keep best sellers for "lazy load" or fetch here? User requested separate menu.
+                    // We can still fetch basic dashboard data but not everything.
                     try {
                         const response = await fetch(`${API_URL}?action=getAdminDashboardData`);
                         const data = await response.json();
                         if (data.orders) adminPendingOrders.value = data.orders;
                         if (data.stats) adminStats.value = data.stats;
-                        if (data.bestSellers) adminBestSellers.value = data.bestSellers; // v2.98
+                        if (data.bestSellers) adminBestSellers.value = data.bestSellers; 
                     } catch (e) { showToast('讀取後台失敗'); }
                 };
                 
                 const fetchLowStock = async () => {
+                    showToast('讀取庫存中...');
                     isAdminFetchingStock.value = true;
                     try {
                         const response = await fetch(`${API_URL}?action=getLowStockItems`);
@@ -1466,10 +1418,63 @@
                 const openPaymentForm = () => { if (selectedBankInfos.value.length === 1) { paymentForm.value.bankCode = selectedBankInfos.value[0].code; } showPaymentForm.value = true; };
                 const paymentFormPlaceholder = computed(() => { if (paymentForm.value.bankCode === '396') return '請輸入您的街口暱稱/名稱'; return '請輸入您帳號的後五碼'; });
                 const paymentFormLabel = computed(() => { if (paymentForm.value.bankCode === '396') return '街口名稱：'; return '帳號末五碼：'; });
+                
+                // v2.99: Improved Submit Payment with Timeout Race
                 const submitPayment = async () => {
-                    if (!paymentForm.value.bankCode || !paymentForm.value.accountInfo) { showToast('請完整填寫資訊'); return; } isSubmittingPayment.value = true; const bank = bankAccounts.value.find(b => b.code === paymentForm.value.bankCode); const bankName = bank ? bank.name : '未知銀行';
-                    try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'submitPayment', orderIds: lastOrderIds.value, bankName: bankName, accountInfo: paymentForm.value.accountInfo }) }); if (liff.isInClient()) { const msg = `💰【付款回報】\n單號：${lastOrderIds.value.join(', ')}\n銀行：${bankName}\n帳號/名稱：${paymentForm.value.accountInfo}\n總金額：$${reportingTotalAmount.value}`; liff.sendMessages([{ type: 'text', text: msg }]).then(() => console.log('Message sent')).catch(err => console.error('LIFF Send Error', err)); } showToast('回報成功！我們會盡快處理'); const remaining = unreportedOrders.value.filter(id => !lastOrderIds.value.includes(id)); unreportedOrders.value = remaining; safeSetStorage('mm_pending_payment_orders', JSON.stringify(remaining)); hideModalSafe('successModal'); resetCart(); showPaymentForm.value = false; paymentForm.value = { bankCode: '', accountInfo: '' }; orderHistory.value = orderHistory.value.map(h => { if (lastOrderIds.value.includes(h.id)) return { ...h, paymentNote: '已回報' }; return h; }); safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value)); } catch(e) { showToast('傳送失敗，請直接聯繫客服'); console.error(e); } finally { isSubmittingPayment.value = false; }
+                    if (!paymentForm.value.bankCode || !paymentForm.value.accountInfo) { showToast('請完整填寫資訊'); return; } 
+                    isSubmittingPayment.value = true; 
+                    const bank = bankAccounts.value.find(b => b.code === paymentForm.value.bankCode); 
+                    const bankName = bank ? bank.name : '未知銀行';
+                    
+                    const fetchPromise = fetch(API_URL, { 
+                        method: 'POST', 
+                        mode: 'no-cors', 
+                        body: JSON.stringify({ 
+                            action: 'submitPayment', 
+                            orderIds: lastOrderIds.value, 
+                            bankName: bankName, 
+                            accountInfo: paymentForm.value.accountInfo 
+                        }) 
+                    });
+
+                    // Timeout after 25 seconds to prevent UI lockup
+                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 25000));
+
+                    try { 
+                        await Promise.race([fetchPromise, timeoutPromise]);
+                        
+                        if (liff.isInClient()) { 
+                            const msg = `💰【付款回報】\n單號：${lastOrderIds.value.join(', ')}\n銀行：${bankName}\n帳號/名稱：${paymentForm.value.accountInfo}\n總金額：$${reportingTotalAmount.value}`; 
+                            liff.sendMessages([{ type: 'text', text: msg }]).catch(err => console.error('LIFF Send Error', err)); 
+                        } 
+                        showToast('回報成功！我們會盡快處理'); 
+                        finishPaymentFlow();
+                    } catch(e) { 
+                        if (e.message === "Timeout") {
+                            // Assume sent but backend is slow (Gmail check)
+                            showToast('已送出回報，請稍後至歷史訂單確認狀態');
+                            finishPaymentFlow();
+                        } else {
+                            showToast('傳送失敗，請直接聯繫客服'); 
+                            console.error(e); 
+                        }
+                    } finally { 
+                        isSubmittingPayment.value = false; 
+                    }
                 };
+
+                const finishPaymentFlow = () => {
+                    const remaining = unreportedOrders.value.filter(id => !lastOrderIds.value.includes(id)); 
+                    unreportedOrders.value = remaining; 
+                    safeSetStorage('mm_pending_payment_orders', JSON.stringify(remaining)); 
+                    hideModalSafe('successModal'); 
+                    resetCart(); 
+                    showPaymentForm.value = false; 
+                    paymentForm.value = { bankCode: '', accountInfo: '' }; 
+                    orderHistory.value = orderHistory.value.map(h => { if (lastOrderIds.value.includes(h.id)) return { ...h, paymentNote: '已回報' }; return h; }); 
+                    safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
+                };
+
                 const reBuy = (h) => { cart.value = {}; h.items.forEach(it => { const p = products.value.find(x => x.name === it.name); if (p) cart.value[p.id] = it.quantity; }); safeSetStorage('mm_cart_storage', JSON.stringify(cart.value)); hideModalSafe('historyModal'); openModalSafe('cartModal'); };
                 const resendHistory = (h) => { let msg = `🛒【歷史訂單補傳】單號：#${h.id}\n品項：\n`; h.items.forEach((it, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${it.name} x${it.quantity}\n`; }); msg += `總額：$${h.totalAmount}`; if (liff.isInClient()) { liff.sendMessages([{ type: 'text', text: msg }]).then(() => liff.closeWindow()); } else { window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msg)}`, '_blank'); } };
                 const resetCart = () => { cart.value = {}; safeSetStorage('mm_cart_storage', '{}'); deliveryMethod.value = 'screenshot'; if(deliveryMethod.value !== 'screenshot') selectedPayment.value = ''; showPaymentForm.value = false; requestManualScreenshot.value = false; };
@@ -1536,7 +1541,7 @@
                 isAdmin, openAdminLogin, verifyAdminPassword, adminPasswordInput, adminPendingOrders, fetchAdminDashboard, onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, adminStats, adminLowStockItems,
                 triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning, triggerPaymentCheck, isAdminChecking, isAdminFetchingStock, fetchLowStock,
                 clearRedeemedHistory, confirmClearHistoryAction,
-                fetchExpiringItems, adminExpiringItems, adminBestSellers // v2.98 New Exports
+                fetchExpiringItems, adminExpiringItems, adminBestSellers, openModalSafe // Added openModalSafe to exports
                  };
             }
         }).mount('#app');
