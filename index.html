@@ -363,7 +363,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.99 P9</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.99 P10</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -411,7 +411,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.99 P6</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.99 P10</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -847,10 +847,10 @@
                                     <i class="fas fa-fire me-1"></i>熱銷排行
                                  </button>
                                  <button class="btn btn-sm btn-outline-warning text-dark rounded-pill fw-bold shadow-sm w-100" @click="openModalSafe('adminLowStockModal'); fetchLowStock();">
-                                    <i class="fas fa-exclamation-triangle me-1"></i>低庫存
+                                    <i class="fas fa-exclamation-triangle me-1"></i>庫存管理
                                  </button>
                                  <button class="btn btn-sm btn-outline-secondary rounded-pill fw-bold shadow-sm w-100" @click="openModalSafe('adminExpiringModal'); fetchExpiringItems(1);">
-                                    <i class="fas fa-calendar-times me-1"></i>即將到期
+                                    <i class="fas fa-calendar-times me-1"></i>即期票券
                                  </button>
                              </div>
                              <div class="d-flex gap-2">
@@ -1137,7 +1137,43 @@
         <div class="modal fade" id="alertModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;"><div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden"><div class="modal-body p-4"><div class="mb-3 text-warning"><i class="fas fa-exclamation-circle fa-3x"></i></div><h5 class="fw-bold mb-3">溫馨提醒</h5><div class="text-muted text-start bg-light p-3 rounded-3 small" style="line-height:1.6;"><div v-for="(msg, idx) in alertMessages" :key="idx" class="mb-1"><i class="fas fa-caret-right me-2 text-warning"></i>{{ msg }}</div></div><div class="mt-4"><button type="button" class="btn btn-dark w-100 rounded-pill fw-bold" data-bs-dismiss="modal">我知道了</button></div></div></div></div></div>
         <div class="modal fade" id="productDetailModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden h-100" style="max-height: 85vh;"><div class="btn-close-floating" data-bs-dismiss="modal"></div><div class="modal-body p-0 d-flex flex-column" v-if="selectedProduct"><div class="position-relative bg-white" style="flex: 0 0 auto;"><img :src="selectedProduct.image" class="w-100" style="max-height: 350px; object-fit: contain;"></div><div class="p-4 flex-grow-1 overflow-auto bg-white"><div class="d-flex justify-content-between align-items-start mb-2"><div><span class="badge bg-dark mb-2">{{ selectedProduct.vendor }}</span><h5 class="fw-bold mb-1">{{ selectedProduct.name }}</h5></div><div class="text-end"><h4 class="text-danger fw-bold mb-0">${{ selectedProduct.price }}</h4><small class="text-decoration-line-through text-muted" v-if="selectedProduct.originalPrice > selectedProduct.price">${{ selectedProduct.originalPrice }}</small></div></div><div class="d-flex gap-2 mb-3"><span class="badge bg-light text-dark border"><i class="far fa-clock me-1"></i>效期: {{ selectedProduct.expiryDate }}</span><span class="badge bg-light text-dark border"><i class="fas fa-cubes me-1"></i>庫存: {{ selectedProduct.stock }}</span></div><div class="p-3 bg-light rounded-3 small text-secondary mb-3" style="line-height: 1.6; white-space: pre-wrap;">{{ selectedProduct.description || '暫無商品描述' }}</div></div><div class="p-3 border-top bg-white" style="flex: 0 0 auto;"><div v-if="cart[selectedProduct.id]" class="d-flex justify-content-between align-items-center bg-light rounded-pill p-1 border"><button class="btn btn-light rounded-circle shadow-sm" style="width: 40px; height: 40px;" @click="updateCart(selectedProduct, -1)"><i class="fas fa-minus"></i></button><span class="fw-bold fs-5">{{ cart[selectedProduct.id] }}</span><button class="btn btn-light rounded-circle shadow-sm" style="width: 40px; height: 40px;" @click="updateCart(selectedProduct, 1)" :disabled="cart[selectedProduct.id] >= Number(selectedProduct.stock)"><i class="fas fa-plus"></i></button></div><button v-else class="btn btn-dark w-100 rounded-pill py-3 fw-bold shadow" @click="updateCart(selectedProduct, 1)" :disabled="Number(selectedProduct.stock) <= 0">{{ Number(selectedProduct.stock) <= 0 ? '已售完' : '加入購物車' }}</button></div></div></div></div></div>
         <div class="modal fade" id="guestWarningModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;"><div class="modal-content border-0 rounded-4 shadow-lg text-center p-4"><div class="mb-2 text-danger"><i class="fas fa-user-secret fa-3x"></i></div><h5 class="fw-bold mb-2">訪客模式提醒</h5><p class="text-muted small mb-3">您目前未使用 LINE 登入，訂單將無法自動連結至您的帳號。</p><p class="text-muted small mb-4">建議您使用 LINE 開啟本商城，以享有完整服務與訂單查詢功能。</p><a href="https://lin.ee/ejXmXDl" target="_blank" class="btn btn-success w-100 rounded-pill fw-bold mb-2 shadow-sm" style="background-color:#06C755; border:none;"><i class="fab fa-line me-2"></i>點我加入麥麥小舖 LINE@</a><button class="btn btn-outline-success w-100 rounded-pill fw-bold mb-2" onclick="copyLineId()"><i class="far fa-copy me-1"></i>複製商城LINE去LINE加入</button><button class="btn btn-outline-danger w-100 rounded-pill fw-bold" onclick="copyGuestLink()"><i class="fas fa-link me-1"></i>複製商城連結去瀏覽器開啟</button></div></div></div>
+<div class="modal fade" id="expiryReminderModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 350px;">
+                <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+                    <div class="modal-header border-0 bg-warning bg-opacity-25 pb-2">
+                        <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-stopwatch me-2 text-danger"></i>效期提醒</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <p class="text-muted small mb-3">親愛的客人，您有以下票券即將到期，<br>請儘速使用或完成核銷：</p>
+                        
+                        <div class="list-group mb-4 shadow-sm">
+                            <div v-for="item in expiringTicketsList" :key="item.ticketId" 
+                                 class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3 border-light"
+                                 @click="openRedeemFromReminder(item)" style="cursor: pointer;">
+                                <div class="d-flex align-items-center overflow-hidden">
+                                    <div class="badge bg-danger rounded-pill me-2 flex-shrink-0">剩 {{ item.daysLeft }} 天</div>
+                                    <div class="text-truncate small fw-bold text-dark">{{ item.name }}</div>
+                                </div>
+                                <i class="fas fa-chevron-right text-muted" style="font-size: 10px;"></i>
+                            </div>
+                        </div>
 
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-danger rounded-pill fw-bold shadow-sm" @click="openWalletFromReminder">
+                                <i class="fas fa-wallet me-2"></i>前往票夾 (進行核銷)
+                            </button>
+                            <button class="btn btn-outline-dark rounded-pill fw-bold" data-bs-dismiss="modal">
+                                <i class="fas fa-shopping-cart me-2"></i>繼續選購
+                            </button>
+                            <button class="btn btn-link text-muted small text-decoration-none mt-1" @click="dismissExpiryToday">
+                                <i class="far fa-bell-slash me-1"></i>今日內不再提醒
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- Admin Login Modal -->
         <div class="modal fade" id="adminLoginModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 280px;"><div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden"><div class="modal-body p-4"><div class="mb-3 text-dark"><i class="fas fa-lock fa-2x"></i></div><h6 class="fw-bold mb-3">請輸入管理密碼</h6><input type="password" class="form-control text-center fs-4 fw-bold rounded-pill mb-3" v-model="adminPasswordInput" placeholder="****" maxlength="4" inputmode="numeric"><button class="btn btn-dark w-100 rounded-pill fw-bold" @click="verifyAdminPassword">進入</button></div></div></div></div>
 
@@ -1274,6 +1310,7 @@
                 const batchSelection = ref(new Set());
                 const now = ref(Date.now());
                 const hiddenTicketKeys = ref(new Set());
+                const expiringTicketsList = ref([]);
                 try {
                     const savedHidden = JSON.parse(safeGetStorage('mm_hidden_tickets', '[]'));
                     savedHidden.forEach(k => hiddenTicketKeys.value.add(k));
@@ -1422,7 +1459,7 @@
                     try {
                         const response = await fetch(API_URL, {
                             method: 'POST',
-                            mode: 'no-cors',
+                            // mode: 'no-cors',
                             body: JSON.stringify({
                                 action: 'adminSaveProduct',
                                 ...editingProduct.value
@@ -1463,7 +1500,7 @@
                     try {
                         await fetch(API_URL, {
                             method: 'POST',
-                            mode: 'no-cors',
+                            // mode: 'no-cors',
                             body: JSON.stringify({
                                 action: 'adminUpdateOrder',
                                 orderId: editingOrder.value.orderId,
@@ -1486,7 +1523,7 @@
                     try {
                         await fetch(API_URL, {
                             method: 'POST',
-                            mode: 'no-cors',
+                            // mode: 'no-cors',
                             body: JSON.stringify({
                                 action: 'adminDeleteOrder',
                                 orderId: editingOrder.value.orderId,
@@ -1536,7 +1573,7 @@
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
-           // mode: 'no-cors',
+           // // mode: 'no-cors',
             body: JSON.stringify({
                 action: 'adminShipOrder',
                 orderId: adminShipTarget.value.orderId,
@@ -1600,9 +1637,9 @@
                     }
                 };
 
-                const triggerStockSync = async () => { isAdminSyncing.value = true; try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'adminSyncStock' }) }); showToast('已觸發同步指令'); setTimeout(() => { initApp(); }, 3000); } catch(e) { showToast('同步請求失敗'); } finally { isAdminSyncing.value = false; } };
-                const triggerTimeoutCheck = async () => { isAdminCleaning.value = true; try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'adminCheckTimeout' }) }); showToast('已觸發清理指令'); } catch(e) { showToast('清理請求失敗'); } finally { isAdminCleaning.value = false; } };
-                const triggerPaymentCheck = async () => { isAdminChecking.value = true; try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'adminCheckPayments' }) }); showToast('已觸發查帳指令'); setTimeout(() => { fetchAdminDashboard(); }, 2000); } catch(e) { showToast('查帳請求失敗'); } finally { isAdminChecking.value = false; } };
+                const triggerStockSync = async () => { isAdminSyncing.value = true; try { await fetch(API_URL, { method: 'POST', // mode: 'no-cors', body: JSON.stringify({ action: 'adminSyncStock' }) }); showToast('已觸發同步指令'); setTimeout(() => { initApp(); }, 3000); } catch(e) { showToast('同步請求失敗'); } finally { isAdminSyncing.value = false; } };
+                const triggerTimeoutCheck = async () => { isAdminCleaning.value = true; try { await fetch(API_URL, { method: 'POST', // mode: 'no-cors', body: JSON.stringify({ action: 'adminCheckTimeout' }) }); showToast('已觸發清理指令'); } catch(e) { showToast('清理請求失敗'); } finally { isAdminCleaning.value = false; } };
+                const triggerPaymentCheck = async () => { isAdminChecking.value = true; try { await fetch(API_URL, { method: 'POST', // mode: 'no-cors', body: JSON.stringify({ action: 'adminCheckPayments' }) }); showToast('已觸發查帳指令'); setTimeout(() => { fetchAdminDashboard(); }, 2000); } catch(e) { showToast('查帳請求失敗'); } finally { isAdminChecking.value = false; } };
 
                 onMounted(() => { initApp(); setInterval(() => { now.value = Date.now(); }, 1000); });
                 watch(acceptTerms, (newVal) => { safeSetStorage('mm_accept_terms', newVal); });
@@ -1778,7 +1815,7 @@
                 };
                 
                 const openCancelModal = (h) => { hideModalSafe('historyModal'); orderToCancel.value = h; relatedOrdersToCancel.value = []; const baseId = h.id.split('-')[0]; if (h.id.includes('-')) { const siblings = orderHistory.value.filter(o => o.id.startsWith(baseId) && o.id !== h.id && getStatusBadge(o).canCancel ); relatedOrdersToCancel.value = siblings; } openModalSafe('cancelConfirmModal'); };
-                const confirmCancel = async (mode = 'single') => { if (!orderToCancel.value) return; const mainOrder = orderToCancel.value; const ordersToProcess = [mainOrder]; if (mode === 'all') { relatedOrdersToCancel.value.forEach(o => ordersToProcess.push(o)); } hideModalSafe('cancelConfirmModal'); showToast('正在取消訂單...'); try { const cancelPromises = ordersToProcess.map(o => fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'cancelOrder', orderId: o.id, userId: getEffectiveUserId() }) }) ); await Promise.all(cancelPromises); ordersToProcess.forEach(o => { orderHistory.value = orderHistory.value.map(hist => { if (hist.id === o.id) return { ...hist, paymentNote: '用戶自行取消' }; return hist; }); const remPending = unreportedOrders.value.filter(id => id !== o.id); unreportedOrders.value = remPending; }); safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value)); safeSetStorage('mm_pending_payment_orders', JSON.stringify(unreportedOrders.value)); showToast(mode === 'all' ? '全部相關訂單已取消！' : '訂單已成功取消！謝謝您'); setTimeout(() => { initApp(); }, 1200); } catch(e) { showToast('取消失敗，請聯繫客服'); console.error(e); } };
+                const confirmCancel = async (mode = 'single') => { if (!orderToCancel.value) return; const mainOrder = orderToCancel.value; const ordersToProcess = [mainOrder]; if (mode === 'all') { relatedOrdersToCancel.value.forEach(o => ordersToProcess.push(o)); } hideModalSafe('cancelConfirmModal'); showToast('正在取消訂單...'); try { const cancelPromises = ordersToProcess.map(o => fetch(API_URL, { method: 'POST', // mode: 'no-cors', body: JSON.stringify({ action: 'cancelOrder', orderId: o.id, userId: getEffectiveUserId() }) }) ); await Promise.all(cancelPromises); ordersToProcess.forEach(o => { orderHistory.value = orderHistory.value.map(hist => { if (hist.id === o.id) return { ...hist, paymentNote: '用戶自行取消' }; return hist; }); const remPending = unreportedOrders.value.filter(id => id !== o.id); unreportedOrders.value = remPending; }); safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value)); safeSetStorage('mm_pending_payment_orders', JSON.stringify(unreportedOrders.value)); showToast(mode === 'all' ? '全部相關訂單已取消！' : '訂單已成功取消！謝謝您'); setTimeout(() => { initApp(); }, 1200); } catch(e) { showToast('取消失敗，請聯繫客服'); console.error(e); } };
                 
                 const showProductDetail = (p) => { selectedProduct.value = p; openModalSafe('productDetailModal'); };
                 const openReportForPending = () => { hideModalSafe('unreportedModal'); lastOrderIds.value = pendingSelection.value; openPaymentForm(); openModalSafe('successModal'); };
@@ -1823,13 +1860,13 @@
 
                     if (driveItems.length > 0) {
                          const oid = giftItems.length > 0 ? `${baseOrderId}-1` : baseOrderId; generatedOrderIds.push(oid); const total = driveItems.reduce((a,b) => a + (b.price*b.quantity), 0); const record = { id: oid, timestamp: timeStr, totalAmount: total, items: driveItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) }; records.push(record);
-                         orderPromises.push(fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ ...record, phone: userContact.value.phone, email: userProfile.value.email,testMode: isCartTestMode.value, deliveryMethod: '截圖發送', momoName: '', momoPhone: '', userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', userId: getEffectiveUserId(), initialPaymentDesc: initialPaymentDesc }) }));
+                         orderPromises.push(fetch(API_URL, { method: 'POST', // mode: 'no-cors', body: JSON.stringify({ ...record, phone: userContact.value.phone, email: userProfile.value.email,testMode: isCartTestMode.value, deliveryMethod: '截圖發送', momoName: '', momoPhone: '', userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', userId: getEffectiveUserId(), initialPaymentDesc: initialPaymentDesc }) }));
                          let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：📸 截圖發送\n🍱 內容：\n`; driveItems.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${i.name} x${i.quantity}\n`; }); msg += `💰 小計：$${total}`; lineMessages.push(msg);
                     }
                     if (giftItems.length > 0) {
                          const oid = driveItems.length > 0 ? `${baseOrderId}-2` : baseOrderId; generatedOrderIds.push(oid); const total = giftItems.reduce((a,b) => a + (b.price*b.quantity), 0); const record = { id: oid, timestamp: timeStr, totalAmount: total, items: giftItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) }; records.push(record);
                          const isManual = requestManualScreenshot.value || deliveryMethod.value === 'screenshot'; const methodStr = isManual ? '轉贈(手動截圖)' : 'momo 轉贈'; const mName = isManual ? '' : giftInfo.value.name; const mPhone = isManual ? '' : giftInfo.value.phone;
-                         orderPromises.push(fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ ...record, phone: userContact.value.phone, email: userProfile.value.email || '', deliveryMethod: methodStr, momoName: mName, momoPhone: mPhone, userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', userId: getEffectiveUserId(), initialPaymentDesc: initialPaymentDesc }) }));
+                         orderPromises.push(fetch(API_URL, { method: 'POST', // mode: 'no-cors', body: JSON.stringify({ ...record, phone: userContact.value.phone, email: userProfile.value.email || '', deliveryMethod: methodStr, momoName: mName, momoPhone: mPhone, userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', userId: getEffectiveUserId(), initialPaymentDesc: initialPaymentDesc }) }));
                          let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：${methodStr}\n`; if(!isManual) msg += `👤 收件：${giftInfo.value.name} / ${giftInfo.value.phone}\n`; msg += `🍱 內容：\n`; giftItems.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${i.name} x${i.quantity}\n`; }); msg += `💰 小計：$${total}`; lineMessages.push(msg);
                     }
                     Promise.all(orderPromises).then(() => {
@@ -1852,7 +1889,7 @@
                     
                     const fetchPromise = fetch(API_URL, { 
                         method: 'POST', 
-                        mode: 'no-cors', 
+                        // mode: 'no-cors', 
                         body: JSON.stringify({ 
                             action: 'submitPayment', 
                             orderIds: lastOrderIds.value, 
@@ -1943,24 +1980,102 @@
                 const confirmClearHistoryAction = () => { const currentUsed = usedTickets.value; currentUsed.forEach(t => hiddenTicketKeys.value.add(`${t.orderId}_${t.ticketIndex}`)); safeSetStorage('mm_hidden_tickets', JSON.stringify([...hiddenTicketKeys.value])); showToast('紀錄已清除'); hideModalSafe('clearHistoryConfirmModal'); };
                 const currentDisplayTickets = computed(() => { return walletFilter.value === 'available' ? availableTickets.value : usedTickets.value; });
                 const openWallet = () => { ticketSearchQuery.value = ''; walletUnread.value = false; safeSetStorage('mm_last_ticket_count', availableTickets.value.length); lastKnownTicketCount.value = availableTickets.value.length; hideModalSafe('historyModal'); openModalSafe('ticketModal'); fetchOrderStatus(getEffectiveUserId()); };
-                watch(availableTickets, (newVal) => { if (newVal.length > lastKnownTicketCount.value) { walletUnread.value = true; } else if (newVal.length < lastKnownTicketCount.value) { safeSetStorage('mm_last_ticket_count', newVal.length); lastKnownTicketCount.value = newVal.length; } });
+                watch(availableTickets, (newVal) => { 
+                    if (newVal.length > lastKnownTicketCount.value) { 
+                        walletUnread.value = true; 
+                    } else if (newVal.length < lastKnownTicketCount.value) { 
+                        safeSetStorage('mm_last_ticket_count', newVal.length); 
+                        lastKnownTicketCount.value = newVal.length; 
+                    }
+                    
+                    // ★★★ 新增這一行：當票券列表更新時，檢查有沒有快過期的 ★★★
+                    if (newVal.length > 0) checkExpiryReminders();
+                });
+                                                                                                                                                                                                                                                                                                                                              (newVal) => { if (newVal.length > lastKnownTicketCount.value) { walletUnread.value = true; } else if (newVal.length < lastKnownTicketCount.value) { safeSetStorage('mm_last_ticket_count', newVal.length); lastKnownTicketCount.value = newVal.length; } });
                 const showTicketImage = (item) => { if (item.isMergedOrder && !item.isRedeemed) { pendingTicketUrl.value = item.url; itemToRedeem.value = item; openModalSafe('mergedWarningModal'); } else { window.open(item.url, '_blank'); if (!item.isRedeemed) setTimeout(() => { openRedeemConfirm(item); }, 800); } };
                 const confirmMergedWarning = () => { hideModalSafe('mergedWarningModal'); if(pendingTicketUrl.value) { window.open(pendingTicketUrl.value, '_blank'); if(itemToRedeem.value && !itemToRedeem.value.isRedeemed) { setTimeout(() => { openModalSafe('redeemConfirmModal'); }, 800); } } };
                 const openRedeemConfirm = (item) => { itemToRedeem.value = item; openModalSafe('redeemConfirmModal'); };
-                const confirmRedeemAction = async () => { if (!itemToRedeem.value) return; isRedeeming.value = true; const item = itemToRedeem.value; const now = new Date(); const timeStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`; redeemedStatus.value[item.url] = timeStr; redeemedStatus.value = { ...redeemedStatus.value }; safeSetStorage('mm_redeemed_map', JSON.stringify(redeemedStatus.value)); try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'redeemTicket', orderId: item.orderId, ticketIndex: item.ticketIndex, timestamp: timeStr }) }); fetchOrderStatus(userProfile.value.userId); } catch(e) {} isRedeeming.value = false; hideModalSafe('redeemConfirmModal'); showToast("核銷成功！"); itemToRedeem.value = null; };
+                const confirmRedeemAction = async () => { if (!itemToRedeem.value) return; isRedeeming.value = true; const item = itemToRedeem.value; const now = new Date(); const timeStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`; redeemedStatus.value[item.url] = timeStr; redeemedStatus.value = { ...redeemedStatus.value }; safeSetStorage('mm_redeemed_map', JSON.stringify(redeemedStatus.value)); try { await fetch(API_URL, { method: 'POST', // mode: 'no-cors', body: JSON.stringify({ action: 'redeemTicket', orderId: item.orderId, ticketIndex: item.ticketIndex, timestamp: timeStr }) }); fetchOrderStatus(userProfile.value.userId); } catch(e) {} isRedeeming.value = false; hideModalSafe('redeemConfirmModal'); showToast("核銷成功！"); itemToRedeem.value = null; };
                 const openVendorGuide = (item) => { const vendor = item.vendor; if(vendor && vendorInfoMap.value[vendor]) { currentVendorGuide.value = { name: vendor, ...vendorInfoMap.value[vendor] }; openModalSafe('vendorGuideModal'); } else { showToast("此廠商暫無詳細說明"); } };
                 const linkifiedGuideInstruction = computed(() => { if (!currentVendorGuide.value) return ''; let text = currentVendorGuide.value.instruction || '暫無詳細說明'; return text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="word-break:break-all; text-decoration:underline;">$1</a>'); });
                 const toggleBatchMode = () => { isBatchMode.value = !isBatchMode.value; batchSelection.value.clear(); };
                 const toggleTicketSelection = (item) => { if (item.isRedeemed) return; const key = `${item.orderId}_${item.ticketIndex}`; if (batchSelection.value.has(key)) { batchSelection.value.delete(key); } else { batchSelection.value.add(key); } batchSelection.value = new Set(batchSelection.value); };
                 const selectAllTickets = () => { const allKeys = currentDisplayTickets.value.filter(t => !t.isRedeemed).map(t => `${t.orderId}_${t.ticketIndex}`); const allSelected = allKeys.length > 0 && allKeys.every(k => batchSelection.value.has(k)); if (allSelected) { batchSelection.value.clear(); } else { allKeys.forEach(k => batchSelection.value.add(k)); } batchSelection.value = new Set(batchSelection.value); };
                 const executeBatchRedeem = () => { if (batchSelection.value.size === 0) return; openModalSafe('batchRedeemConfirmModal'); };
-                const confirmBatchRedeemAction = async () => { isRedeeming.value = true; const now = new Date(); const timeStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`; const ticketsToProcess = []; batchSelection.value.forEach(key => { const [orderId, idxStr] = key.split('_'); const ticketIndex = parseInt(idxStr, 10); const item = availableTickets.value.find(t => t.orderId === orderId && t.ticketIndex === ticketIndex); if (item) { redeemedStatus.value[item.url] = timeStr; ticketsToProcess.push({ orderId, ticketIndex }); } }); redeemedStatus.value = { ...redeemedStatus.value }; safeSetStorage('mm_redeemed_map', JSON.stringify(redeemedStatus.value)); try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'batchRedeemTickets', tickets: ticketsToProcess, timestamp: timeStr }) }); fetchOrderStatus(userProfile.value.userId); } catch(e) { console.error(e); showToast('部分連線失敗，請重整確認'); } isRedeeming.value = false; hideModalSafe('batchRedeemConfirmModal'); isBatchMode.value = false; batchSelection.value.clear(); showToast(`成功核銷 ${ticketsToProcess.length} 張票券！`); };
+                const confirmBatchRedeemAction = async () => { isRedeeming.value = true; const now = new Date(); const timeStr = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`; const ticketsToProcess = []; batchSelection.value.forEach(key => { const [orderId, idxStr] = key.split('_'); const ticketIndex = parseInt(idxStr, 10); const item = availableTickets.value.find(t => t.orderId === orderId && t.ticketIndex === ticketIndex); if (item) { redeemedStatus.value[item.url] = timeStr; ticketsToProcess.push({ orderId, ticketIndex }); } }); redeemedStatus.value = { ...redeemedStatus.value }; safeSetStorage('mm_redeemed_map', JSON.stringify(redeemedStatus.value)); try { await fetch(API_URL, { method: 'POST', // mode: 'no-cors', body: JSON.stringify({ action: 'batchRedeemTickets', tickets: ticketsToProcess, timestamp: timeStr }) }); fetchOrderStatus(userProfile.value.userId); } catch(e) { console.error(e); showToast('部分連線失敗，請重整確認'); } isRedeeming.value = false; hideModalSafe('batchRedeemConfirmModal'); isBatchMode.value = false; batchSelection.value.clear(); showToast(`成功核銷 ${ticketsToProcess.length} 張票券！`); };
+// --- 新增函式：檢查到期票券 ---
+                const checkExpiryReminders = () => {
+                    const todayStr = new Date().toLocaleDateString('zh-TW'); // 取得今日日期字串 (例如 2026/1/14)
+                    const ignoreKey = 'mm_ignore_expiry_' + todayStr;
+                    
+                    // 如果使用者按過「今日不再提醒」，則跳過
+                    if (safeGetStorage(ignoreKey, '') === 'true') return;
 
+                    const list = [];
+                    const nowTime = new Date().getTime();
+
+                    availableTickets.value.forEach(t => {
+                        if (t.expiryDate && !t.isRedeemed) {
+                            // 轉換效期字串為 Date 物件 (支援 YYYY/MM/DD)
+                            const expParts = t.expiryDate.split(/[\/\-]/);
+                            if (expParts.length >= 3) {
+                                // 設定為當天晚上 23:59:59 到期
+                                const expDate = new Date(expParts[0], expParts[1] - 1, expParts[2], 23, 59, 59);
+                                const diffMs = expDate.getTime() - nowTime;
+                                const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+                                // ★ 判斷條件：剩餘天數為 1, 3, 7 天 (或是少於 0 天的過期品也提醒)
+                                // 為了體驗更好，建議設為「小於等於 7 天」都提醒，避免客人第 6 天登入沒看到
+                                // 若您堅持只要 1, 3, 7，請改用: if ([1, 3, 7].includes(diffDays))
+                                if (diffDays <= 7 && diffDays >= 0) { 
+                                    list.push({
+                                        ...t,
+                                        ticketId: `${t.orderId}_${t.ticketIndex}`,
+                                        daysLeft: diffDays === 0 ? '今天' : diffDays
+                                    });
+                                }
+                            }
+                        }
+                    });
+
+                    // 如果有即將到期的票券，且目前沒有打開其他重要視窗，則顯示提醒
+                    if (list.length > 0) {
+                        expiringTicketsList.value = list;
+                        // 延遲一點點顯示，避免跟載入動畫強碰
+                        setTimeout(() => {
+                            const hasOtherModal = document.querySelector('.modal.show');
+                            if (!hasOtherModal) {
+                                openModalSafe('expiryReminderModal');
+                            }
+                        }, 1500);
+                    }
+                };
+
+                // --- 新增函式：從提醒視窗開啟核銷 ---
+                const openRedeemFromReminder = (item) => {
+                    hideModalSafe('expiryReminderModal');
+                    // 直接開啟該票券的圖片/核銷視窗
+                    showTicketImage(item); 
+                };
+
+                // --- 新增函式：前往票夾 ---
+                const openWalletFromReminder = () => {
+                    hideModalSafe('expiryReminderModal');
+                    openWallet();
+                };
+
+                // --- 新增函式：今日不再提醒 ---
+                const dismissExpiryToday = () => {
+                    const todayStr = new Date().toLocaleDateString('zh-TW');
+                    safeSetStorage('mm_ignore_expiry_' + todayStr, 'true');
+                    hideModalSafe('expiryReminderModal');
+                    showToast('今日不再提醒');
+                };
                 return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart, openHistory, showGuide, orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayment, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, canSelectDrive, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, fetchOrderStatus, showToast, errorMsg, requestManualScreenshot,
                 openWallet, walletFilter, showTicketImage, openVendorGuide, currentVendorGuide, availableTickets, usedTickets, currentDisplayTickets, openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery, linkifiedGuideInstruction,
                 giftOnlyItemsNames, driveOnlyItemsNames, getHistoryItemName, ticketSortType, totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, validUnreportedOrders, isPendingAlertDismissed, isGroupExpired, dismissPendingAlertForever, isRepaying, goToPayFromPending, getOrderItems, getOrderAmount,
                 groupedUnreportedOrders, isGroupSelected, toggleGroupSelection, relatedOrdersToCancel, showSortMenu, sortType, setSortType, walletUnread,
-                confirmMergedWarning,isCartTestMode,isAdminTestMode,
+                confirmMergedWarning,isCartTestMode,isAdminTestMode,expiringTicketsList, openRedeemFromReminder, openWalletFromReminder, dismissExpiryToday,
                 isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, executeBatchRedeem, confirmBatchRedeemAction, selectAllTickets,
                 isAdmin, openAdminLogin, verifyAdminPassword, adminPasswordInput, adminPendingOrders, fetchAdminDashboard, onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, adminStats, adminLowStockItems,
                 triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning, triggerPaymentCheck, isAdminChecking, isAdminFetchingStock, fetchLowStock,
@@ -1980,6 +2095,7 @@
     </script>
 </body>
 </html>
+
 
 
 
