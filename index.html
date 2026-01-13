@@ -363,7 +363,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.99</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.99 P8</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -1088,7 +1088,6 @@
         🧪 測試發貨 (複製檔案/不移走)
     </label>
 </div>
-<div class="d-grid gap-4">
                         <div class="d-grid gap-4">
                             <button class="btn btn-success rounded-pill fw-bold" @click="executeAdminShip(true)" :disabled="isAdminShipping">
                                 <span v-if="isAdminShipping"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</span>
@@ -1824,7 +1823,7 @@
 
                     if (driveItems.length > 0) {
                          const oid = giftItems.length > 0 ? `${baseOrderId}-1` : baseOrderId; generatedOrderIds.push(oid); const total = driveItems.reduce((a,b) => a + (b.price*b.quantity), 0); const record = { id: oid, timestamp: timeStr, totalAmount: total, items: driveItems.map(i => ({ name: i.name, quantity: i.quantity, price: i.price, expiryDate: i.expiryDate })) }; records.push(record);
-                         orderPromises.push(fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ ...record, phone: userContact.value.phone, email: userProfile.value.email,testMode: isCartTestMode.value || '', deliveryMethod: '截圖發送', momoName: '', momoPhone: '', userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', userId: getEffectiveUserId(), initialPaymentDesc: initialPaymentDesc }) }));
+                         orderPromises.push(fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ ...record, phone: userContact.value.phone, email: userProfile.value.email,testMode: isCartTestMode.value, deliveryMethod: '截圖發送', momoName: '', momoPhone: '', userName: (userProfile.value && userProfile.value.displayName) || 'GUEST', userId: getEffectiveUserId(), initialPaymentDesc: initialPaymentDesc }) }));
                          let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：📸 截圖發送\n🍱 內容：\n`; driveItems.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx+1)} ${i.name} x${i.quantity}\n`; }); msg += `💰 小計：$${total}`; lineMessages.push(msg);
                     }
                     if (giftItems.length > 0) {
@@ -1981,6 +1980,7 @@
     </script>
 </body>
 </html>
+
 
 
 
