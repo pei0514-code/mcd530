@@ -1078,9 +1078,17 @@
                 <div class="modal-content border-0 rounded-4 shadow-lg text-center">
                     <div class="modal-body p-4">
                         <div class="mb-3 text-primary"><i class="fas fa-shipping-fast fa-3x"></i></div>
+                       
                         <h5 class="fw-bold mb-1">確認發貨？</h5>
-                        <p class="text-muted small mb-4">單號：{{ adminShipTarget?.orderId }}</p>
-                        
+<p class="text-muted small mb-4">單號：{{ adminShipTarget?.orderId }}</p>
+
+<div class="form-check form-switch d-inline-block text-start bg-light p-2 rounded mb-3 border">
+    <input class="form-check-input" type="checkbox" id="adminShipTestCheck" v-model="isAdminTestMode">
+    <label class="form-check-label small fw-bold text-primary" for="adminShipTestCheck">
+        🧪 測試發貨 (複製檔案/不移走)
+    </label>
+</div>
+<div class="d-grid gap-4">
                         <div class="d-grid gap-4">
                             <button class="btn btn-success rounded-pill fw-bold" @click="executeAdminShip(true)" :disabled="isAdminShipping">
                                 <span v-if="isAdminShipping"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</span>
@@ -1208,6 +1216,7 @@
                 const settings = ref({ version: 'v188', liffId: '' });
                 const cart = ref({});
                 const currentCat = ref('ALL');
+                const isAdminTestMode = ref(false);
                 const userProfile = ref({});
                 const guestName = ref(safeGetStorage('mm_guest_name', ''));
                 const isLoadingData = ref(true);
@@ -1522,18 +1531,20 @@
                 };
 
                 // Updated Admin Shipment Execution
-                const executeAdminShip = async (isAutoPush) => {
-                    if (!adminShipTarget.value) return;
-                    isAdminShipping.value = true;
-                    try {
-                        const response = await fetch(API_URL, {
-                            method: 'POST',
-                            body: JSON.stringify({
-                                action: 'adminShipOrder',
-                                orderId: adminShipTarget.value.orderId,
-                                isAutoPush: isAutoPush
-                            })
-                        });
+               const executeAdminShip = async (isAutoPush) => {
+    if (!adminShipTarget.value) return;
+    isAdminShipping.value = true;
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({
+                action: 'adminShipOrder',
+                orderId: adminShipTarget.value.orderId,
+                isAutoPush: isAutoPush,
+                testMode: isAdminTestMode.value // ★★★ 補上這行，傳送前端開關的狀態 ★★★
+            })
+        });
                         const json = await response.json();
                         
                         if(json.status === 'OK') {
@@ -1950,7 +1961,7 @@
                 openWallet, walletFilter, showTicketImage, openVendorGuide, currentVendorGuide, availableTickets, usedTickets, currentDisplayTickets, openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery, linkifiedGuideInstruction,
                 giftOnlyItemsNames, driveOnlyItemsNames, getHistoryItemName, ticketSortType, totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, validUnreportedOrders, isPendingAlertDismissed, isGroupExpired, dismissPendingAlertForever, isRepaying, goToPayFromPending, getOrderItems, getOrderAmount,
                 groupedUnreportedOrders, isGroupSelected, toggleGroupSelection, relatedOrdersToCancel, showSortMenu, sortType, setSortType, walletUnread,
-                confirmMergedWarning,isCartTestMode,
+                confirmMergedWarning,isCartTestMode,isAdminTestMode,
                 isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, executeBatchRedeem, confirmBatchRedeemAction, selectAllTickets,
                 isAdmin, openAdminLogin, verifyAdminPassword, adminPasswordInput, adminPendingOrders, fetchAdminDashboard, onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, adminStats, adminLowStockItems,
                 triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning, triggerPaymentCheck, isAdminChecking, isAdminFetchingStock, fetchLowStock,
@@ -1970,5 +1981,6 @@
     </script>
 </body>
 </html>
+
 
 
