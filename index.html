@@ -354,7 +354,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.90</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.91</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -402,7 +402,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.90</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.91</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -718,6 +718,13 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Clear History Button -->
+                        <div v-if="walletFilter === 'used' && currentDisplayTickets.length > 0" class="mt-4 mb-2 text-center">
+                            <button class="btn btn-link text-secondary text-decoration-none small fw-bold" @click="clearRedeemedHistory">
+                                <i class="fas fa-trash-alt me-1"></i>清除已核銷紀錄
+                            </button>
+                        </div>
                     </div>
                     
                     <div v-if="isBatchMode" class="batch-bar">
@@ -753,6 +760,29 @@
                                 <span v-else>確認核銷</span>
                             </button>
                             <button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">還沒使用</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- FIXED: Added Batch Redeem Confirm Modal -->
+        <div class="modal fade" id="batchRedeemConfirmModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;">
+                <div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden">
+                     <div class="modal-header border-0 pb-0 justify-content-end"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                    <div class="modal-body px-4 pb-4">
+                        <div class="mb-3 text-warning"><i class="fas fa-check-double fa-4x"></i></div>
+                        <h5 class="fw-bold mb-2">批量核銷確認</h5>
+                        <p class="text-muted small mb-2">您選擇了 <span class="text-danger fw-bold fs-5">{{ batchSelection.size }}</span> 張票券。</p>
+                        <p class="text-danger fw-bold mb-4 fs-5">⚠️ 確定全部核銷？</p>
+                        
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-warning rounded-pill fw-bold shadow-sm" @click="confirmBatchRedeemAction" :disabled="isRedeeming">
+                                <span v-if="isRedeeming"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</span>
+                                <span v-else>確認全部核銷</span>
+                            </button>
+                            <button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">取消</button>
                         </div>
                     </div>
                 </div>
@@ -1324,6 +1354,13 @@
                 const isBatchMode = ref(false);
                 const batchSelection = ref(new Set());
                 const now = ref(Date.now());
+                
+                // NEW: Hidden tickets set for "Clear Redeemed" function
+                const hiddenTicketKeys = ref(new Set());
+                try {
+                    const savedHidden = JSON.parse(safeGetStorage('mm_hidden_tickets', '[]'));
+                    savedHidden.forEach(k => hiddenTicketKeys.value.add(k));
+                } catch(e) {}
 
                 // Admin states
                 const adminPasswordInput = ref('');
@@ -2037,15 +2074,13 @@
 
                 const allTickets = computed(() => {
                     let tempTickets = [];
-                    
-                    // 1. Collect all raw tickets from history
+                    // ... (Ticket parsing logic UNCHANGED) ...
+                    // Copy existing logic for `allTickets`
                     orderHistory.value.forEach(order => {
                         if ((order.isShipped === true || String(order.isShipped) === 'true') && (order.fulfillment || (order.tickets && order.tickets.length > 0))) {
                             
-                            // Calculate total expected units
                             const totalExpectedUnits = order.items ? order.items.reduce((sum, it) => {
                                 const qty = Number(it.quantity) || 0;
-                                // Check for multiplier in name e.g. (2組)
                                 const match = it.name.match(/[\(（](\d+)[組份張]/);
                                 const multiplier = match ? parseInt(match[1], 10) : 1;
                                 return sum + (qty * multiplier);
@@ -2053,7 +2088,6 @@
 
                             const totalActualLinks = (order.tickets && order.tickets.length > 0) ? order.tickets.length : (order.fulfillment ? order.fulfillment.split('\n').filter(l=>l.trim()).length : 0);
                             
-                            // v2.87 FIX: If exactly 1 link but multiple units, it's definitely merged
                             const forcedMergedByCount = (totalActualLinks === 1 && totalExpectedUnits > 1);
 
                             if (order.tickets && order.tickets.length > 0) {
@@ -2079,34 +2113,20 @@
                                     let productImage = product ? product.image : 'https://via.placeholder.com/150?text=No+Image';
                                     let vendorName = product ? product.vendor : '';
                                     const purchaseDate = order.timestamp ? order.timestamp.split(' ')[0] : '';
-                                    
-                                    // Strip quantity info from name for grouping (e.g. "Burger (2 sets)" -> "Burger")
                                     const groupingName = t.name.replace(/[\(（]\d+[組份張].*?[\)）]/g, '').trim();
 
                                     tempTickets.push({
-                                        url: t.url, 
-                                        orderId: order.id, 
-                                        ticketIndex: i, 
-                                        name: t.name, 
-                                        originalName: t.name, // Keep original for numbering
-                                        groupingName: groupingName,
-                                        vendor: vendorName,
-                                        productImage: productImage, 
-                                        isRedeemed: isRedeemed, 
-                                        redeemedAt: redeemedAt,
-                                        purchaseDate: purchaseDate, 
-                                        expiryDate: t.expiry || '', 
-                                        fullTimestamp: order.timestamp, 
-                                        isMergedOrder: t.isMerged || forcedMergedByCount // Combine backend flag with count heuristic
+                                        url: t.url, orderId: order.id, ticketIndex: i, name: t.name, originalName: t.name, groupingName: groupingName, vendor: vendorName,
+                                        productImage: productImage, isRedeemed: isRedeemed, redeemedAt: redeemedAt,
+                                        purchaseDate: purchaseDate, expiryDate: t.expiry || '', fullTimestamp: order.timestamp, isMergedOrder: t.isMerged || forcedMergedByCount
                                     });
                                 });
                             } else if (order.fulfillment) {
                                 const links = order.fulfillment.split('\n').filter(l => l.trim().length > 0);
-                                const isMergedOrder = forcedMergedByCount || (totalExpectedUnits > links.length); // Legacy check
+                                const isMergedOrder = forcedMergedByCount || (totalExpectedUnits > links.length); 
                                 const serverLog = order.redemptionLog || "";
                                 
                                 links.forEach((url, i) => {
-                                    // Similar fallback logic...
                                     const isServerRedeemed = serverLog.includes(`[${i+1}]已核銷`);
                                     const isLocalRedeemed = !!redeemedStatus.value[url];
                                     const isRedeemed = isServerRedeemed || isLocalRedeemed;
@@ -2120,9 +2140,7 @@
                                     let vendorName = '';
                                     let expiryDate = '';
                                     if (order.items && order.items.length > 0) {
-                                         const item0 = order.items[0]; 
-                                         pName = item0.name;
-                                         expiryDate = item0.expiryDate;
+                                         const item0 = order.items[0]; pName = item0.name; expiryDate = item0.expiryDate;
                                     }
                                     const product = products.value.find(p => p.name === pName);
                                     let productImage = product ? product.image : 'https://via.placeholder.com/150?text=No+Image';
@@ -2139,42 +2157,26 @@
                         }
                     });
 
-                    // 2. Group by (OrderId + GroupingName) to identify split files
+                    // Logic from previous turn for grouping/naming
                     const grouped = {};
                     tempTickets.forEach((item, index) => {
                         const key = `${item.orderId}_${item.groupingName}`;
                         if (!grouped[key]) grouped[key] = [];
-                        grouped[key].push(index); // Store index in tempTickets array
+                        grouped[key].push(index); 
                     });
-
-                    // 3. Process groups to apply numbering and correct merged warning
                     Object.values(grouped).forEach(indices => {
                         const count = indices.length;
                         indices.forEach((arrayIndex, localIndex) => {
                             const item = tempTickets[arrayIndex];
-                            
-                            // If we have multiple separate files for what is logically one product type in this order
-                            if (count > 1) {
-                                // Append numbering (1/N)
-                                item.name = `${item.originalName} (${localIndex + 1}/${count})`;
-                            } 
-                            
-                            // v2.89 FIX: Check strict keywords in the name that indicate merging for ALL items
-                            // This ensures that even if it's item 2/2, if it says "2張合併", it flags as merged.
+                            if (count > 1) item.name = `${item.originalName} (${localIndex + 1}/${count})`;
                             const nameHasMergedKeywords = /合併|\[\d{4}\].*\[\d{4}\]|\[[xX]?\d+(組|張|份)?\]/.test(item.originalName);
-
-                            // If backend says it's merged OR name implies it, set to true.
-                            if (nameHasMergedKeywords) {
-                                item.isMergedOrder = true;
-                            }
+                            if (nameHasMergedKeywords) item.isMergedOrder = true;
                         });
                     });
 
-                    // 4. Apply search filter
                     if (ticketSearchQuery.value) {
                         return tempTickets.filter(t => t.name.includes(ticketSearchQuery.value) || t.orderId.includes(ticketSearchQuery.value));
                     }
-
                     return tempTickets;
                 });
 
@@ -2196,8 +2198,9 @@
                     });
                 });
 
+                // FIXED: Filter out hidden tickets
                 const usedTickets = computed(() => {
-                    return allTickets.value.filter(t => t.isRedeemed).sort((a, b) => {
+                    return allTickets.value.filter(t => t.isRedeemed && !hiddenTicketKeys.value.has(`${t.orderId}_${t.ticketIndex}`)).sort((a, b) => {
                         const timeA = a.redeemedAt || '';
                         const timeB = b.redeemedAt || '';
                         if (timeA && timeB) return timeB.localeCompare(timeA);
@@ -2207,10 +2210,21 @@
                     });
                 });
                 
+                // NEW: Clear History Function
+                const clearRedeemedHistory = () => {
+                    if (confirm('確定要隱藏目前已顯示的核銷紀錄嗎？\n(此操作僅隱藏顯示，不影響後台資料)')) {
+                        const currentUsed = usedTickets.value;
+                        currentUsed.forEach(t => hiddenTicketKeys.value.add(`${t.orderId}_${t.ticketIndex}`));
+                        safeSetStorage('mm_hidden_tickets', JSON.stringify([...hiddenTicketKeys.value]));
+                        showToast('紀錄已清除');
+                    }
+                };
+                
                 const currentDisplayTickets = computed(() => {
                     return walletFilter.value === 'available' ? availableTickets.value : usedTickets.value;
                 });
                 
+                // ... (openWallet, showTicketImage, etc. UNCHANGED) ...
                 // Fix: Fetch latest status when opening wallet to ensure tickets appear
                 const openWallet = () => { 
                     ticketSearchQuery.value = ''; 
@@ -2364,7 +2378,8 @@
                 confirmMergedWarning,
                 isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, executeBatchRedeem, confirmBatchRedeemAction, selectAllTickets,
                 isAdmin, openAdminLogin, verifyAdminPassword, adminPasswordInput, adminPendingOrders, fetchAdminDashboard, onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, adminStats,
-                triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning, triggerPaymentCheck, isAdminChecking
+                triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning, triggerPaymentCheck, isAdminChecking,
+                clearRedeemedHistory // Export new function
                  };
             }
         }).mount('#app');
