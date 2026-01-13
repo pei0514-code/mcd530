@@ -1866,10 +1866,165 @@ const triggerPaymentCheck = async () => {
                     openModalSafe('successModal'); 
                 };
                 
-                const openCancelModal = (h) => { hideModalSafe('historyModal'); orderToCancel.value = h; relatedOrdersToCancel.value = []; const baseId = h.id.split('-')[0]; if (h.id.includes('-')) { const siblings = orderHistory.value.filter(o => o.id.startsWith(baseId) && o.id !== h.id && getStatusBadge(o).canCancel ); relatedOrdersToCancel.value = siblings; } openModalSafe('cancelConfirmModal'); };
-                const confirmCancel = async (mode = 'single') => { if (!orderToCancel.value) return; const mainOrder = orderToCancel.value; const ordersToProcess = [mainOrder]; if (mode === 'all') { relatedOrdersToCancel.value.forEach(o => ordersToProcess.push(o)); } hideModalSafe('cancelConfirmModal'); showToast('正在取消訂單...'); try { const cancelPromises = ordersToProcess.map(o => fetch(API_URL, { method: 'POST', // mode: 'no-cors', body: JSON.stringify({ action: 'cancelOrder', orderId: o.id, userId: getEffectiveUserId() }) }) ); await Promise.all(cancelPromises); ordersToProcess.forEach(o => { orderHistory.value = orderHistory.value.map(hist => { if (hist.id === o.id) return { ...hist, paymentNote: '用戶自行取消' }; return hist; }); const remPending = unreportedOrders.value.filter(id => id !== o.id); unreportedOrders.value = remPending; }); safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value)); safeSetStorage('mm_pending_payment_orders', JSON.stringify(unreportedOrders.value)); showToast(mode === 'all' ? '全部相關訂單已取消！' : '訂單已成功取消！謝謝您'); setTimeout(() => { initApp(); }, 1200); } catch(e) { showToast('取消失敗，請聯繫客服'); console.error(e); } };
-                
-                const showProductDetail = (p) => { selectedProduct.value = p; openModalSafe('productDetailModal'); };
+              // --- 1. 取消訂單確認彈窗 ---
+
+const openCancelModal = (h) => {
+
+    hideModalSafe('historyModal');
+
+    orderToCancel.value = h;
+
+    relatedOrdersToCancel.value = [];
+
+
+
+    // 檢查是否有相關聯的訂單 (例如同一次下單的多筆)
+
+    const baseId = h.id.split('-')[0];
+
+    if (h.id.includes('-')) {
+
+        const siblings = orderHistory.value.filter(o =>
+
+            o.id.startsWith(baseId) &&
+
+            o.id !== h.id &&
+
+            getStatusBadge(o).canCancel
+
+        );
+
+        relatedOrdersToCancel.value = siblings;
+
+    }
+
+    openModalSafe('cancelConfirmModal');
+
+};
+
+
+
+// --- 2. 執行取消動作 ---
+
+const confirmCancel = async (mode = 'single') => {
+
+    if (!orderToCancel.value) return;
+
+
+
+    const mainOrder = orderToCancel.value;
+
+    const ordersToProcess = [mainOrder];
+
+
+
+    if (mode === 'all') {
+
+        relatedOrdersToCancel.value.forEach(o => ordersToProcess.push(o));
+
+    }
+
+
+
+    hideModalSafe('cancelConfirmModal');
+
+    showToast('正在取消訂單...');
+
+
+
+    try {
+
+        const cancelPromises = ordersToProcess.map(o =>
+
+            fetch(API_URL, {
+
+                method: 'POST',
+
+                // mode: 'no-cors',
+
+                body: JSON.stringify({
+
+                    action: 'cancelOrder',
+
+                    orderId: o.id,
+
+                    userId: getEffectiveUserId()
+
+                })
+
+            })
+
+        );
+
+
+
+        await Promise.all(cancelPromises);
+
+
+
+        // 更新本地列表顯示狀態
+
+        ordersToProcess.forEach(o => {
+
+            orderHistory.value = orderHistory.value.map(hist => {
+
+                if (hist.id === o.id) return { ...hist, paymentNote: '用戶自行取消' };
+
+                return hist;
+
+            });
+
+            // 移除未回報清單中的項目
+
+            const remPending = unreportedOrders.value.filter(id => id !== o.id);
+
+            unreportedOrders.value = remPending;
+
+        });
+
+
+
+        safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
+
+        safeSetStorage('mm_pending_payment_orders', JSON.stringify(unreportedOrders.value));
+
+
+
+        showToast(mode === 'all' ? '全部相關訂單已取消！' : '訂單已成功取消！謝謝您');
+
+        
+
+        // 重新整理 (CSP 安全寫法)
+
+        setTimeout(() => {
+
+            initApp();
+
+        }, 1200);
+
+
+
+    } catch (e) {
+
+        showToast('取消失敗，請聯繫客服');
+
+        console.error(e);
+
+    }
+
+};
+
+
+
+// --- 3. 顯示商品詳情 ---
+
+const showProductDetail = (p) => {
+
+    selectedProduct.value = p;
+
+    openModalSafe('productDetailModal');
+
+};   
                 const openReportForPending = () => { hideModalSafe('unreportedModal'); lastOrderIds.value = pendingSelection.value; openPaymentForm(); openModalSafe('successModal'); };
                 const goToPayFromPending = () => { hideModalSafe('unreportedModal'); lastOrderIds.value = pendingSelection.value; isRepaying.value = true; showPaymentForm.value = false; selectedPayment.value = ''; openModalSafe('successModal'); };
                 const getOrderItems = (oid) => { const o = orderHistory.value.find(x => x.id === oid); return o ? o.items : []; };
@@ -2147,6 +2302,7 @@ const triggerPaymentCheck = async () => {
     </script>
 </body>
 </html>
+
 
 
 
