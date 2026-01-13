@@ -271,6 +271,12 @@
         /* History Group Card Style */
         .history-group-card { background: #fff; border: 1px solid #eee; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); padding: 15px; margin-bottom: 15px; }
 
+        /* Admin Styles */
+        .admin-card { border: 2px solid #333; background: #fff; border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+        .admin-card-header { background: #333; color: #fff; padding: 8px 12px; font-weight: 700; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+        .admin-card-body { padding: 12px; }
+        .admin-btn-float { position: fixed; bottom: 20px; left: 20px; z-index: 1100; width: 45px; height: 45px; border-radius: 50%; background: #333; color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 18px; border: 2px solid #555; }
+
         /* Desktop Grid Constraint */
         @media (min-width: 992px) {
             .container-fluid.mode-large, .container-fluid.mode-medium, .container-fluid.mode-small, .container-fluid.mode-xlarge, .container-fluid.mode-xsmall {
@@ -348,7 +354,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.88</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.89</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -390,12 +396,13 @@
     </div>
 
     <div id="app" v-cloak>
+        <!-- ... (Header, Product Grid, Layout Switcher, etc. unchanged) ... -->
         <div class="sticky-header">
             <div class="p-3 d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.88</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.89</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -529,6 +536,7 @@
         <a class="line-float" href="https://lin.ee/ejXmXDl" target="_blank"><i class="fab fa-line"></i></a>
 
         <!-- Modals -->
+        <!-- ... (Cart, Ticket, Redeem, History, etc. unchanged) ... -->
         <div class="modal fade" id="cartModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 rounded-4 shadow-lg">
@@ -622,7 +630,6 @@
             </div>
         </div>
 
-        <!-- ... (Ticket Modal and other existing modals unchanged) ... -->
         <div class="modal fade" id="ticketModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 rounded-4 shadow-lg" style="background: #f8f9fa;">
@@ -752,29 +759,145 @@
             </div>
         </div>
 
-        <!-- NEW: Batch Redeem Confirm Modal (Replaces window.confirm) -->
-        <div class="modal fade" id="batchRedeemConfirmModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;">
+        <div class="modal fade" id="guideModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 rounded-4 shadow-lg">
+                    <div class="modal-header border-0 pb-0"><h5 class="fw-bold"><i class="fas fa-book-reader me-2"></i>操作說明</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                    <div class="modal-body p-4">
+                        <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-shopping-basket"></i></div><div class="guide-content"><h6>1. 挑選商品</h6><p>瀏覽商品列表，將喜歡的商品加入購物車。點擊圖片可查看詳細資訊。</p></div></div>
+                        <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-cash-register"></i></div><div class="guide-content"><h6>2. 確認結帳</h6><p>進入購物車，確認數量與金額，選擇您方便的付款方式 (支援多種銀行/街口)。</p></div></div>
+                        <div class="guide-card"><div class="guide-icon-box"><i class="fab fa-line"></i></div><div class="guide-content"><h6>3. 訂單傳送</h6><p>按下送出後，系統會自動將訂單明細傳送至 LINE 聊天室，請勿關閉視窗。</p></div></div>
+                        <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-file-invoice-dollar"></i></div><div class="guide-content"><h6>4. 付款與回報</h6><p>完成轉帳後，請點擊「回報付款」或至歷史訂單中回報您的帳號後五碼。</p></div></div>
+                        <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-gift"></i></div><div class="guide-content"><h6>5. 領取商品</h6><p>選擇截圖發送請直接到我的票券中查看商品，選擇轉贈則請到您的momo會員票券區查看。</p></div></div>
+                    </div>
+                    <div class="modal-footer border-0 bg-light p-2 justify-content-end">
+                        <button v-if="isAdmin" class="btn btn-sm btn-link text-muted text-decoration-none" @click="openAdminLogin"><i class="fas fa-user-shield"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Admin Login Modal -->
+        <div class="modal fade" id="adminLoginModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 280px;">
                 <div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden">
-                     <div class="modal-header border-0 pb-0 justify-content-end"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                    <div class="modal-body px-4 pb-4">
-                        <div class="mb-3 text-warning"><i class="fas fa-check-double fa-4x"></i></div>
-                        <h5 class="fw-bold mb-2">批量核銷確認</h5>
-                        <p class="text-muted small mb-2">您選取了 <span class="text-danger fw-bold fs-5">{{ batchSelection.size }}</span> 張票券</p>
-                        <p class="text-dark fw-bold mb-4">請確認您已向店家出示所有畫面！</p>
+                    <div class="modal-body p-4">
+                        <div class="mb-3 text-dark"><i class="fas fa-lock fa-2x"></i></div>
+                        <h6 class="fw-bold mb-3">請輸入管理密碼</h6>
+                        <input type="password" class="form-control text-center fs-4 fw-bold rounded-pill mb-3" v-model="adminPasswordInput" placeholder="****" maxlength="4" inputmode="numeric">
+                        <button class="btn btn-dark w-100 rounded-pill fw-bold" @click="verifyAdminPassword">進入</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Admin Panel Modal -->
+        <div class="modal fade" id="adminPanelModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 rounded-4 shadow-lg">
+                    <div class="modal-header border-0 bg-dark text-white">
+                        <h5 class="fw-bold fs-6"><i class="fas fa-tasks me-2"></i>管理員後台</h5>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-light rounded-pill" @click="fetchAdminDashboard"><i class="fas fa-sync-alt"></i></button>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                    </div>
+                    <div class="modal-body p-3 bg-light">
+                        <!-- Sales Statistics -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-6 col-md-3">
+                                <div class="p-2 bg-white border rounded text-center shadow-sm">
+                                    <small class="text-muted d-block fw-bold" style="font-size:10px;">今日營收</small>
+                                    <span class="text-danger fw-bold fs-5">${{ adminStats.today }}</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="p-2 bg-white border rounded text-center shadow-sm">
+                                    <small class="text-muted d-block fw-bold" style="font-size:10px;">本週營收</small>
+                                    <span class="text-dark fw-bold fs-5">${{ adminStats.week }}</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="p-2 bg-white border rounded text-center shadow-sm">
+                                    <small class="text-muted d-block fw-bold" style="font-size:10px;">本月營收</small>
+                                    <span class="text-dark fw-bold fs-5">${{ adminStats.month }}</span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="p-2 bg-white border rounded text-center shadow-sm">
+                                    <small class="text-muted d-block fw-bold" style="font-size:10px;">總營收</small>
+                                    <span class="text-dark fw-bold fs-5">${{ adminStats.total }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="d-flex gap-2 mb-3 overflow-auto pb-1">
+                             <button class="btn btn-sm btn-outline-dark rounded-pill text-nowrap fw-bold shadow-sm" @click="triggerStockSync" :disabled="isAdminSyncing">
+                                <i class="fas fa-sync me-1"></i>{{ isAdminSyncing ? '同步中...' : '強制庫存同步' }}
+                             </button>
+                             <button class="btn btn-sm btn-outline-secondary rounded-pill text-nowrap fw-bold shadow-sm" @click="triggerTimeoutCheck" :disabled="isAdminCleaning">
+                                <i class="fas fa-broom me-1"></i>{{ isAdminCleaning ? '清理中...' : '清理逾時訂單' }}
+                             </button>
+                        </div>
+
+                        <!-- Pending Orders List -->
+                        <h6 class="fw-bold border-bottom pb-2 mb-2 d-flex justify-content-between align-items-center">
+                            <span>待處理訂單 ({{ adminPendingOrders.length }})</span>
+                        </h6>
                         
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-warning rounded-pill fw-bold shadow-sm" @click="confirmBatchRedeemAction" :disabled="isRedeeming">
-                                <span v-if="isRedeeming"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</span>
-                                <span v-else>確認全部核銷</span>
-                            </button>
-                            <button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">取消</button>
+                        <div v-if="adminPendingOrders.length === 0" class="text-center py-5 text-muted">
+                            <i class="fas fa-check-circle fa-3x mb-3 text-success"></i><br>目前沒有待處理訂單
+                        </div>
+                        <div v-for="order in adminPendingOrders" :key="order.orderId" class="admin-card">
+                            <div class="admin-card-header">
+                                <span>{{ order.orderId }}</span>
+                                <span class="badge bg-danger">${{ order.totalAmount }}</span>
+                            </div>
+                            <div class="admin-card-body d-flex justify-content-between align-items-center">
+                                <div class="d-flex gap-2 overflow-auto" style="max-width: 60%;">
+                                    <div v-for="item in order.items" class="position-relative flex-shrink-0" style="width: 36px; height: 36px;">
+                                        <img :src="getProductImage(item.name)" class="w-100 h-100 rounded border object-fit-cover">
+                                        <span class="position-absolute bottom-0 end-0 badge bg-dark rounded-pill" style="font-size:7px; padding: 1px 3px;">x{{ item.quantity }}</span>
+                                    </div>
+                                </div>
+                                <button class="btn btn-dark btn-sm rounded-pill fw-bold px-3" @click="onAdminShipClick(order)">
+                                    發貨 <i class="fas fa-paper-plane ms-1"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- NEW: Admin Shipment Confirmation Modal -->
+        <div class="modal fade" id="adminShipConfirmModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 300px;">
+                <div class="modal-content border-0 rounded-4 shadow-lg text-center">
+                    <div class="modal-body p-4">
+                        <div class="mb-3 text-primary"><i class="fas fa-shipping-fast fa-3x"></i></div>
+                        <h5 class="fw-bold mb-1">確認發貨？</h5>
+                        <p class="text-muted small mb-4">單號：{{ adminShipTarget?.orderId }}</p>
+                        
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success rounded-pill fw-bold" @click="executeAdminShip(true)" :disabled="isAdminShipping">
+                                <span v-if="isAdminShipping"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</span>
+                                <span v-else>🟢 確認發貨 (自動推播)</span>
+                            </button>
+                            <button class="btn btn-outline-secondary rounded-pill fw-bold" @click="executeAdminShip(false)" :disabled="isAdminShipping">
+                                ⚪ 僅產生備份 (不推播)
+                            </button>
+                            <button class="btn btn-light rounded-pill fw-bold text-muted" data-bs-dismiss="modal">✖️ 取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ... (Other existing modals) ... -->
+        <!-- ... (mergedWarningModal, successModal, unreportedModal, cancelConfirmModal, alertModal, productDetailModal, guestWarningModal unchanged) ... -->
+        <!-- ... Include existing modals ... -->
         <div class="modal fade" id="mergedWarningModal" tabindex="-1" data-bs-backdrop="static">
             <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;">
                 <div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden">
@@ -861,22 +984,6 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ... (Guide, Vendor, Success, Unreported Modals) ... -->
-        <div class="modal fade" id="guideModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                <div class="modal-content border-0 rounded-4 shadow-lg">
-                    <div class="modal-header border-0 pb-0"><h5 class="fw-bold"><i class="fas fa-book-reader me-2"></i>操作說明</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                    <div class="modal-body p-4">
-                        <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-shopping-basket"></i></div><div class="guide-content"><h6>1. 挑選商品</h6><p>瀏覽商品列表，將喜歡的商品加入購物車。點擊圖片可查看詳細資訊。</p></div></div>
-                        <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-cash-register"></i></div><div class="guide-content"><h6>2. 確認結帳</h6><p>進入購物車，確認數量與金額，選擇您方便的付款方式 (支援多種銀行/街口)。</p></div></div>
-                        <div class="guide-card"><div class="guide-icon-box"><i class="fab fa-line"></i></div><div class="guide-content"><h6>3. 訂單傳送</h6><p>按下送出後，系統會自動將訂單明細傳送至 LINE 聊天室，請勿關閉視窗。</p></div></div>
-                        <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-file-invoice-dollar"></i></div><div class="guide-content"><h6>4. 付款與回報</h6><p>完成轉帳後，請點擊「回報付款」或至歷史訂單中回報您的帳號後五碼。</p></div></div>
-                        <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-gift"></i></div><div class="guide-content"><h6>5. 領取商品</h6><p>選擇截圖發送請直接到我的票券中查看商品，選擇轉贈則請到您的momo會員票券區查看。</p></div></div>
                     </div>
                 </div>
             </div>
@@ -1138,6 +1245,7 @@
         const { createApp, ref, computed, onMounted, watch } = Vue;
         const API_URL = 'https://script.google.com/macros/s/AKfycbx2xdqkRoBGFibvgKRo05QtVcIWZlUjBq-rr_NRJ-8nK1BsFPSorQqnsNa89IPlG45aeA/exec';
         const NUMBERS = ['❶', '❷', '❸', '❹', '❺', '❻', '❼', '❽', '❾', '❿'];
+        const ADMIN_IDS = ['U427b3a2987866247f59e69e4a9400fc5', 'Uff13b47f1e66048edc970326f2bfea77'];
         
         const BANK_ACCOUNTS = [
             { code: '823', name: '將來銀行(823)', account: '88658888888840' },
@@ -1214,6 +1322,15 @@
                 const batchSelection = ref(new Set());
                 const now = ref(Date.now());
 
+                // Admin states
+                const adminPasswordInput = ref('');
+                const adminPendingOrders = ref([]);
+                const adminStats = ref({ today: 0, week: 0, month: 0, total: 0 });
+                const adminShipTarget = ref(null);
+                const isAdminShipping = ref(false);
+                const isAdminSyncing = ref(false);
+                const isAdminCleaning = ref(false);
+
                 const getModal = (id) => {
                     const el = document.getElementById(id);
                     if (!el) return null;
@@ -1251,6 +1368,94 @@
 
                 const openCart = () => {
                     openModalSafe('cartModal');
+                };
+
+                const isAdmin = computed(() => {
+                    return userProfile.value && userProfile.value.userId && ADMIN_IDS.includes(userProfile.value.userId);
+                });
+
+                const openAdminLogin = () => {
+                    hideModalSafe('guideModal');
+                    adminPasswordInput.value = '';
+                    openModalSafe('adminLoginModal');
+                };
+
+                const verifyAdminPassword = () => {
+                    if (adminPasswordInput.value === '0187') {
+                        hideModalSafe('adminLoginModal');
+                        fetchAdminDashboard();
+                        openModalSafe('adminPanelModal');
+                    } else {
+                        showToast('密碼錯誤');
+                    }
+                };
+
+                const fetchAdminDashboard = async () => {
+                    adminPendingOrders.value = [];
+                    try {
+                        const response = await fetch(`${API_URL}?action=getAdminDashboardData`);
+                        const data = await response.json();
+                        if (data.orders) {
+                            adminPendingOrders.value = data.orders;
+                        }
+                        if (data.stats) {
+                            adminStats.value = data.stats;
+                        }
+                    } catch (e) {
+                        showToast('讀取後台失敗');
+                    }
+                };
+
+                const onAdminShipClick = (order) => {
+                    adminShipTarget.value = order;
+                    hideModalSafe('adminPanelModal');
+                    openModalSafe('adminShipConfirmModal');
+                };
+
+                const executeAdminShip = async (isAutoPush) => {
+                    if (!adminShipTarget.value) return;
+                    isAdminShipping.value = true;
+                    try {
+                        await fetch(API_URL, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            body: JSON.stringify({
+                                action: 'adminShipOrder',
+                                orderId: adminShipTarget.value.orderId,
+                                isAutoPush: isAutoPush
+                            })
+                        });
+                        showToast('指令已發送');
+                        hideModalSafe('adminShipConfirmModal');
+                        adminShipTarget.value = null;
+                        // Refresh list
+                        openModalSafe('adminPanelModal');
+                        fetchAdminDashboard();
+                    } catch (e) {
+                        showToast('發貨失敗');
+                    } finally {
+                        isAdminShipping.value = false;
+                    }
+                };
+                
+                const triggerStockSync = async () => {
+                    isAdminSyncing.value = true;
+                    try {
+                        await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'adminSyncStock' }) });
+                        showToast('已觸發同步指令');
+                        // Wait a bit then refresh local data
+                        setTimeout(() => { initApp(); }, 3000);
+                    } catch(e) { showToast('同步請求失敗'); }
+                    finally { isAdminSyncing.value = false; }
+                };
+                
+                const triggerTimeoutCheck = async () => {
+                    isAdminCleaning.value = true;
+                    try {
+                        await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'adminCheckTimeout' }) });
+                        showToast('已觸發清理指令');
+                    } catch(e) { showToast('清理請求失敗'); }
+                    finally { isAdminCleaning.value = false; }
                 };
 
                 onMounted(() => {
@@ -1361,6 +1566,7 @@
                     }
                 };
                 
+                // ... (reloadApp, getProductImage, checkGuestStatus, hideStaticLoader, showAlert, setViewMode, setSortType, togglePayment, copyText, gridModeClass, etc... UNCHANGED) ...
                 const reloadApp = () => { window.location.reload(); };
                 const getProductImage = (name) => { const p = products.value.find(prod => prod.name === name); return p ? p.image : 'https://via.placeholder.com/48?text=No+Img'; };
                 const checkGuestStatus = () => { const ua = navigator.userAgent || navigator.vendor || window.opera; if (!liff.isInClient() || (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1)) { setTimeout(() => { openModalSafe('guestWarningModal'); }, 1000); } };
@@ -2136,7 +2342,9 @@
                 giftOnlyItemsNames, driveOnlyItemsNames, getHistoryItemName, ticketSortType, totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, validUnreportedOrders, isPendingAlertDismissed, isGroupExpired, dismissPendingAlertForever, isRepaying, goToPayFromPending, getOrderItems, getOrderAmount,
                 groupedUnreportedOrders, isGroupSelected, toggleGroupSelection, relatedOrdersToCancel, showSortMenu, sortType, setSortType, walletUnread,
                 confirmMergedWarning,
-                isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, executeBatchRedeem, confirmBatchRedeemAction, selectAllTickets
+                isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, executeBatchRedeem, confirmBatchRedeemAction, selectAllTickets,
+                isAdmin, openAdminLogin, verifyAdminPassword, adminPasswordInput, adminPendingOrders, fetchAdminDashboard, onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, adminStats,
+                triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning
                  };
             }
         }).mount('#app');
