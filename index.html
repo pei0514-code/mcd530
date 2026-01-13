@@ -1106,8 +1106,8 @@
                     <div class="d-flex flex-column text-start">
                         <span class="fw-bold text-muted small" style="font-size: 11px;">訂單編號 {{ h.id }} 
                             <!-- v2.99 Patch 6 Label Fix -->
-                            <span class="badge-method" :class="(h.id && h.id.indexOf('-2') > -1) ? 'momo' : 'screenshot'">
-                                {{ (h.id.indexOf('-1') > -1) ? '截圖發送' : (h.id.indexOf('-2') > -1) ? 'momo轉贈' : (h.deliveryMethod || '一般') }}
+                            <span class="badge-method" :class="((h.id && h.id.indexOf('-2') > -1) || (h.deliveryMethod && (h.deliveryMethod.includes('momo') || h.deliveryMethod.includes('轉贈')))) ? 'momo' : 'screenshot'">
+                                {{ (h.id && h.id.indexOf('-1') > -1) ? '截圖發送' : (h.id && h.id.indexOf('-2') > -1) ? 'momo轉贈' : (h.deliveryMethod || '一般') }}
                             </span>
                         </span>
                     </div>
