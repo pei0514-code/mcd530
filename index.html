@@ -354,7 +354,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.89</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v2.90</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -402,7 +402,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.89</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v2.90</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -839,6 +839,9 @@
                              <button class="btn btn-sm btn-outline-secondary rounded-pill text-nowrap fw-bold shadow-sm" @click="triggerTimeoutCheck" :disabled="isAdminCleaning">
                                 <i class="fas fa-broom me-1"></i>{{ isAdminCleaning ? '清理中...' : '清理逾時訂單' }}
                              </button>
+                             <button class="btn btn-sm btn-outline-primary rounded-pill text-nowrap fw-bold shadow-sm" @click="triggerPaymentCheck" :disabled="isAdminChecking">
+                                <i class="fas fa-envelope me-1"></i>{{ isAdminChecking ? '查帳中...' : '執行 MAIL 查帳' }}
+                             </button>
                         </div>
 
                         <!-- Pending Orders List -->
@@ -851,7 +854,7 @@
                         </div>
                         <div v-for="order in adminPendingOrders" :key="order.orderId" class="admin-card">
                             <div class="admin-card-header">
-                                <span>{{ order.orderId }}</span>
+                                <span>{{ order.orderId }} <span class="badge bg-secondary ms-1" style="font-size:10px;">{{ order.buyerName }}</span></span>
                                 <span class="badge bg-danger">${{ order.totalAmount }}</span>
                             </div>
                             <div class="admin-card-body d-flex justify-content-between align-items-center">
@@ -880,7 +883,7 @@
                         <h5 class="fw-bold mb-1">確認發貨？</h5>
                         <p class="text-muted small mb-4">單號：{{ adminShipTarget?.orderId }}</p>
                         
-                        <div class="d-grid gap-2">
+                        <div class="d-grid gap-4">
                             <button class="btn btn-success rounded-pill fw-bold" @click="executeAdminShip(true)" :disabled="isAdminShipping">
                                 <span v-if="isAdminShipping"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</span>
                                 <span v-else>🟢 確認發貨 (自動推播)</span>
@@ -1330,6 +1333,7 @@
                 const isAdminShipping = ref(false);
                 const isAdminSyncing = ref(false);
                 const isAdminCleaning = ref(false);
+                const isAdminChecking = ref(false);
 
                 const getModal = (id) => {
                     const el = document.getElementById(id);
@@ -1376,12 +1380,18 @@
 
                 const openAdminLogin = () => {
                     hideModalSafe('guideModal');
-                    adminPasswordInput.value = '';
-                    openModalSafe('adminLoginModal');
+                    if (safeGetStorage('mm_admin_auth', '') === 'true') {
+                         fetchAdminDashboard();
+                         openModalSafe('adminPanelModal');
+                    } else {
+                         adminPasswordInput.value = '';
+                         openModalSafe('adminLoginModal');
+                    }
                 };
 
                 const verifyAdminPassword = () => {
                     if (adminPasswordInput.value === '0187') {
+                        safeSetStorage('mm_admin_auth', 'true');
                         hideModalSafe('adminLoginModal');
                         fetchAdminDashboard();
                         openModalSafe('adminPanelModal');
@@ -1456,6 +1466,16 @@
                         showToast('已觸發清理指令');
                     } catch(e) { showToast('清理請求失敗'); }
                     finally { isAdminCleaning.value = false; }
+                };
+                
+                const triggerPaymentCheck = async () => {
+                    isAdminChecking.value = true;
+                    try {
+                        await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'adminCheckPayments' }) });
+                        showToast('已觸發查帳指令');
+                        setTimeout(() => { fetchAdminDashboard(); }, 2000);
+                    } catch(e) { showToast('查帳請求失敗'); }
+                    finally { isAdminChecking.value = false; }
                 };
 
                 onMounted(() => {
@@ -2344,7 +2364,7 @@
                 confirmMergedWarning,
                 isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, executeBatchRedeem, confirmBatchRedeemAction, selectAllTickets,
                 isAdmin, openAdminLogin, verifyAdminPassword, adminPasswordInput, adminPendingOrders, fetchAdminDashboard, onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, adminStats,
-                triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning
+                triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning, triggerPaymentCheck, isAdminChecking
                  };
             }
         }).mount('#app');
