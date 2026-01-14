@@ -1414,11 +1414,11 @@
         createApp({
             setup() {
                 // ==========================
-                // A. 變數定義 (REFS)
+                // A. 變數定義
                 // ==========================
                 const products = ref([]);
                 const cart = ref({});
-                const settings = ref({ version: 'v3.02 Stable', liffId: '' });
+                const settings = ref({ version: 'v3.02 Fixed', liffId: '' });
                 const faqList = ref([]);
                 const announcement = ref("🔥 正在載入最新公告...");
                 const currentCat = ref('ALL');
@@ -1453,7 +1453,7 @@
                 const appliedCoupon = ref(null);
                 const isVerifyingCoupon = ref(false);
 
-                // 訂單與票券狀態
+                // 訂單歷史
                 let hist = []; try { hist = JSON.parse(safeGetStorage('mm_order_history', '[]')); } catch(e){ hist = []; }
                 const orderHistory = ref(hist);
                 let pending = []; try { pending = JSON.parse(safeGetStorage('mm_pending_payment_orders', '[]')); } catch(e) { pending = []; }
@@ -1489,7 +1489,7 @@
                 const orderToCancel = ref(null);
                 const relatedOrdersToCancel = ref([]);
 
-                // 管理員變數
+                // 管理員
                 const adminPasswordInput = ref('');
                 const adminPendingOrders = ref([]);
                 const adminStats = ref({ today: 0, week: 0, month: 0, total: 0 });
@@ -1516,22 +1516,37 @@
                 const getModal = (id) => { const el = document.getElementById(id); if (!el) return null; if (typeof bootstrap !== 'undefined') { let instance = bootstrap.Modal.getInstance(el); if (!instance) instance = new bootstrap.Modal(el); return instance; } return null; };
                 const openModalSafe = (id) => { const modal = getModal(id); if (modal) modal.show(); };
                 const hideModalSafe = (id) => { const modal = getModal(id); if (modal) modal.hide(); };
+                
                 const openHistory = () => { hideModalSafe('ticketModal'); openModalSafe('historyModal'); fetchOrderStatus(getEffectiveUserId()); };
                 const showGuide = () => openModalSafe('guideModal');
                 const openCart = () => openModalSafe('cartModal');
                 const isAdmin = computed(() => userProfile.value?.userId && ADMIN_IDS.includes(userProfile.value.userId));
-                const openAdminLogin = () => { hideModalSafe('guideModal'); if (safeGetStorage('mm_admin_auth', '') === 'true') { fetchAdminDashboard(); openModalSafe('adminPanelModal'); } else { adminPasswordInput.value = ''; openModalSafe('adminLoginModal'); } };
+                
+                const openAdminLogin = () => { 
+                    hideModalSafe('guideModal'); 
+                    if (safeGetStorage('mm_admin_auth', '') === 'true') { 
+                        fetchAdminDashboard(); openModalSafe('adminPanelModal'); 
+                    } else { 
+                        adminPasswordInput.value = ''; openModalSafe('adminLoginModal'); 
+                    } 
+                };
 
                 // ==========================
-                // C. 計算屬性 (COMPUTED)
+                // C. 計算屬性
                 // ==========================
-                // 1. 購物與金額
                 const cartItems = computed(() => Object.keys(cart.value).map(id => { const p = products.value.find(x => x.id === id); return p ? { ...p, quantity: cart.value[id] } : null; }).filter(x => x));
+                
+                // ★★★ 關鍵修復：這裡補上了 totalQty ★★★
+                const totalQty = computed(() => cartItems.value.reduce((a, b) => a + b.quantity, 0));
+                
                 const totalPrice = computed(() => cartItems.value.reduce((sum, item) => sum + (item.price * item.quantity), 0));
-                const finalTotalPrice = computed(() => { let total = totalPrice.value; if (appliedCoupon.value) total -= appliedCoupon.value.amount; return total > 0 ? total : 0; });
+                const finalTotalPrice = computed(() => { 
+                    let total = totalPrice.value; 
+                    if (appliedCoupon.value) total -= appliedCoupon.value.amount; 
+                    return total > 0 ? total : 0; 
+                });
                 const totalSavings = computed(() => cartItems.value.reduce((a, b) => { const orig = b.originalPrice && b.originalPrice > b.price ? b.originalPrice : b.price; return a + ((orig - b.price) * b.quantity); }, 0));
 
-                // 2. 商品列表
                 const categories = computed(() => [...new Set(products.value.map(p => p.category))]);
                 const filteredProducts = computed(() => {
                     let res = currentCat.value === 'ALL' ? products.value : products.value.filter(p => p.category === currentCat.value);
@@ -1543,12 +1558,10 @@
                     return res;
                 });
 
-                // 3. UI 樣式
                 const gridModeClass = computed(() => `mode-${viewMode.value}`);
                 const gridRowClass = computed(() => (viewMode.value === 'small' || viewMode.value === 'medium' || viewMode.value === 'xsmall') ? 'g-1' : 'g-2');
                 const gridColClass = computed(() => { if (viewMode.value === 'xlarge') return 'col-12'; if (viewMode.value === 'large') return 'col-6'; if (viewMode.value === 'medium') return 'col-4'; if (viewMode.value === 'small') return 'col-3'; if (viewMode.value === 'xsmall') return 'col-2'; return 'col-4'; });
 
-                // 4. 支付與庫存
                 const selectedBankInfos = computed(() => { if (!selectedPayment.value) return bankAccounts.value; return bankAccounts.value.filter(b => b.code === selectedPayment.value); });
                 const hasGiftOnlyItems = computed(() => cartItems.value.some(item => item.driveStock < item.quantity && item.giftStock >= item.quantity));
                 const hasDriveOnlyItems = computed(() => cartItems.value.some(item => item.giftStock < item.quantity && item.driveStock >= item.quantity));
@@ -1557,7 +1570,23 @@
                 const canSelectGift = computed(() => cartItems.value.some(i => i.giftStock > 0));
                 const canSelectDrive = computed(() => cartItems.value.some(i => i.driveStock > 0));
 
-                // 5. 訂單相關
+                const validUnreportedOrders = computed(() => unreportedOrders.value.filter(oid => { const order = orderHistory.value.find(o => o.id === oid); if (!order) return false; if (isOrderExpired(order)) return false; const badge = getStatusBadge(order); return badge.class === 'status-pending'; }));
+                const groupedUnreportedOrders = computed(() => {
+                    const groups = {}; validUnreportedOrders.value.forEach(oid => { const order = orderHistory.value.find(o => o.id === oid); if (!order) return; const baseId = oid.split('-')[0]; if (!groups[baseId]) groups[baseId] = { baseId: baseId, ids: [], items: [], totalAmount: 0, timestamp: order.timestamp }; groups[baseId].ids.push(oid); groups[baseId].totalAmount += (Number(order.totalAmount) || 0); if (order.items) order.items.forEach(item => groups[baseId].items.push(item)); });
+                    return Object.values(groups).sort((a,b) => safeParseDate(b.timestamp).getTime() - safeParseDate(a.timestamp).getTime());
+                });
+
+                const reportingTotalAmount = computed(() => { if (lastOrderIds.value.length === 0) return 0; return orderHistory.value.filter(o => lastOrderIds.value.includes(o.id)).reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0); });
+                const isGroupSelected = (group) => group.ids.every(id => pendingSelection.value.includes(id));
+                const toggleGroupSelection = (group) => { const all = isGroupSelected(group); if (all) pendingSelection.value = pendingSelection.value.filter(id => !group.ids.includes(id)); else pendingSelection.value = [...pendingSelection.value, ...group.ids.filter(id => !pendingSelection.value.includes(id))]; };
+                const dismissPendingAlertForever = () => { isPendingAlertDismissed.value = true; hideModalSafe('unreportedModal'); };
+                const getHistoryItemName = (order, idx) => { if (!order.items) return ''; const expanded = []; order.items.forEach(it => { const qty = Number(it.quantity) || 1; for(let k=0; k<qty; k++) expanded.push(it.name); }); return expanded[idx] || '商品項'; };
+                const getOrderItems = (oid) => { const o = orderHistory.value.find(x => x.id === oid); return o ? o.items : []; };
+                const getOrderAmount = (oid) => { const o = orderHistory.value.find(x => x.id === oid); return o ? o.totalAmount : 0; };
+
+                // ==========================
+                // D. 邏輯與監聽
+                // ==========================
                 const getStatusBadge = (h) => {
                     if (String(h.isShipped) === 'true') return { text: '✅ 已發貨', class: 'status-shipped', canReport: false, canCancel: false };
                     const note = String(h.paymentNote || "").trim();
@@ -1566,56 +1595,50 @@
                     if (note === "" || note.startsWith("[待]")) return { text: '💰 待付款', class: 'status-pending', canReport: true, canCancel: true };
                     return { text: '⏳ 待核對', class: 'status-pending', canReport: true, canCancel: true };
                 };
+                
                 const safeParseDate = (dateStr) => { if (!dateStr) return new Date(); const s = String(dateStr); const m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})$/); return m ? new Date(m[1], m[2]-1, m[3], m[4], m[5], m[6]) : new Date(s); };
                 const isOrderExpired = (h) => { const b = getStatusBadge(h); if (b.text !== '💰 待付款') return false; const d = safeParseDate(h.timestamp); return !isNaN(d.getTime()) && (now.value - d.getTime()) >= 1800000; };
                 const getRemainingTime = (ts) => { const d = safeParseDate(ts); if (isNaN(d.getTime())) return "00:00"; const rem = d.getTime() + 1800000 - now.value; if (rem <= 0) return "00:00"; const sec = Math.floor(rem/1000); return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`; };
-                
-                const validUnreportedOrders = computed(() => unreportedOrders.value.filter(oid => { const order = orderHistory.value.find(o => o.id === oid); if (!order) return false; if (isOrderExpired(order)) return false; const badge = getStatusBadge(order); return badge.class === 'status-pending'; }));
-                const groupedUnreportedOrders = computed(() => {
-                    const groups = {}; validUnreportedOrders.value.forEach(oid => { const order = orderHistory.value.find(o => o.id === oid); if (!order) return; const baseId = oid.split('-')[0]; if (!groups[baseId]) groups[baseId] = { baseId: baseId, ids: [], items: [], totalAmount: 0, timestamp: order.timestamp }; groups[baseId].ids.push(oid); groups[baseId].totalAmount += (Number(order.totalAmount) || 0); if (order.items) order.items.forEach(item => groups[baseId].items.push(item)); });
-                    return Object.values(groups).sort((a,b) => safeParseDate(b.timestamp).getTime() - safeParseDate(a.timestamp).getTime());
-                });
-                
-                const reportingTotalAmount = computed(() => { if (lastOrderIds.value.length === 0) return 0; return orderHistory.value.filter(o => lastOrderIds.value.includes(o.id)).reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0); });
-                const isGroupSelected = (group) => group.ids.every(id => pendingSelection.value.includes(id));
-                const toggleGroupSelection = (group) => { const all = isGroupSelected(group); if (all) pendingSelection.value = pendingSelection.value.filter(id => !group.ids.includes(id)); else pendingSelection.value = [...pendingSelection.value, ...group.ids.filter(id => !pendingSelection.value.includes(id))]; };
-                const getHistoryItemName = (order, idx) => { if (!order.items) return ''; const expanded = []; order.items.forEach(it => { const qty = Number(it.quantity) || 1; for(let k=0; k<qty; k++) expanded.push(it.name); }); return expanded[idx] || '商品項'; };
-                const getOrderItems = (oid) => { const o = orderHistory.value.find(x => x.id === oid); return o ? o.items : []; };
-                const getOrderAmount = (oid) => { const o = orderHistory.value.find(x => x.id === oid); return o ? o.totalAmount : 0; };
                 const getGroupTimer = (g) => g.orders.some(o => getStatusBadge(o).text === '💰 待付款' && !isOrderExpired(o)) ? getRemainingTime(g.timestamp) : null;
                 const isGroupExpired = (g) => { const p = g.orders.filter(o => getStatusBadge(o).class === 'status-pending'); return p.length > 0 && p.every(o => isOrderExpired(o)); };
 
-                // 6. 票券夾 (★★★ 關鍵修復：把 Ticket Computed 移到這裡，確保變數已定義 ★★★)
-                const allTickets = computed(() => {
-                    let t = []; orderHistory.value.forEach(o => {
-                        if ((String(o.isShipped)==='true') && (o.fulfillment || (o.tickets && o.tickets.length>0))) {
-                            const l = (o.tickets && o.tickets.length>0) ? o.tickets.map(x=>x.url) : o.fulfillment.split('\n').filter(x=>x.trim());
-                            const log = o.redemptionLog || "";
-                            l.forEach((url, i) => {
-                                const redeemed = log.includes(`[${i+1}]已核銷`) || !!redeemedStatus.value[url];
-                                let n = (o.tickets && o.tickets[i]) ? o.tickets[i].name : (o.items && o.items[0] ? o.items[0].name : '商品');
-                                const cn = n.replace(/\s*[\(（]\d+[組份張].*?[\)）]/g, '').trim();
-                                const p = products.value.find(x=>x.name===n) || products.value.find(x=>x.name===cn);
-                                t.push({ url:url, orderId:o.id, ticketIndex:i, name:n, vendor:p?p.vendor:'商城', productImage:p?p.image:'https://placehold.co/150?text=NoImg', isRedeemed:redeemed, expiryDate:(o.tickets&&o.tickets[i]?.expiry)||'', fullTimestamp:o.timestamp, isMergedOrder:(o.tickets&&o.tickets[i]?.isMerged)||false });
-                            });
-                        }
-                    });
-                    if(ticketSearchQuery.value){ const q=ticketSearchQuery.value.toLowerCase(); return t.filter(x=>x.name.toLowerCase().includes(q)||x.orderId.toLowerCase().includes(q)); }
-                    return t;
+                watch(canSelectGift, (val) => { if (!val && deliveryMethod.value === 'gift') deliveryMethod.value = 'screenshot'; });
+                watch(deliveryMethod, (val) => { if (val === 'screenshot') selectedPayment.value = '822'; }, { immediate: true });
+                watch(useCouponChecked, (val) => { if (!val) removeCoupon(); });
+                watch(totalPrice, () => { if (appliedCoupon.value) appliedCoupon.value = null; });
+                
+                watch(availableTickets, (val) => { 
+                    if (val.length > lastKnownTicketCount.value) walletUnread.value = true; 
+                    else if (val.length < lastKnownTicketCount.value) { 
+                        safeSetStorage('mm_last_ticket_count', val.length); 
+                        lastKnownTicketCount.value = val.length; 
+                    } 
+                    if (val.length > 0) checkExpiryReminders(); 
                 });
-                const availableTickets = computed(() => allTickets.value.filter(t=>!t.isRedeemed).sort((a,b)=>b.fullTimestamp.localeCompare(a.fullTimestamp)));
-                const usedTickets = computed(() => allTickets.value.filter(t=>t.isRedeemed && !hiddenTicketKeys.value.has(`${t.orderId}_${t.ticketIndex}`)).sort((a,b)=>(b.redeemedAt||'').localeCompare(a.redeemedAt||'')));
-                const currentDisplayTickets = computed(() => walletFilter.value==='available'?availableTickets.value:usedTickets.value);
-                const linkifiedGuideInstruction = computed(() => currentVendorGuide.value ? (currentVendorGuide.value.instruction||'').replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="text-decoration:underline;">$1</a>') : '');
+                watch(acceptTerms, (val) => safeSetStorage('mm_accept_terms', val));
 
                 // ==========================
-                // D. 邏輯與函式 (METHODS)
+                // E. API 與 初始化
                 // ==========================
                 const fetchWithRetry = async (url, retries=3) => { for(let i=0;i<retries;i++){ try{ const r=await fetch(url); if(!r.ok)throw new Error('Net err'); return await r.json(); } catch(e){ if(i===retries-1)throw e; await new Promise(res=>setTimeout(res,1000*Math.pow(2,i))); } } };
+                
                 const fetchOrderStatus = async (uid) => {
                     if (!uid) return;
-                    try { const res = await fetch(`${API_URL}?action=getOrderStatus&userId=${uid}`); if(res.ok){ const d=await res.json(); if(d.orders){ const map={}; d.orders.forEach(o=>map[o.id]=o); orderHistory.value=orderHistory.value.map(h=>{ const s=map[h.id]; return s?{...h,...s}:h; }); safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value)); const clean=unreportedOrders.value.filter(oid=>{ const s=map[oid]; return !s || !(String(s.isShipped)=='true'||String(s.isPaid)=='true'||(s.paymentNote&&(s.paymentNote.includes('取消')||s.paymentNote.includes('失效')))); }); unreportedOrders.value=clean; safeSetStorage('mm_pending_payment_orders',JSON.stringify(clean)); } } } catch(e){}
+                    try { 
+                        const res = await fetch(`${API_URL}?action=getOrderStatus&userId=${uid}`); 
+                        if(res.ok){ 
+                            const d=await res.json(); 
+                            if(d.orders){ 
+                                const map={}; d.orders.forEach(o=>map[o.id]=o); 
+                                orderHistory.value=orderHistory.value.map(h=>{ const s=map[h.id]; return s?{...h,...s}:h; }); 
+                                safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value)); 
+                                const clean=unreportedOrders.value.filter(oid=>{ const s=map[oid]; return !s || !(String(s.isShipped)=='true'||String(s.isPaid)=='true'||(s.paymentNote&&(s.paymentNote.includes('取消')||s.paymentNote.includes('失效')))); }); 
+                                unreportedOrders.value=clean; safeSetStorage('mm_pending_payment_orders',JSON.stringify(clean)); 
+                            } 
+                        } 
+                    } catch(e){}
                 };
+
                 const initApp = async () => {
                     isLoadingData.value = true; errorMsg.value = '';
                     try {
@@ -1627,10 +1650,21 @@
                         try {
                             const sc = JSON.parse(safeGetStorage('mm_cart_storage', '{}')); const vc = {}; Object.keys(sc).forEach(k=>{ const p=products.value.find(x=>x.id===k); if(p && Number(p.stock)>=Number(sc[k])) vc[k]=Number(sc[k]); }); cart.value = vc;
                         } catch(e) { safeSetStorage('mm_cart_storage', '{}'); }
-                        if (settings.value.liffId) { try { await liff.init({ liffId: settings.value.liffId }); if(liff.isLoggedIn()){ userProfile.value=await liff.getProfile(); const t=liff.getDecodedIDToken(); if(t&&t.email)userProfile.value.email=t.email; fetchOrderStatus(userProfile.value.userId); } else { fetchOrderStatus(guestUuid.value); checkGuestStatus(); } } catch(e){ fetchOrderStatus(guestUuid.value); checkGuestStatus(); } }
-                    } catch (e) { errorMsg.value = e.message; } finally { isLoadingData.value = false; hideStaticLoader(); if (!safeGetStorage('mm_guided_v172', '')) { setTimeout(() => { openModalSafe('guideModal'); safeSetStorage('mm_guided_v172', 'true'); }, 600); } if (validUnreportedOrders.value.length > 0) { pendingSelection.value = [...validUnreportedOrders.value]; setTimeout(() => openModalSafe('unreportedModal'), 1500); } }
+                        
+                        if (settings.value.liffId) { 
+                            try { await liff.init({ liffId: settings.value.liffId }); if(liff.isLoggedIn()){ userProfile.value=await liff.getProfile(); const t=liff.getDecodedIDToken(); if(t&&t.email)userProfile.value.email=t.email; fetchOrderStatus(userProfile.value.userId); } else { fetchOrderStatus(guestUuid.value); checkGuestStatus(); } } catch(e){ fetchOrderStatus(guestUuid.value); checkGuestStatus(); } 
+                        }
+                    } catch (e) { errorMsg.value = e.message; } 
+                    finally { 
+                        isLoadingData.value = false; hideStaticLoader(); 
+                        if (!safeGetStorage('mm_guided_v172', '')) { setTimeout(() => { openModalSafe('guideModal'); safeSetStorage('mm_guided_v172', 'true'); }, 600); } 
+                        if (validUnreportedOrders.value.length > 0) { pendingSelection.value = [...validUnreportedOrders.value]; setTimeout(() => openModalSafe('unreportedModal'), 1500); } 
+                    }
                 };
 
+                // ==========================
+                // F. UI 互動
+                // ==========================
                 const reloadApp = () => window.location.reload();
                 const getProductImage = (n) => { const p = products.value.find(x => x.name === n); return p ? p.image : 'https://placehold.co/48x48?text=No+Img'; };
                 const checkGuestStatus = () => { const ua = navigator.userAgent; if(!liff.isInClient() || ua.includes("FBAN") || ua.includes("FBAV")) setTimeout(() => openModalSafe('guestWarningModal'), 1000); };
@@ -1645,16 +1679,24 @@
                 const removeCoupon = () => { appliedCoupon.value = null; couponCodeInput.value = ''; };
                 const fetchFAQ = async () => { try { const r=await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getFAQ' }) }); const j=await r.json(); if(j.status==='success'){ faqList.value=j.data; if(j.announcements?.length){ let l=[]; for(let i=0;i<10;i++) l=l.concat(j.announcements); announcement.value=l.join("        ✦        "); } } } catch(e){ announcement.value="歡迎光臨"; } };
 
+                // ==========================
+                // G. 購物車與訂單互動
+                // ==========================
                 const updateCart = (p, d) => { if(d>0 && (cart.value[p.id]||0)>=Number(p.stock)){ showToast('庫存上限'); return; } const n=(cart.value[p.id]||0)+d; if(n<=0) delete cart.value[p.id]; else if(n<=Number(p.stock)) cart.value[p.id]=n; safeSetStorage('mm_cart_storage', JSON.stringify(cart.value)); };
+                
                 const showProductDetail = (p) => { selectedProduct.value = p; openModalSafe('productDetailModal'); };
+                
                 const openCancelModal = (h) => { hideModalSafe('historyModal'); orderToCancel.value = h; relatedOrdersToCancel.value = []; if(h.id.includes('-')){ const base=h.id.split('-')[0]; relatedOrdersToCancel.value=orderHistory.value.filter(o=>o.id.startsWith(base)&&o.id!==h.id&&getStatusBadge(o).canCancel); } openModalSafe('cancelConfirmModal'); };
                 const confirmCancel = async (mode='single') => { if(!orderToCancel.value) return; const t=[orderToCancel.value]; if(mode==='all') t.push(...relatedOrdersToCancel.value); hideModalSafe('cancelConfirmModal'); showToast('取消中...'); try{ await Promise.all(t.map(o=>fetch(API_URL,{ method:'POST', body:JSON.stringify({ action:'cancelOrder', orderId:o.id, userId:getEffectiveUserId() }) }))); orderHistory.value=orderHistory.value.map(h=>{ if(t.find(x=>x.id===h.id)) return {...h, paymentNote:'用戶自行取消'}; return h; }); safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value)); unreportedOrders.value=unreportedOrders.value.filter(id=>!t.find(x=>x.id===id)); safeSetStorage('mm_pending_payment_orders', JSON.stringify(unreportedOrders.value)); showToast('已取消'); setTimeout(initApp, 1000); } catch(e){ showToast('取消失敗'); } };
+                
                 const openReportForPending = () => { hideModalSafe('unreportedModal'); lastOrderIds.value = pendingSelection.value; openPaymentForm(); openModalSafe('successModal'); };
                 const goToPayFromPending = () => { hideModalSafe('unreportedModal'); lastOrderIds.value = pendingSelection.value; isRepaying.value = true; showPaymentForm.value = false; selectedPayment.value = ''; openModalSafe('successModal'); };
                 const openReportForHistory = (h) => { hideModalSafe('historyModal'); const base = h.id.split('-')[0]; const sib = orderHistory.value.filter(o=>o.id.startsWith(base)&&getStatusBadge(o).canReport).map(o=>o.id); lastOrderIds.value = sib.length>0?sib:[h.id]; openPaymentForm(); openModalSafe('successModal'); };
-                const dismissPendingAlertForever = () => { isPendingAlertDismissed.value = true; hideModalSafe('unreportedModal'); };
+                const linkifiedGuideInstruction = computed(() => currentVendorGuide.value ? (currentVendorGuide.value.instruction||'').replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="text-decoration:underline;">$1</a>') : '');
 
-                // 結帳邏輯
+                // ==========================
+                // H. 結帳核心
+                // ==========================
                 const handleCheckout = async () => {
                     const err = [];
                     if(!acceptTerms.value) err.push("請同意需知");
@@ -1698,6 +1740,9 @@
                     } catch(e){ showToast('連線不穩'); } finally { isSubmitting.value = false; }
                 };
 
+                // ==========================
+                // I. 付款回報與管理員
+                // ==========================
                 const openPaymentForm = () => { if(selectedBankInfos.value.length===1) paymentForm.value.bankCode=selectedBankInfos.value[0].code; showPaymentForm.value=true; };
                 const paymentFormPlaceholder = computed(() => paymentForm.value.bankCode==='396'?'輸入街口暱稱':'輸入帳號後五碼');
                 const paymentFormLabel = computed(() => paymentForm.value.bankCode==='396'?'街口名稱：':'帳號末五碼：');
@@ -1717,6 +1762,7 @@
                 const reBuy = (h) => { cart.value={}; h.items.forEach(i=>{ const p=products.value.find(x=>x.name===i.name); if(p) cart.value[p.id]=i.quantity; }); safeSetStorage('mm_cart_storage', JSON.stringify(cart.value)); hideModalSafe('historyModal'); openModalSafe('cartModal'); };
                 const resendHistory = (h) => { let m=`🛒 補傳 #${h.id}\n總額：$${h.totalAmount}`; if(liff.isInClient()) liff.sendMessages([{type:'text',text:m}]).then(()=>liff.closeWindow()); else window.open(`https://line.me/R/msg/text/?${encodeURIComponent(m)}`,'_blank'); };
 
+                // 管理員功能
                 const verifyAdminPassword = async () => { if(!adminPasswordInput.value)return showToast('請輸入'); try{ const r=await fetch(`${API_URL}?action=verifyAdmin&p=${encodeURIComponent(adminPasswordInput.value)}`); const j=await r.json(); if(j.status==='OK'){ safeSetStorage('mm_admin_auth','true'); hideModalSafe('adminLoginModal'); fetchAdminDashboard(); openModalSafe('adminPanelModal'); showToast('成功'); adminPasswordInput.value=''; } else { showToast('錯誤'); } } catch(e){ showToast('失敗'); } };
                 const fetchAdminDashboard = async () => { try{ const r=await fetch(`${API_URL}?action=getAdminDashboardData`); const d=await r.json(); if(d.orders) adminPendingOrders.value=d.orders; if(d.stats) adminStats.value=d.stats; if(d.bestSellers) adminBestSellers.value=d.bestSellers; } catch(e){} };
                 const triggerStockSync = async () => { isAdminSyncing.value=true; try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminSyncStock'})}); showToast('已同步'); setTimeout(initApp,3000); } catch(e){} finally{ isAdminSyncing.value=false; } };
@@ -1736,6 +1782,30 @@
                 const copyOrderBackup = () => { const t=editingOrder.value.backupContent||''; navigator.clipboard.writeText(t).then(()=>showToast('已複製')).catch(()=>fallbackCopyTextToClipboard(t)); };
                 const fallbackCopyTextToClipboard = (text) => { const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); showToast('備份已複製'); } catch(e){} document.body.removeChild(ta); };
 
+                // ==========================
+                // J. 票券夾
+                // ==========================
+                const allTickets = computed(() => {
+                    let t = []; orderHistory.value.forEach(o => {
+                        if ((String(o.isShipped)==='true') && (o.fulfillment || (o.tickets && o.tickets.length>0))) {
+                            const l = (o.tickets && o.tickets.length>0) ? o.tickets.map(x=>x.url) : o.fulfillment.split('\n').filter(x=>x.trim());
+                            const log = o.redemptionLog || "";
+                            l.forEach((url, i) => {
+                                const redeemed = log.includes(`[${i+1}]已核銷`) || !!redeemedStatus.value[url];
+                                let n = (o.tickets && o.tickets[i]) ? o.tickets[i].name : (o.items && o.items[0] ? o.items[0].name : '商品');
+                                const cn = n.replace(/\s*[\(（]\d+[組份張].*?[\)）]/g, '').trim();
+                                const p = products.value.find(x=>x.name===n) || products.value.find(x=>x.name===cn);
+                                t.push({ url:url, orderId:o.id, ticketIndex:i, name:n, vendor:p?p.vendor:'商城', productImage:p?p.image:'https://placehold.co/150?text=NoImg', isRedeemed:redeemed, expiryDate:(o.tickets&&o.tickets[i]?.expiry)||'', fullTimestamp:o.timestamp, isMergedOrder:(o.tickets&&o.tickets[i]?.isMerged)||false });
+                            });
+                        }
+                    });
+                    if(ticketSearchQuery.value){ const q=ticketSearchQuery.value.toLowerCase(); return t.filter(x=>x.name.toLowerCase().includes(q)||x.orderId.toLowerCase().includes(q)); }
+                    return t;
+                });
+                const availableTickets = computed(() => allTickets.value.filter(t=>!t.isRedeemed).sort((a,b)=>b.fullTimestamp.localeCompare(a.fullTimestamp)));
+                const usedTickets = computed(() => allTickets.value.filter(t=>t.isRedeemed && !hiddenTicketKeys.value.has(`${t.orderId}_${t.ticketIndex}`)).sort((a,b)=>(b.redeemedAt||'').localeCompare(a.redeemedAt||'')));
+                const currentDisplayTickets = computed(() => walletFilter.value==='available'?availableTickets.value:usedTickets.value);
+
                 const openWallet = () => { ticketSearchQuery.value=''; walletUnread.value=false; safeSetStorage('mm_last_ticket_count',availableTickets.value.length); lastKnownTicketCount.value=availableTickets.value.length; hideModalSafe('historyModal'); openModalSafe('ticketModal'); fetchOrderStatus(getEffectiveUserId()); };
                 const showTicketImage = (i) => { if(i.isMergedOrder && !i.isRedeemed){ pendingTicketUrl.value=i.url; itemToRedeem.value=i; openModalSafe('mergedWarningModal'); } else { window.open(i.url,'_blank'); if(!i.isRedeemed) setTimeout(()=>openRedeemConfirm(i),800); } };
                 const confirmMergedWarning = () => { hideModalSafe('mergedWarningModal'); if(pendingTicketUrl.value){ window.open(pendingTicketUrl.value,'_blank'); if(itemToRedeem.value) setTimeout(()=>openRedeemConfirm(itemToRedeem.value),1000); } };
@@ -1754,31 +1824,12 @@
                 const confirmClearHistoryAction = () => { usedTickets.value.forEach(t=>hiddenTicketKeys.value.add(`${t.orderId}_${t.ticketIndex}`)); safeSetStorage('mm_hidden_tickets', JSON.stringify([...hiddenTicketKeys.value])); hideModalSafe('clearHistoryConfirmModal'); };
                 const openVendorGuide = (i) => { const v=i.vendor; if(v&&vendorInfoMap.value[v]){ currentVendorGuide.value={name:v,...vendorInfoMap.value[v]}; openModalSafe('vendorGuideModal'); } else showToast("無說明"); };
 
-                // ==========================
-                // E. 監聽器與生命週期 (WATCHERS MUST BE LAST)
-                // ==========================
-                watch(canSelectGift, (val) => { if (!val && deliveryMethod.value === 'gift') deliveryMethod.value = 'screenshot'; });
-                watch(deliveryMethod, (val) => { if (val === 'screenshot') selectedPayment.value = '822'; }, { immediate: true });
-                watch(useCouponChecked, (val) => { if (!val) removeCoupon(); });
-                watch(totalPrice, () => { if (appliedCoupon.value) appliedCoupon.value = null; });
-                watch(acceptTerms, (val) => safeSetStorage('mm_accept_terms', val));
-                
-                // ★★★ availableTickets 現在已經定義好了，可以監聽了 ★★★
-                watch(availableTickets, (val) => { 
-                    if (val.length > lastKnownTicketCount.value) walletUnread.value = true; 
-                    else if (val.length < lastKnownTicketCount.value) { 
-                        safeSetStorage('mm_last_ticket_count', val.length); 
-                        lastKnownTicketCount.value = val.length; 
-                    } 
-                    if (val.length > 0) checkExpiryReminders(); 
-                });
-
                 onMounted(() => { initApp(); fetchFAQ(); setInterval(() => { now.value = Date.now(); }, 1000); });
 
                 return {
                     // 基本狀態
                     products, cart, currentCat, showFaq, categories, filteredProducts, isLoadingData, errorMsg, userProfile, guestName, settings, now,
-                    // 購物與金額
+                    // 購物與金額 (已修復 totalQty)
                     cartItems, totalQty, totalPrice, finalTotalPrice, totalSavings, updateCart, openCart, resetCart, handleCheckout, acceptTerms,
                     // 優惠券
                     hasActiveCoupons, useCouponChecked, couponCodeInput, appliedCoupon, verifyCoupon, removeCoupon, isVerifyingCoupon,
@@ -1800,6 +1851,7 @@
     </script>
 </body>
 </html>
+
 
 
 
