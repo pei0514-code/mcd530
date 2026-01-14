@@ -979,6 +979,84 @@
 
         <!-- Admin Panel Modal -->
         <div class="modal fade" id="adminPanelModal" tabindex="-1">
+<div class="modal fade" id="marqueeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">📢 跑馬燈公告設定</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="mqSw" v-model="marqueeConfig.enabled">
+                    <label class="form-check-label" for="mqSw">開啟跑馬燈</label>
+                </div>
+                <textarea class="form-control mb-3" rows="4" v-model="marqueeConfig.text" placeholder="輸入公告內容... (按 Enter 換行可自動分隔)"></textarea>
+                <button class="btn btn-dark w-100" @click="saveMarqueeSettings">儲存設定</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="couponAdminModal" tabindex="-1">
+    <div class="modal-dialog modal-fullscreen-sm-down modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">🎟️ 優惠券管理</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <div class="modal-body p-0" v-if="!isEditingCoupon">
+                <div class="p-2 d-grid">
+                    <button class="btn btn-success" @click="openCouponEditor(null)">+ 新增優惠券</button>
+                </div>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center" v-for="c in adminCoupons" :key="c.code">
+                        <div>
+                            <div class="fw-bold text-danger">{{ c.code }} <span class="badge bg-secondary">{{ c.type }}</span></div>
+                            <small class="text-muted">{{ c.title }}</small>
+                            <div style="font-size: 0.8rem">
+                                門檻: ${{c.min}} | 折抵: {{c.type=='折數'? (c.value*100)+'% Off' : '$'+c.value}}
+                            </div>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary me-2" @click="openCouponEditor(c)">編輯</button>
+                            <button class="btn btn-sm btn-outline-danger" @click="deleteCoupon(c.code)">刪除</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-body" v-else>
+                <form @submit.prevent="saveCoupon">
+                    <div class="row g-2">
+                        <div class="col-6"><label>優惠碼 (英數)</label><input class="form-control" v-model="editingCouponData.code" required></div>
+                        <div class="col-6"><label>標題</label><input class="form-control" v-model="editingCouponData.title" required></div>
+                        <div class="col-6"><label>類型</label>
+                            <select class="form-select" v-model="editingCouponData.type">
+                                <option value="減價">減價 (扣金額)</option>
+                                <option value="折數">折數 (打折)</option>
+                            </select>
+                        </div>
+                        <div class="col-6"><label>數值 (20元 或 0.9折)</label><input type="number" step="0.01" class="form-control" v-model="editingCouponData.value" required></div>
+                        <div class="col-6"><label>低消門檻</label><input type="number" class="form-control" v-model="editingCouponData.min" required></div>
+                        <div class="col-6"><label>單人限用次數</label><input type="number" class="form-control" v-model="editingCouponData.uLimit"></div>
+                        <div class="col-12"><label>適用商品關鍵字 (選填)</label><input class="form-control" v-model="editingCouponData.item" placeholder="留空則全部適用"></div>
+                        <div class="col-6"><label>開始日期</label><input type="date" class="form-control" v-model="editingCouponData.start"></div>
+                        <div class="col-6"><label>結束日期</label><input type="date" class="form-control" v-model="editingCouponData.end"></div>
+                        <div class="col-12"><label>總張數限制 (0=不限)</label><input type="number" class="form-control" v-model="editingCouponData.tLimit"></div>
+                    </div>
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="button" class="btn btn-secondary flex-fill" @click="isEditingCoupon = false">取消</button>
+                        <button type="submit" class="btn btn-primary flex-fill">儲存</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+            
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 rounded-4 shadow-lg">
                     <div class="modal-header border-0 bg-dark text-white">
@@ -1030,19 +1108,15 @@
                                     <i class="fas fa-calendar-times me-1"></i>即期票券
                                  </button>
                              </div>
-                            <div class="card mb-3 border-warning">
-    <div class="card-header bg-warning text-dark fw-bold">📢 跑馬燈公告設定</div>
-    <div class="card-body">
-        <div class="form-check form-switch mb-2">
-            <input class="form-check-input" type="checkbox" id="marqueeSwitch" v-model="marqueeConfig.enabled">
-            <label class="form-check-label" for="marqueeSwitch">開啟跑馬燈</label>
-        </div>
-        <div class="mb-2">
-            <textarea class="form-control" rows="2" v-model="marqueeConfig.text" placeholder="輸入公告內容..."></textarea>
-        </div>
-        <button class="btn btn-dark w-100 btn-sm" @click="saveMarqueeSettings" :disabled="isSavingMarquee">
-            <span v-if="isSavingMarquee" class="spinner-border spinner-border-sm"></span>
-            {{ isSavingMarquee ? '儲存中...' : '儲存公告設定' }}
+                            <div class="row g-2 mt-2">
+    <div class="col-6">
+        <button class="btn btn-warning w-100 h-100" @click="openModalSafe('marqueeModal')">
+            📢 跑馬燈設定
+        </button>
+    </div>
+    <div class="col-6">
+        <button class="btn btn-danger w-100 h-100" @click="openAdminCoupons">
+            🎟️ 優惠券管理
         </button>
     </div>
 </div>
@@ -1432,6 +1506,11 @@
                 // ==========================
                 // A. 變數定義
                 // ==========================
+                const adminCoupons = ref([]); // 優惠券列表
+                const isEditingCoupon = ref(false); // 是否正在編輯模式
+                const editingCouponData = ref({}); // 正在編輯的資料
+                const isNewCoupon = ref(false); // 是否為新增
+                const originalCouponCode = ref(''); // 編輯前的舊代碼
                 const products = ref([]);
                 const cart = ref({});
                 const settings = ref({ version: 'v3.02 Fixed', liffId: '' });
@@ -1650,7 +1729,14 @@
                     if (note === "" || note.startsWith("[待]")) return { text: '💰 待付款', class: 'status-pending', canReport: true, canCancel: true };
                     return { text: '⏳ 待核對', class: 'status-pending', canReport: true, canCancel: true };
                 };
-                
+                // --- 優惠券管理邏輯 (單行極簡版) ---
+const openAdminCoupons = async () => { openModalSafe('couponAdminModal'); showToast('載入優惠券中...'); try { const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCouponAction', subAction: 'list' }) }); const j = await res.json(); if(j.status === 'success') { adminCoupons.value = j.coupons; } } catch(e) { showToast('載入失敗'); } };
+
+const openCouponEditor = (coupon) => { isEditingCoupon.value = true; if (coupon) { isNewCoupon.value = false; originalCouponCode.value = coupon.code; editingCouponData.value = JSON.parse(JSON.stringify(coupon)); if(editingCouponData.value.start) editingCouponData.value.start = new Date(editingCouponData.value.start).toISOString().split('T')[0]; if(editingCouponData.value.end) editingCouponData.value.end = new Date(editingCouponData.value.end).toISOString().split('T')[0]; } else { isNewCoupon.value = true; editingCouponData.value = { type: '減價', value: 0, min: 0, uLimit: 1, tLimit: 0, item: '' }; } };
+
+const saveCoupon = async () => { showToast('儲存中...'); try { const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCouponAction', subAction: 'save', isNew: isNewCoupon.value, oldCode: originalCouponCode.value, data: editingCouponData.value }) }); const j = await res.json(); if (j.status === 'success') { showToast('儲存成功'); isEditingCoupon.value = false; openAdminCoupons(); } else { showToast('儲存失敗'); } } catch(e) { showToast('連線錯誤'); } };
+
+const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠券嗎？')) return; try { const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCouponAction', subAction: 'delete', code: code }) }); const j = await res.json(); if(j.status === 'success') { showToast('已刪除'); openAdminCoupons(); } } catch(e) { showToast('刪除失敗'); } };
                 const safeParseDate = (dateStr) => { if (!dateStr) return new Date(); const s = String(dateStr); const m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})$/); return m ? new Date(m[1], m[2]-1, m[3], m[4], m[5], m[6]) : new Date(s); };
                 const isOrderExpired = (h) => { const b = getStatusBadge(h); if (b.text !== '💰 待付款') return false; const d = safeParseDate(h.timestamp); return !isNaN(d.getTime()) && (now.value - d.getTime()) >= 1800000; };
                 const getRemainingTime = (ts) => { const d = safeParseDate(ts); if (isNaN(d.getTime())) return "00:00"; const rem = d.getTime() + 1800000 - now.value; if (rem <= 0) return "00:00"; const sec = Math.floor(rem/1000); return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`; };
@@ -1938,6 +2024,13 @@
 marqueeConfig,
 isSavingMarquee,
 saveMarqueeSettings,
+                  adminCoupons, 
+    isEditingCoupon, 
+    editingCouponData, 
+    openAdminCoupons, 
+    openCouponEditor, 
+    saveCoupon, 
+    deleteCoupon ,
                     // [C] 名稱對應修復 (Alias)
                     // 舊版 HTML 可能呼叫 openWallet... 但程式裡是 openRedeem...
                     openWalletFromReminder: openRedeemFromReminder 
@@ -1948,6 +2041,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
