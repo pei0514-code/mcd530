@@ -1030,6 +1030,22 @@
                                     <i class="fas fa-calendar-times me-1"></i>即期票券
                                  </button>
                              </div>
+                            <div class="card mb-3 border-warning">
+    <div class="card-header bg-warning text-dark fw-bold">📢 跑馬燈公告設定</div>
+    <div class="card-body">
+        <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="marqueeSwitch" v-model="marqueeConfig.enabled">
+            <label class="form-check-label" for="marqueeSwitch">開啟跑馬燈</label>
+        </div>
+        <div class="mb-2">
+            <textarea class="form-control" rows="2" v-model="marqueeConfig.text" placeholder="輸入公告內容..."></textarea>
+        </div>
+        <button class="btn btn-dark w-100 btn-sm" @click="saveMarqueeSettings" :disabled="isSavingMarquee">
+            <span v-if="isSavingMarquee" class="spinner-border spinner-border-sm"></span>
+            {{ isSavingMarquee ? '儲存中...' : '儲存公告設定' }}
+        </button>
+    </div>
+</div>
                              <div class="d-flex gap-2">
                                  <button class="btn btn-sm btn-dark rounded-pill fw-bold shadow-sm w-100" @click="openAdminProductManager">
                                     <i class="fas fa-boxes me-1"></i>商品管理
@@ -1509,7 +1525,8 @@
                 const editingOrder = ref({});
                 const isSavingOrder = ref(false);
                 const isAdminTestMode = ref(false);
-
+                const marqueeConfig = ref({ enabled: true, text: '' });
+                const isSavingMarquee = ref(false);
                 // ==========================
                 // B. 視窗控制
                 // ==========================
@@ -1522,15 +1539,20 @@
                 const openCart = () => openModalSafe('cartModal');
                 const isAdmin = computed(() => userProfile.value?.userId && ADMIN_IDS.includes(userProfile.value.userId));
                 
-                const openAdminLogin = () => { 
-                    hideModalSafe('guideModal'); 
-                    if (safeGetStorage('mm_admin_auth', '') === 'true') { 
-                        fetchAdminDashboard(); openModalSafe('adminPanelModal'); 
-                    } else { 
-                        adminPasswordInput.value = ''; openModalSafe('adminLoginModal'); 
-                    } 
-                };
-
+               const openAdminLogin = () => { 
+    hideModalSafe('guideModal'); 
+    if (safeGetStorage('mm_admin_auth', '') === 'true') { 
+        fetchAdminDashboard(); 
+        
+        // ★★★ 順便把目前的公告填入管理介面 ★★★
+        marqueeConfig.value.text = announcement.value.replace(/        ✦        /g, ""); // 移除裝飾符號
+        // 預設開啟，因為前端比較難從純文字判斷開關，管理員自己看得到有沒有字
+        
+        openModalSafe('adminPanelModal'); 
+    } else { 
+        adminPasswordInput.value = ''; openModalSafe('adminLoginModal'); 
+    } 
+};
                 // ==========================
                 // C. 計算屬性
                 // ==========================
@@ -1808,6 +1830,8 @@
                 const openAdminProductManager = async () => { openModalSafe('adminProductManagerModal'); try{ const r=await fetch(`${API_URL}?action=adminGetProductList`); const d=await r.json(); adminProducts.value=d.products||[]; } catch(e){} };
                 const adminEditProduct = (p) => { editingProduct.value={...p}; openModalSafe('adminProductEditModal'); };
                 const saveProduct = async () => { isSavingProduct.value=true; try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminSaveProduct',...editingProduct.value})}); showToast('已存'); hideModalSafe('adminProductEditModal'); setTimeout(openAdminProductManager,1000); setTimeout(initApp,2000); } catch(e){} finally{ isSavingProduct.value=false; } };
+                
+                const saveMarqueeSettings = async () => { isSavingMarquee.value = true; try { const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveMarqueeSettings', enabled: marqueeConfig.value.enabled, text: marqueeConfig.value.text }) }); const j = await res.json(); if (j.status === 'OK') { showToast('公告已更新'); fetchFAQ(); } else { showToast('更新失敗'); } } catch (e) { showToast('連線錯誤'); } finally { isSavingMarquee.value = false; } };
                 const openAdminOrderManager = async () => { openModalSafe('adminOrderManagerModal'); adminAllOrders.value=[]; try{ const r=await fetch(`${API_URL}?action=adminGetAllOrders`); const d=await r.json(); if(d.orders) adminAllOrders.value=d.orders; } catch(e){} };
                 const openAdminOrderEdit = (o) => { editingOrder.value={...o}; openModalSafe('adminOrderEditModal'); };
                 const saveAdminOrder = async () => { isSavingOrder.value=true; try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminUpdateOrder', orderId:editingOrder.value.orderId, productName:editingOrder.value.productName, paymentNote:editingOrder.value.paymentNote, isPaid:editingOrder.value.isPaid, cartTotal:editingOrder.value.totalAmount, couponCode:appliedCoupon.value?appliedCoupon.value.code:'', isShipped:editingOrder.value.isShipped})}); showToast('已更'); hideModalSafe('adminOrderEditModal'); setTimeout(openAdminOrderManager,1000); } catch(e){} finally{ isSavingOrder.value=false; } };
@@ -1912,10 +1936,12 @@
                     vendorInfoMap,    // 廠商 Logo 列表
                     checkGuestStatus, // 訪客身分檢查
                     lastOrderIds,     // 結帳後顯示單號
-
+marqueeConfig,
+isSavingMarquee,
+saveMarqueeSettings,
                     // [C] 名稱對應修復 (Alias)
                     // 舊版 HTML 可能呼叫 openWallet... 但程式裡是 openRedeem...
-                    openWalletFromReminder: openRedeemFromReminder
+                    openWalletFromReminder: openRedeemFromReminder 
 
                 }; // 結束 return
             } // 結束 setup
@@ -1923,6 +1949,7 @@
     </script>
 </body>
 </html>
+
 
 
 
