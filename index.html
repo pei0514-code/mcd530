@@ -1885,15 +1885,21 @@
                     showSortMenu, sortType, setSortType, 
                     openModalSafe, hideModalSafe, showToast, alertMessages, showAlert, reloadApp, 
                     faqList, announcement,
-                    showGuide , isRepaying,      // 補付款模式開關
-                    vendorInfoMap,   // 廠商 Logo 對照表
-                    retryCount,      // 連線重試次數
+                    showGuide , 
+                    // 這是剛剛補上的 4 個漏網之魚
+                    lastOrderIds,
+                    isRepaying,
+                    vendorInfoMap,
+                    retryCount,
                     checkGuestStatus
-            }
-        }).mount('#app');
+
+                }; // ★ 這裡必須有一個分號和右大括號 (結束 return)
+            } // ★ 這裡必須有一個右大括號 (結束 setup)
+        }).mount('#app'); // ★ 這裡必須有圓括號、mount、分號 (結束 Vue)
     </script>
 </body>
 </html>
+
 
 
 
