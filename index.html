@@ -1597,6 +1597,20 @@
                     return Object.values(groups).sort((a,b) => safeParseDate(b.timestamp).getTime() - safeParseDate(a.timestamp).getTime());
                 });
 
+                // ★★★ 請在此處補上 groupedHistory 的定義 ★★★
+                const groupedHistory = computed(() => {
+                    const map = {};
+                    orderHistory.value.forEach(o => {
+                        const base = o.id.split('-')[0];
+                        if(!map[base]) map[base] = { baseId: base, timestamp: o.timestamp, orders: [] };
+                        map[base].orders.push(o);
+                    });
+                    // 按時間倒序排列
+                    return Object.values(map).sort((a, b) => safeParseDate(b.timestamp).getTime() - safeParseDate(a.timestamp).getTime());
+                });
+                
+                });
+
                 const reportingTotalAmount = computed(() => { if (lastOrderIds.value.length === 0) return 0; return orderHistory.value.filter(o => lastOrderIds.value.includes(o.id)).reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0); });
                 const isGroupSelected = (group) => group.ids.every(id => pendingSelection.value.includes(id));
                 const toggleGroupSelection = (group) => { const all = isGroupSelected(group); if (all) pendingSelection.value = pendingSelection.value.filter(id => !group.ids.includes(id)); else pendingSelection.value = [...pendingSelection.value, ...group.ids.filter(id => !pendingSelection.value.includes(id))]; };
@@ -1891,14 +1905,16 @@
                     isRepaying,
                     vendorInfoMap,
                     retryCount,
-                    checkGuestStatus
-
+                    checkGuestStatus ,
+                    relatedOrdersToCancel,
+                    groupedHistory
                 }; // ★ 這裡必須有一個分號和右大括號 (結束 return)
             } // ★ 這裡必須有一個右大括號 (結束 setup)
         }).mount('#app'); // ★ 這裡必須有圓括號、mount、分號 (結束 Vue)
     </script>
 </body>
 </html>
+
 
 
 
