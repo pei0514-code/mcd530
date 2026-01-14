@@ -1714,8 +1714,8 @@
                 const gridRowClass = computed(() => (viewMode.value === 'small' || viewMode.value === 'medium' || viewMode.value === 'xsmall') ? 'g-1' : 'g-2');
                 const gridColClass = computed(() => { if (viewMode.value === 'xlarge') return 'col-12'; if (viewMode.value === 'large') return 'col-6'; if (viewMode.value === 'medium') return 'col-4'; if (viewMode.value === 'small') return 'col-3'; if (viewMode.value === 'xsmall') return 'col-2'; return 'col-4'; });
 
-                const selectedBankInfos = computed(() => { if (!selectedPayment.value) return bankAccounts.value; return bankAccounts.value.filter(b => b.code === selectedPayment.value); });
-                const hasGiftOnlyItems = computed(() => cartItems.value.some(item => item.driveStock < item.quantity && item.giftStock >= item.quantity));
+                 const selectedBankInfos = computed(() => { if (!selectedPayment.value) return bankAccounts.value; return bankAccounts.value.filter(b => b.code === selectedPayment.value); });
+                 const hasGiftOnlyItems = computed(() => cartItems.value.some(item => item.driveStock < item.quantity && item.giftStock >= item.quantity));
                 const hasDriveOnlyItems = computed(() => cartItems.value.some(item => item.giftStock < item.quantity && item.driveStock >= item.quantity));
                 const giftOnlyItemsNames = computed(() => cartItems.value.filter(item => item.driveStock < item.quantity && item.giftStock >= item.quantity).map(i => i.name));
                 const driveOnlyItemsNames = computed(() => cartItems.value.filter(item => item.giftStock < item.quantity && item.driveStock >= item.quantity).map(i => i.name));
