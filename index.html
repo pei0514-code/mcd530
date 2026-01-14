@@ -960,22 +960,29 @@
 </div>
 
             
-            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                <div class="modal-content border-0 rounded-4 shadow-lg">
-                    <div class="modal-header border-0 pb-0"><h5 class="fw-bold"><i class="fas fa-book-reader me-2"></i>操作說明</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                    <div class="modal-body p-4">
-                        <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-shopping-basket"></i></div><div class="guide-content"><h6>1. 挑選商品</h6><p>瀏覽商品列表，將喜歡的商品加入購物車。點擊圖片可查看詳細資訊。</p></div></div>
-                        <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-cash-register"></i></div><div class="guide-content"><h6>2. 確認結帳</h6><p>進入購物車，確認數量與金額，選擇您方便的付款方式 (支援多種銀行/街口)。</p></div></div>
-                        <div class="guide-card"><div class="guide-icon-box"><i class="fab fa-line"></i></div><div class="guide-content"><h6>3. 訂單傳送</h6><p>按下送出後，系統會自動將訂單明細傳送至 LINE 聊天室，請勿關閉視窗。</p></div></div>
-                        <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-file-invoice-dollar"></i></div><div class="guide-content"><h6>4. 付款與回報</h6><p>完成轉帳後，請點擊「回報付款」或至歷史訂單中回報您的帳號後五碼。</p></div></div>
-                        <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-gift"></i></div><div class="guide-content"><h6>5. 領取商品</h6><p>選擇截圖發送請直接到我的票券中查看商品，選擇轉贈則請到您的momo會員票券區查看。</p></div></div>
-                    </div>
-                    <div class="modal-footer border-0 bg-light p-2 justify-content-end">
-                        <button v-if="isAdmin" class="btn btn-sm btn-link text-muted text-decoration-none" @click="openAdminLogin"><i class="fas fa-user-shield"></i></button>
-                    </div>
+          <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header border-0 pb-0 align-items-center">
+                    <h5 class="fw-bold mb-0 d-flex align-items-center">
+                        <i class="fas fa-book-reader me-2"></i>操作說明
+                        
+                        <button class="btn btn-sm btn-link text-muted text-decoration-none ms-2 opacity-50" 
+                                @click="openAdminLogin" 
+                                style="font-size: 0.9rem;">
+                            <i class="fas fa-user-shield"></i>
+                        </button>
+                    </h5>
+                    
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-shopping-basket"></i></div><div class="guide-content"><h6>1. 挑選商品</h6><p>瀏覽商品列表，將喜歡的商品加入購物車。點擊圖片可查看詳細資訊。</p></div></div>
+                    <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-cash-register"></i></div><div class="guide-content"><h6>2. 確認結帳</h6><p>進入購物車，確認數量與金額，選擇您方便的付款方式 (支援多種銀行/街口)。</p></div></div>
+                    <div class="guide-card"><div class="guide-icon-box"><i class="fab fa-line"></i></div><div class="guide-content"><h6>3. 訂單傳送</h6><p>按下送出後，系統會自動將訂單明細傳送至 LINE 聊天室，請勿關閉視窗。</p></div></div>
+                    <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-file-invoice-dollar"></i></div><div class="guide-content"><h6>4. 付款與回報</h6><p>完成轉帳後，請點擊「回報付款」或至歷史訂單中回報您的帳號後五碼。</p></div></div>
+                    <div class="guide-card"><div class="guide-icon-box"><i class="fas fa-gift"></i></div><div class="guide-content"><h6>5. 領取商品</h6><p>選擇截圖發送請直接到我的票券中查看商品，選擇轉贈則請到您的momo會員票券區查看。</p></div></div>
                 </div>
             </div>
-        </div>
 
         <!-- Admin Panel Modal -->
         <div class="modal fade" id="adminPanelModal" tabindex="-1">
@@ -2041,6 +2048,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
