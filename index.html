@@ -547,25 +547,12 @@
             </div>
         </div>
 
-<div class="category-scroll">
-                <button class="cat-btn" :class="{ active: currentCat === 'ALL' }" @click="currentCat = 'ALL'">🌟 全部商品</button>
-                <button v-for="cat in categories" :key="cat" class="cat-btn" :class="{ active: currentCat === cat }" @click="currentCat = cat">{{ cat }}</button>
-            </div>
-        </div> 
         <div class="marquee-container" v-if="announcement">
             <div class="marquee-content">
                 📢 {{ announcement }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 📢 {{ announcement }}
             </div>
         </div>
-        <div class="container-fluid px-2 py-3" :class="gridModeClass">
 
-
-
-
-
-
-
-        
         <div class="container-fluid px-2 py-3" :class="gridModeClass">
             <div v-if="isLoadingData" class="text-center py-5">
                 <div class="spinner-border text-danger mb-3" role="status"></div>
@@ -2567,6 +2554,7 @@ if (driveItems.length > 0) {
     </script>
 </body>
 </html>
+
 
 
 
