@@ -13,6 +13,29 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
     <style>
+        /* --- 跑馬燈樣式 (請加在 <style> 裡面) --- */
+.marquee-container {
+    background-color: #d32f2f; /* 紅色背景 */
+    color: #fff;               /* 白色文字 */
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 8px 0;
+    font-size: 0.9rem;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: relative;
+    z-index: 900; /* 確保在 header 下面但在內容上面 */
+}
+.marquee-content {
+    display: inline-block;
+    padding-left: 100%;
+    animation: marquee-scroll 25s linear infinite;
+}
+@keyframes marquee-scroll {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(-100%, 0); }
+}
         /* --- FAQ 常見問題樣式 --- */
 .faq-box {
     background-color: #fff8e1; /* 醒目的淡黃色背景 */
@@ -524,6 +547,25 @@
             </div>
         </div>
 
+<div class="category-scroll">
+                <button class="cat-btn" :class="{ active: currentCat === 'ALL' }" @click="currentCat = 'ALL'">🌟 全部商品</button>
+                <button v-for="cat in categories" :key="cat" class="cat-btn" :class="{ active: currentCat === cat }" @click="currentCat = cat">{{ cat }}</button>
+            </div>
+        </div> 
+        <div class="marquee-container" v-if="announcement">
+            <div class="marquee-content">
+                📢 {{ announcement }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 📢 {{ announcement }}
+            </div>
+        </div>
+        <div class="container-fluid px-2 py-3" :class="gridModeClass">
+
+
+
+
+
+
+
+        
         <div class="container-fluid px-2 py-3" :class="gridModeClass">
             <div v-if="isLoadingData" class="text-center py-5">
                 <div class="spinner-border text-danger mb-3" role="status"></div>
@@ -1363,6 +1405,7 @@
                 const settings = ref({ version: 'v188', liffId: '' });
                 const cart = ref({});
                 const faqList = ref([]);
+                const announcement = ref("🔥 正在載入最新公告...");
                 const fetchFAQ = async () => {
     try {
         const res = await fetch(API_URL, {
@@ -1370,12 +1413,20 @@
             body: JSON.stringify({ action: 'getFAQ' })
         });
         const json = await res.json();
+        
         if (json.status === 'success') {
+            // 1. 設定 FAQ 列表
             faqList.value = json.data;
+            
+            // 2. ✅ 設定跑馬燈 (把多條公告串成一條長字串)
+            if (json.announcements && json.announcements.length > 0) {
+                // 這裡使用 " ✦ " 當作分隔符號，你可以自由改成想要的符號
+                announcement.value = json.announcements.join("   ✦   ");
+            }
         }
     } catch (e) {
-        console.error("無法載入 FAQ", e);
-        // 失敗時可以手動設定幾個預設問題，避免空白
+        console.error("無法載入資料", e);
+        announcement.value = "歡迎光臨麥麥電子票券商城！"; // 備用文字
     }
 };
                 const currentCat = ref('ALL');
@@ -2498,7 +2549,7 @@ if (driveItems.length > 0) {
                 groupedUnreportedOrders, isGroupSelected, toggleGroupSelection, relatedOrdersToCancel, showSortMenu, sortType, setSortType, walletUnread,
                 confirmMergedWarning,isCartTestMode,isAdminTestMode,expiringTicketsList, openRedeemFromReminder, openWalletFromReminder, dismissExpiryToday,
                 isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, executeBatchRedeem, confirmBatchRedeemAction, selectAllTickets,
-                isAdmin, openAdminLogin, verifyAdminPassword, adminPasswordInput, faqList,adminPendingOrders, fetchAdminDashboard, onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, adminStats, adminLowStockItems,
+                isAdmin, openAdminLogin, verifyAdminPassword, adminPasswordInput, faqList, announcement, adminPendingOrders, fetchAdminDashboard, onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, adminStats, adminLowStockItems,
                 triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning, triggerPaymentCheck, isAdminChecking, isAdminFetchingStock, fetchLowStock,
                 clearRedeemedHistory, confirmClearHistoryAction,
                 fetchExpiringItems, adminExpiringItems, adminBestSellers, openModalSafe,
@@ -2516,6 +2567,7 @@ if (driveItems.length > 0) {
     </script>
 </body>
 </html>
+
 
 
 
