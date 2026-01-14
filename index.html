@@ -1840,100 +1840,90 @@
 
                 onMounted(() => { initApp(); fetchFAQ(); setInterval(() => { now.value = Date.now(); }, 1000); });
 
-                return {
-                    // --- 1. 基礎資料與狀態 ---
+              return {
+                    // ===========================
+                    // 1. 原本穩定版包含的變數 (保留)
+                    // ===========================
                     products, cart, currentCat, showFaq, categories, filteredProducts, 
-                    isLoadingData, errorMsg, userProfile, guestName, settings, now,
-                    isSubmitting, // ★ 補回這裡 (修復 isSubmitting 錯誤)
-
-                    // --- 2. 購物車與金額 ---
-                    cartItems, totalQty, totalPrice, finalTotalPrice, totalSavings, 
-                    updateCart, openCart, resetCart, handleCheckout, acceptTerms,
-
-                    // --- 3. 優惠券 ---
-                    hasActiveCoupons, useCouponChecked, couponCodeInput, appliedCoupon, 
-                    verifyCoupon, removeCoupon, isVerifyingCoupon,
-
-                    // --- 4. 支付與領取 ---
-                    deliveryMethod, selectedPayment, bankAccounts, selectedBankInfos, 
-                    giftInfo, userContact, canSelectGift, canSelectDrive, 
-                    requestManualScreenshot, togglePayment, copyText, 
-                    hasGiftOnlyItems, hasDriveOnlyItems, giftOnlyItemsNames, driveOnlyItemsNames,
-
-                    // --- 5. 訂單操作 ---
-                    orderHistory, openHistory, fetchOrderStatus, resendHistory, reBuy, 
-                    getStatusBadge, isOrderExpired, getGroupTimer, isGroupExpired, 
-                    unreportedOrders, validUnreportedOrders, pendingSelection, groupedUnreportedOrders, 
-                    openPaymentForm, showPaymentForm, paymentForm, paymentFormLabel, paymentFormPlaceholder, 
+                    updateCart, totalQty, totalPrice, cartItems, handleCheckout, 
+                    openCart, openHistory, showGuide, orderHistory, userProfile, 
+                    guestName, userContact, resendHistory, reBuy, acceptTerms, 
+                    resetCart, isLoadingData, deliveryMethod, giftInfo, 
+                    viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, 
+                    alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayment, 
+                    togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, 
+                    hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, canSelectDrive, 
+                    showPaymentForm, openPaymentForm, paymentForm, paymentFormLabel, paymentFormPlaceholder, 
                     submitPayment, isSubmittingPayment, 
-                    showProductDetail, openCancelModal, confirmCancel, // ★ 補回
-                    openReportForPending, goToPayFromPending, openReportForHistory, 
-                    dismissPendingAlertForever, isPendingAlertDismissed,
-                    getOrderItems, getOrderAmount, getHistoryItemName, isGroupSelected, toggleGroupSelection,
-                    reportingTotalAmount, // ★ 補回
-
-                    // --- 6. 票券夾 ---
-                    openWallet, walletFilter, availableTickets, usedTickets, currentDisplayTickets, 
-                    ticketSearchQuery, ticketSortType, walletUnread, showTicketImage, 
-                    confirmMergedWarning, openRedeemConfirm, confirmRedeemAction, isRedeeming, 
+                    openReportForHistory, getStatusBadge, openReportForPending, 
+                    unreportedOrders, pendingSelection, 
+                    openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, 
+                    fetchOrderStatus, showToast, errorMsg, requestManualScreenshot,
+                    openWallet, walletFilter, showTicketImage, openVendorGuide, currentVendorGuide, 
+                    availableTickets, usedTickets, currentDisplayTickets, 
+                    openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery, 
+                    linkifiedGuideInstruction,
+                    giftOnlyItemsNames, driveOnlyItemsNames, getHistoryItemName, ticketSortType, 
+                    totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, 
+                    validUnreportedOrders, isPendingAlertDismissed, isGroupExpired, dismissPendingAlertForever, 
+                    isRepaying, goToPayFromPending, getOrderItems, getOrderAmount,
+                    groupedUnreportedOrders, isGroupSelected, toggleGroupSelection, relatedOrdersToCancel, 
+                    showSortMenu, sortType, setSortType, walletUnread,
+                    confirmMergedWarning, isCartTestMode, isAdminTestMode, expiringTicketsList, 
+                    
+                    // 注意：這裡原本是 openRedeemFromReminder，下面會做別名處理
+                    openRedeemFromReminder, 
+                    
+                    dismissExpiryToday,
                     isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, 
-                    executeBatchRedeem, confirmBatchRedeemAction, selectAllTickets, 
-                    expiringTicketsList, openRedeemFromReminder, dismissExpiryToday, 
-                    clearRedeemedHistory, confirmClearHistoryAction, openVendorGuide, currentVendorGuide,
-                    linkifiedGuideInstruction, itemToRedeem, pendingTicketUrl, // ★ 補回
-
-                    // --- 7. 管理員後台 ---
+                    executeBatchRedeem, confirmBatchRedeemAction, selectAllTickets,
                     isAdmin, openAdminLogin, verifyAdminPassword, adminPasswordInput, 
-                    adminPendingOrders, adminStats, adminBestSellers, // ★ 補回這裡 (修復 adminBestSellers 錯誤)
-                    fetchAdminDashboard, onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, 
+                    faqList, announcement, adminPendingOrders, fetchAdminDashboard, 
+                    onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, 
+                    adminStats, adminLowStockItems,
                     triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning, 
-                    triggerPaymentCheck, isAdminChecking, fetchLowStock, isAdminFetchingStock, adminLowStockItems, adminExpiringItems,
-                    isAdminTestMode, isCartTestMode, 
+                    triggerPaymentCheck, isAdminChecking, isAdminFetchingStock, fetchLowStock,
+                    clearRedeemedHistory, confirmClearHistoryAction,
+                    // fetchExpiringItems (這個舊版可能有，新版用 computed 處理，保留也無妨)
+                    adminExpiringItems, adminBestSellers, openModalSafe,
+                    
+                    // v2.99 Patches Exports
                     openAdminProductManager, adminProducts, adminEditProduct, editingProduct, saveProduct, isSavingProduct,
-                    openAdminOrderManager, adminAllOrders, openAdminOrderEdit, editingOrder, saveAdminOrder, deleteAdminOrder, isSavingOrder, 
+                    openAdminOrderManager, adminAllOrders, openAdminOrderEdit, editingOrder, saveAdminOrder, deleteAdminOrder, isSavingOrder,
                     copyMomoInfo, copyOrderBackup,
 
-                  // --- 8. UI 輔助與動作函式 (完整版) ---
-                    viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, 
-                    showSortMenu, sortType, setSortType, 
-                    openModalSafe, hideModalSafe, showToast, alertMessages, showAlert, reloadApp, 
-                    faqList, announcement,
-                    showGuide, getProductImage, // 基本 UI
-
-                    // 剛剛補上的變數 (正確)
-                    lastOrderIds,
-                    isRepaying,
-                    vendorInfoMap,
-                    retryCount,
-                    checkGuestStatus,
-                    relatedOrdersToCancel,
-                    groupedHistory,
-
-                    // ★★★ 還缺少這些「動作函式」，請務必補上！ ★★★
-                    showProductDetail,          // 點擊圖片看大圖
-                    openCancelModal,            // 打開取消視窗
-                    confirmCancel,              // 確認取消
-                    openReportForPending,       // 從未回報區去回報
-                    goToPayFromPending,         // 從未回報區去付款
-                    openReportForHistory,       // 從歷史區去回報
-                    linkifiedGuideInstruction,  // 廠商說明連結化
-                    getHistoryItemName,         // 歷史商品名稱處理
-                    isGroupSelected,            // 批量回報勾選檢查
-                    toggleGroupSelection,       // 批量回報勾選切換
-                    dismissPendingAlertForever, // 關閉提醒
-                    isPendingAlertDismissed,    // 提醒狀態
-                    getOrderItems,              // 取得訂單商品
-                    getOrderAmount  ,            // 取得訂單金額
-                    selectedProduct,        // 用於商品詳情彈窗
-                    openRedeemFromReminder, // 這是程式原本的名字
-                    openWalletFromReminder: openRedeemFromReminder ,
+                    // ===========================
+                    // 2. ★★★ V3.0 新增補漏區 (必加！) ★★★
+                    // ===========================
                     
-                }; // ★ 這裡必須有一個分號和右大括號 (結束 return)
-            } // ★ 這裡必須有一個右大括號 (結束 setup)
-        }).mount('#app'); // ★ 這裡必須有圓括號、mount、分號 (結束 Vue)
+                    // [A] 優惠券系統 (缺少這些會導致優惠券無法使用)
+                    hasActiveCoupons, 
+                    useCouponChecked, 
+                    couponCodeInput, 
+                    appliedCoupon, 
+                    verifyCoupon, 
+                    removeCoupon, 
+                    isVerifyingCoupon,
+                    finalTotalPrice, // 計算折抵後總金額的重要變數
+
+                    // [B] UI 與邏輯修復 (缺少這些會導致彈窗報錯)
+                    itemToRedeem,     // 核銷確認視窗需要
+                    pendingTicketUrl, // 合併訂單警告視窗需要
+                    vendorInfoMap,    // 廠商 Logo 列表
+                    checkGuestStatus, // 訪客身分檢查
+                    lastOrderIds,     // 結帳後顯示單號
+
+                    // [C] 名稱對應修復 (Alias)
+                    // 舊版 HTML 可能呼叫 openWallet... 但程式裡是 openRedeem...
+                    openWalletFromReminder: openRedeemFromReminder
+
+                }; // 結束 return
+            } // 結束 setup
+        }).mount('#app'); // 結束 Vue
     </script>
 </body>
 </html>
+
 
 
 
