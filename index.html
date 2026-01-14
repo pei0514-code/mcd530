@@ -5,7 +5,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>麥麥電子票券商城</title>
-    
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https:;
+        img-src 'self' data: https:;
+        connect-src 'self' https:;
+    ">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://static.line-scdn.net">
     
@@ -359,6 +363,29 @@
   }
 }
 </script>
+<script>
+        document.addEventListener('contextmenu', function (e) {
+            e.preventDefault(); // 阻擋右鍵選單
+        });
+
+        document.addEventListener('keydown', function (e) {
+            // 阻擋 F12
+            if (e.key === 'F12' || e.keyCode === 123) {
+                e.preventDefault();
+                return false;
+            }
+            // 阻擋 Ctrl 組合鍵 (Ctrl+U 檢視原始碼, Ctrl+S 存檔, Ctrl+Shift+I 開發者工具)
+            if (e.ctrlKey || (e.ctrlKey && e.shiftKey)) {
+                if (['u', 's', 'i', 'c', 'j', 'U', 'S', 'I', 'C', 'J'].includes(e.key)) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
+    </script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js"></script>
+    
 </head>
 <body>
 
@@ -2388,6 +2415,7 @@ if (driveItems.length > 0) {
     </script>
 </body>
 </html>
+
 
 
 
