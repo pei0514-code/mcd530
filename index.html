@@ -42,7 +42,7 @@
     -webkit-transform: translate3d(0, 0, 0);
     
     /* 這裡調整速度：25s = 25秒跑完一圈 */
-    animation: marquee-seamless 25s linear infinite; 
+    animation: marquee-seamless 5s linear infinite; 
 }
 
 .marquee-text {
@@ -52,7 +52,7 @@
 
 @keyframes marquee-seamless {
     0% { transform: translate3d(0, 0, 0); }
-    100% { transform: translate3d(50%, 0, 0); } /* 因為內容重複了兩份，所以移動 50% 就好 */
+    100% { transform: translate3d(-50%, 0, 0); } /* 因為內容重複了兩份，所以移動 50% 就好 */
 }
         /* --- FAQ 常見問題樣式 --- */
 .faq-box {
@@ -2577,6 +2577,7 @@ if (driveItems.length > 0) {
     </script>
 </body>
 </html>
+
 
 
 
