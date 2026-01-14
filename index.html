@@ -1874,7 +1874,7 @@
                     adminPendingOrders, adminStats, adminBestSellers, // ★ 補回這裡 (修復 adminBestSellers 錯誤)
                     fetchAdminDashboard, onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, 
                     triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning, 
-                    triggerPaymentCheck, isAdminChecking, fetchLowStock, isAdminFetchingStock, adminLowStockItems, 
+                    triggerPaymentCheck, isAdminChecking, fetchLowStock, isAdminFetchingStock, adminLowStockItems, adminExpiringItems,
                     isAdminTestMode, isCartTestMode, 
                     openAdminProductManager, adminProducts, adminEditProduct, editingProduct, saveProduct, isSavingProduct,
                     openAdminOrderManager, adminAllOrders, openAdminOrderEdit, editingOrder, saveAdminOrder, deleteAdminOrder, isSavingOrder, 
@@ -1885,13 +1885,16 @@
                     showSortMenu, sortType, setSortType, 
                     openModalSafe, hideModalSafe, showToast, alertMessages, showAlert, reloadApp, 
                     faqList, announcement,
-                    showGuide // ★ 補回這裡 (修復 showGuide 錯誤)
-                };
+                    showGuide , isRepaying,      // 補付款模式開關
+                    vendorInfoMap,   // 廠商 Logo 對照表
+                    retryCount,      // 連線重試次數
+                    checkGuestStatus
             }
         }).mount('#app');
     </script>
 </body>
 </html>
+
 
 
 
