@@ -1828,30 +1828,71 @@
                 onMounted(() => { initApp(); fetchFAQ(); setInterval(() => { now.value = Date.now(); }, 1000); });
 
                 return {
-                    // 基本狀態
-                    products, cart, currentCat, showFaq, categories, filteredProducts, isLoadingData, errorMsg, userProfile, guestName, settings, now,
-                    // 購物與金額 (已修復 totalQty)
-                    cartItems, totalQty, totalPrice, finalTotalPrice, totalSavings, updateCart, openCart, resetCart, handleCheckout, acceptTerms,
-                    // 優惠券
-                    hasActiveCoupons, useCouponChecked, couponCodeInput, appliedCoupon, verifyCoupon, removeCoupon, isVerifyingCoupon,
-                    // 支付
-                    deliveryMethod, selectedPayment, bankAccounts, selectedBankInfos, giftInfo, userContact, canSelectGift, canSelectDrive, requestManualScreenshot, togglePayment, copyText, hasGiftOnlyItems, hasDriveOnlyItems, giftOnlyItemsNames, driveOnlyItemsNames,
-                    // 訂單
-                    orderHistory, openHistory, fetchOrderStatus, resendHistory, reBuy, getStatusBadge, isOrderExpired, getGroupTimer, isGroupExpired, unreportedOrders, validUnreportedOrders, pendingSelection, groupedUnreportedOrders, openPaymentForm, showPaymentForm, paymentForm, paymentFormLabel, paymentFormPlaceholder, submitPayment, isSubmittingPayment,
-                    // 票券
-                    openWallet, walletFilter, availableTickets, usedTickets, currentDisplayTickets, ticketSearchQuery, ticketSortType, walletUnread, showTicketImage, confirmMergedWarning, openRedeemConfirm, confirmRedeemAction, isRedeeming, isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, executeBatchRedeem, confirmBatchRedeemAction, selectAllTickets, expiringTicketsList, openRedeemFromReminder, dismissExpiryToday, clearRedeemedHistory, confirmClearHistoryAction, openVendorGuide, currentVendorGuide,
-                    // 管理員
-                    isAdmin, openAdminLogin, verifyAdminPassword, adminPasswordInput, adminPendingOrders, adminStats, fetchAdminDashboard, onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning, triggerPaymentCheck, isAdminChecking, fetchLowStock, isAdminFetchingStock, adminLowStockItems, isAdminTestMode, isCartTestMode, openAdminProductManager, adminProducts, adminEditProduct, editingProduct, saveProduct, isSavingProduct,
-                    openAdminOrderManager, adminAllOrders, openAdminOrderEdit, editingOrder, saveAdminOrder, deleteAdminOrder, isSavingOrder, copyMomoInfo, copyOrderBackup,
-                    // UI & Helper
-                    viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, showSortMenu, sortType, setSortType, openModalSafe, hideModalSafe, showToast, alertMessages, showAlert, reloadApp, faqList, announcement,
-                    showProductDetail, openCancelModal, confirmCancel, openReportForPending, goToPayFromPending, openReportForHistory, linkifiedGuideInstruction, getHistoryItemName, isGroupSelected, toggleGroupSelection, dismissPendingAlertForever, isPendingAlertDismissed, getOrderItems, getOrderAmount
+                    // --- 1. 基礎資料與狀態 ---
+                    products, cart, currentCat, showFaq, categories, filteredProducts, 
+                    isLoadingData, errorMsg, userProfile, guestName, settings, now,
+                    isSubmitting, // ★ 補回這裡 (修復 isSubmitting 錯誤)
+
+                    // --- 2. 購物車與金額 ---
+                    cartItems, totalQty, totalPrice, finalTotalPrice, totalSavings, 
+                    updateCart, openCart, resetCart, handleCheckout, acceptTerms,
+
+                    // --- 3. 優惠券 ---
+                    hasActiveCoupons, useCouponChecked, couponCodeInput, appliedCoupon, 
+                    verifyCoupon, removeCoupon, isVerifyingCoupon,
+
+                    // --- 4. 支付與領取 ---
+                    deliveryMethod, selectedPayment, bankAccounts, selectedBankInfos, 
+                    giftInfo, userContact, canSelectGift, canSelectDrive, 
+                    requestManualScreenshot, togglePayment, copyText, 
+                    hasGiftOnlyItems, hasDriveOnlyItems, giftOnlyItemsNames, driveOnlyItemsNames,
+
+                    // --- 5. 訂單操作 ---
+                    orderHistory, openHistory, fetchOrderStatus, resendHistory, reBuy, 
+                    getStatusBadge, isOrderExpired, getGroupTimer, isGroupExpired, 
+                    unreportedOrders, validUnreportedOrders, pendingSelection, groupedUnreportedOrders, 
+                    openPaymentForm, showPaymentForm, paymentForm, paymentFormLabel, paymentFormPlaceholder, 
+                    submitPayment, isSubmittingPayment, 
+                    showProductDetail, openCancelModal, confirmCancel, // ★ 補回
+                    openReportForPending, goToPayFromPending, openReportForHistory, 
+                    dismissPendingAlertForever, isPendingAlertDismissed,
+                    getOrderItems, getOrderAmount, getHistoryItemName, isGroupSelected, toggleGroupSelection,
+                    reportingTotalAmount, // ★ 補回
+
+                    // --- 6. 票券夾 ---
+                    openWallet, walletFilter, availableTickets, usedTickets, currentDisplayTickets, 
+                    ticketSearchQuery, ticketSortType, walletUnread, showTicketImage, 
+                    confirmMergedWarning, openRedeemConfirm, confirmRedeemAction, isRedeeming, 
+                    isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, 
+                    executeBatchRedeem, confirmBatchRedeemAction, selectAllTickets, 
+                    expiringTicketsList, openRedeemFromReminder, dismissExpiryToday, 
+                    clearRedeemedHistory, confirmClearHistoryAction, openVendorGuide, currentVendorGuide,
+                    linkifiedGuideInstruction, itemToRedeem, pendingTicketUrl, // ★ 補回
+
+                    // --- 7. 管理員後台 ---
+                    isAdmin, openAdminLogin, verifyAdminPassword, adminPasswordInput, 
+                    adminPendingOrders, adminStats, adminBestSellers, // ★ 補回這裡 (修復 adminBestSellers 錯誤)
+                    fetchAdminDashboard, onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, 
+                    triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning, 
+                    triggerPaymentCheck, isAdminChecking, fetchLowStock, isAdminFetchingStock, adminLowStockItems, 
+                    isAdminTestMode, isCartTestMode, 
+                    openAdminProductManager, adminProducts, adminEditProduct, editingProduct, saveProduct, isSavingProduct,
+                    openAdminOrderManager, adminAllOrders, openAdminOrderEdit, editingOrder, saveAdminOrder, deleteAdminOrder, isSavingOrder, 
+                    copyMomoInfo, copyOrderBackup,
+
+                    // --- 8. UI 輔助 ---
+                    viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, 
+                    showSortMenu, sortType, setSortType, 
+                    openModalSafe, hideModalSafe, showToast, alertMessages, showAlert, reloadApp, 
+                    faqList, announcement,
+                    showGuide // ★ 補回這裡 (修復 showGuide 錯誤)
                 };
             }
         }).mount('#app');
     </script>
 </body>
 </html>
+
 
 
 
