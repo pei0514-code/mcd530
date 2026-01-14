@@ -13,8 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
     <style>
-        /* --- 跑馬燈樣式 (請加在 <style> 裡面) --- */
-/* --- 無縫跑馬燈樣式 (修正版) --- */
+  /* --- 跑馬燈樣式 (最終修正版) --- */
 .marquee-container {
     background-color: #d32f2f;
     color: #fff;
@@ -23,31 +22,37 @@
     white-space: nowrap;
     position: relative;
     z-index: 900;
-    display: flex; /* 讓內容橫向排列 */
+    height: 40px;
+    display: flex;
     align-items: center;
-    height: 40px; /* 固定高度避免跳動 */
+    
+    /* 🔥 關鍵修正：強制容器也使用 3D 加速，避免被瀏覽器忽略 */
+    transform: translate3d(0, 0, 0); 
+    -webkit-transform: translate3d(0, 0, 0);
 }
 
 .marquee-content {
     display: inline-block;
     white-space: nowrap;
-    /* 強制開啟硬體加速，解決手機上「滑動才出現」的問題 */
+    
+    /* 🔥 關鍵修正：確保寬度足夠，並強制 GPU 渲染 */
+    min-width: 100%; 
+    will-change: transform;
     transform: translate3d(0, 0, 0); 
-    will-change: transform; 
-    /* 修改動畫邏輯 */
-    animation: marquee-seamless 60s linear infinite;
+    -webkit-transform: translate3d(0, 0, 0);
+    
+    /* 這裡調整速度：25s = 25秒跑完一圈 */
+    animation: marquee-seamless 65s linear infinite; 
 }
 
-/* 讓兩段文字中間保持距離 */
 .marquee-text {
     display: inline-block;
-    padding-right: 50px; /* 文字間距 */
+    padding-right: 50px; 
 }
 
-/* 動畫：只移動 50% (因為我們複製了兩份內容) */
 @keyframes marquee-seamless {
     0% { transform: translate3d(0, 0, 0); }
-    100% { transform: translate3d(-50%, 0, 0); }
+    100% { transform: translate3d(-50%, 0, 0); } /* 因為內容重複了兩份，所以移動 50% 就好 */
 }
         /* --- FAQ 常見問題樣式 --- */
 .faq-box {
@@ -560,7 +565,7 @@
             </div>
         </div>
 
-       <div class="marquee-container" v-if="announcement">
+   <div class="marquee-container" v-if="announcement" :key="announcement">
     <div class="marquee-content">
         <span class="marquee-text">📢 {{ announcement }}</span>
         <span class="marquee-text">📢 {{ announcement }}</span>
@@ -2572,6 +2577,7 @@ if (driveItems.length > 0) {
     </script>
 </body>
 </html>
+
 
 
 
