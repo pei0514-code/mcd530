@@ -1489,7 +1489,7 @@
                 const paymentForm = ref({ bankCode: '', accountInfo: '' });
                 const isCartTestMode = ref(false);
                 
-               // const availableTickets = ref([]);
+                const availableTickets = ref([]);
                 const walletUnread = ref(false);
                 const lastKnownTicketCount = ref(Number(safeGetStorage('mm_last_ticket_count', 0)));
                 const ticketSearchQuery = ref('');
@@ -1877,4 +1877,5 @@
     </script>
 </body>
 </html>
+
 
