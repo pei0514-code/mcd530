@@ -1731,8 +1731,7 @@
                 const togglePayment = (c) => selectedPayment.value = c;
                 const copyText = (t) => navigator.clipboard.writeText(t).then(()=>showToast('已複製')).catch(()=>showToast('複製失敗'));
                 
-                const verifyCoupon = async () => { if(!couponCodeInput.value) return showToast('請輸入'); isVerifyingCoupon.value = true; try { const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'verifyCoupon', userId: getEffectiveUserId(), code: couponCodeInput.value.trim().toUpperCase(), cartTotal: totalPrice.value, cartItems: cartItems.value.map(i=>({ name: i.name, price: i.price, quantity: i.quantity })) }) }); const j = await r.json(); if(j.status==='success'){ appliedCoupon.value={ code: j.code, amount: j.discount }; showToast(`✅ 折抵 $${j.discount}`); } else { appliedCoupon.value=null; showToast(`❌ ${j.message}`); } } catch(e){ showToast('驗證失敗'); } finally { isVerifyingCoupon.value = false; } };
-                const removeCoupon = () => { appliedCoupon.value = null; couponCodeInput.value = ''; };
+                const verifyCoupon = async () => { if (!couponCodeInput.value) return; isVerifyingCoupon.value = true; try { const data = await (await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'verifyCoupon', code: couponCodeInput.value, userId: userProfile.value.userId }) })).json(); if (data.status === 'success') { const c = data.coupon; if (totalPrice.value < c.minSpend) { showToast(`此優惠券需滿 $${c.minSpend} 才能使用`); appliedCoupon.value = null; return; } if (c.applicableItems && c.applicableItems.trim() !== '') { const hasItem = cartItems.value.some(item => c.applicableItems.includes(item.name) || item.name.includes(c.applicableItems)); if (!hasItem) { showToast(`此優惠券僅適用於：${c.applicableItems}`); appliedCoupon.value = null; return; } } appliedCoupon.value = c; showToast(`優惠券 "${c.title}" 已套用！`); couponCodeInput.value = ''; } else { showToast(data.message); appliedCoupon.value = null; } } catch (e) { showToast('驗證失敗，請檢查網路'); } finally { isVerifyingCoupon.value = false; } };  const removeCoupon = () => { appliedCoupon.value = null; couponCodeInput.value = ''; };
                 const fetchFAQ = async () => { try { const r=await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getFAQ' }) }); const j=await r.json(); if(j.status==='success'){ faqList.value=j.data; if(j.announcements?.length){ let l=[]; for(let i=0;i<10;i++) l=l.concat(j.announcements); announcement.value=l.join("        ✦        "); } } } catch(e){ announcement.value="歡迎光臨"; } };
 
                 // ==========================
@@ -1949,6 +1948,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
