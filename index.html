@@ -1892,26 +1892,44 @@
                     openAdminOrderManager, adminAllOrders, openAdminOrderEdit, editingOrder, saveAdminOrder, deleteAdminOrder, isSavingOrder, 
                     copyMomoInfo, copyOrderBackup,
 
-                    // --- 8. UI 輔助 ---
+                  // --- 8. UI 輔助與動作函式 (完整版) ---
                     viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, 
                     showSortMenu, sortType, setSortType, 
                     openModalSafe, hideModalSafe, showToast, alertMessages, showAlert, reloadApp, 
                     faqList, announcement,
-                    showGuide , 
-                    // 這是剛剛補上的 4 個漏網之魚
+                    showGuide, getProductImage, // 基本 UI
+
+                    // 剛剛補上的變數 (正確)
                     lastOrderIds,
                     isRepaying,
                     vendorInfoMap,
                     retryCount,
-                    checkGuestStatus ,
+                    checkGuestStatus,
                     relatedOrdersToCancel,
-                    groupedHistory
+                    groupedHistory,
+
+                    // ★★★ 還缺少這些「動作函式」，請務必補上！ ★★★
+                    showProductDetail,          // 點擊圖片看大圖
+                    openCancelModal,            // 打開取消視窗
+                    confirmCancel,              // 確認取消
+                    openReportForPending,       // 從未回報區去回報
+                    goToPayFromPending,         // 從未回報區去付款
+                    openReportForHistory,       // 從歷史區去回報
+                    linkifiedGuideInstruction,  // 廠商說明連結化
+                    getHistoryItemName,         // 歷史商品名稱處理
+                    isGroupSelected,            // 批量回報勾選檢查
+                    toggleGroupSelection,       // 批量回報勾選切換
+                    dismissPendingAlertForever, // 關閉提醒
+                    isPendingAlertDismissed,    // 提醒狀態
+                    getOrderItems,              // 取得訂單商品
+                    getOrderAmount              // 取得訂單金額
                 }; // ★ 這裡必須有一個分號和右大括號 (結束 return)
             } // ★ 這裡必須有一個右大括號 (結束 setup)
         }).mount('#app'); // ★ 這裡必須有圓括號、mount、分號 (結束 Vue)
     </script>
 </body>
 </html>
+
 
 
 
