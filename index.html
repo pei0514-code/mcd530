@@ -13,6 +13,75 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
     <style>
+        /* --- FAQ 常見問題樣式 --- */
+.faq-box {
+    background-color: #fff8e1; /* 醒目的淡黃色背景 */
+    border: 2px solid #ffc107; /* 黃色邊框 */
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.faq-title {
+    margin-top: 0;
+    margin-bottom: 12px;
+    color: #d32f2f; /* 紅色標題 */
+    font-size: 1.1em;
+    font-weight: bold;
+    text-align: center;
+}
+
+.faq-item {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    overflow: hidden;
+}
+
+.faq-item summary {
+    padding: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    list-style: none; /* 隱藏預設三角形 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fff;
+    transition: background 0.2s;
+}
+
+/* 讓問題被點擊時變色 */
+.faq-item[open] summary {
+    background-color: #f0f0f0;
+    color: #000;
+}
+
+/* 自訂一個小箭頭 */
+.faq-item summary::after {
+    content: '+'; 
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #666;
+}
+
+.faq-item[open] summary::after {
+    content: '-';
+}
+
+.faq-content {
+    padding: 12px;
+    font-size: 0.95em;
+    color: #444;
+    line-height: 1.5;
+    border-top: 1px solid #eee;
+    background-color: #fafafa;
+}
+
+/* 強調重點文字 */
+.faq-content strong {
+    color: #d32f2f;
+}
         :root { 
             --brand-red: #DA291C; 
             --brand-dark: #27251F; 
@@ -805,6 +874,23 @@
 
         <!-- Guide Modal -->
         <div class="modal fade" id="guideModal" tabindex="-1">
+
+<div class="faq-box" v-if="faqList.length > 0">
+    <h3 class="faq-title">🔥 常見問題 Q&A</h3>
+    
+    <details class="faq-item" v-for="(item, index) in faqList" :key="index">
+        <summary>Q：{{ item.question }}</summary>
+        <div class="faq-content" v-html="item.answer"></div>
+    </details>
+
+    <hr style="margin: 15px 0; border-top: 1px dashed #ccc;">
+</div>
+
+<div v-else class="text-center p-3 text-muted">
+    <small>正在載入常見問題...</small>
+</div>
+
+            
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 rounded-4 shadow-lg">
                     <div class="modal-header border-0 pb-0"><h5 class="fw-bold"><i class="fas fa-book-reader me-2"></i>操作說明</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -1272,6 +1358,22 @@
                 const products = ref([]);
                 const settings = ref({ version: 'v188', liffId: '' });
                 const cart = ref({});
+                const faqList = ref([]);
+                const fetchFAQ = async () => {
+    try {
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'getFAQ' })
+        });
+        const json = await res.json();
+        if (json.status === 'success') {
+            faqList.value = json.data;
+        }
+    } catch (e) {
+        console.error("無法載入 FAQ", e);
+        // 失敗時可以手動設定幾個預設問題，避免空白
+    }
+};
                 const currentCat = ref('ALL');
                 const isAdminTestMode = ref(false);
                 const userProfile = ref({});
@@ -1715,7 +1817,7 @@ const triggerPaymentCheck = async () => {
         isAdminChecking.value = false;
     }
 }; // ⬅️ 這裡補上了分號
-                onMounted(() => { initApp(); setInterval(() => { now.value = Date.now(); }, 1000); });
+                onMounted(() => { initApp(); fetchFAQ(); setInterval(() => { now.value = Date.now(); }, 1000); });
                 watch(acceptTerms, (newVal) => { safeSetStorage('mm_accept_terms', newVal); });
 
                 const fetchWithRetry = async (url, retries = 3) => {
@@ -2410,6 +2512,7 @@ if (driveItems.length > 0) {
     </script>
 </body>
 </html>
+
 
 
 
