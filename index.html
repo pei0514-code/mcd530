@@ -1661,6 +1661,7 @@
                         const res = await fetch(`${API_URL}?action=getOrderStatus&userId=${uid}`); 
                         if(res.ok){ 
                             const d=await res.json(); 
+                            console.log("【API回傳資料】", d); // ★★★ 加這一行 ★★★
                             if(d.orders){ 
                                 const map={}; d.orders.forEach(o=>map[o.id]=o); 
                                 orderHistory.value=orderHistory.value.map(h=>{ const s=map[h.id]; return s?{...h,...s}:h; }); 
@@ -1929,6 +1930,7 @@
     </script>
 </body>
 </html>
+
 
 
 
