@@ -1609,8 +1609,6 @@
                     return Object.values(map).sort((a, b) => safeParseDate(b.timestamp).getTime() - safeParseDate(a.timestamp).getTime());
                 });
                 
-                });
-
                 const reportingTotalAmount = computed(() => { if (lastOrderIds.value.length === 0) return 0; return orderHistory.value.filter(o => lastOrderIds.value.includes(o.id)).reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0); });
                 const isGroupSelected = (group) => group.ids.every(id => pendingSelection.value.includes(id));
                 const toggleGroupSelection = (group) => { const all = isGroupSelected(group); if (all) pendingSelection.value = pendingSelection.value.filter(id => !group.ids.includes(id)); else pendingSelection.value = [...pendingSelection.value, ...group.ids.filter(id => !pendingSelection.value.includes(id))]; };
@@ -1914,6 +1912,7 @@
     </script>
 </body>
 </html>
+
 
 
 
