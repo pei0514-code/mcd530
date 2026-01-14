@@ -14,27 +14,40 @@
     
     <style>
         /* --- 跑馬燈樣式 (請加在 <style> 裡面) --- */
+/* --- 無縫跑馬燈樣式 (修正版) --- */
 .marquee-container {
-    background-color: #d32f2f; /* 紅色背景 */
-    color: #fff;               /* 白色文字 */
+    background-color: #d32f2f;
+    color: #fff;
     width: 100%;
     overflow: hidden;
     white-space: nowrap;
-    padding: 8px 0;
-    font-size: 0.9rem;
-    font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     position: relative;
-    z-index: 900; /* 確保在 header 下面但在內容上面 */
+    z-index: 900;
+    display: flex; /* 讓內容橫向排列 */
+    align-items: center;
+    height: 40px; /* 固定高度避免跳動 */
 }
+
 .marquee-content {
     display: inline-block;
-    padding-left: 100%;
-    animation: marquee-scroll 25s linear infinite;
+    white-space: nowrap;
+    /* 強制開啟硬體加速，解決手機上「滑動才出現」的問題 */
+    transform: translate3d(0, 0, 0); 
+    will-change: transform; 
+    /* 修改動畫邏輯 */
+    animation: marquee-seamless 60s linear infinite;
 }
-@keyframes marquee-scroll {
-    0% { transform: translate(0, 0); }
-    100% { transform: translate(-100%, 0); }
+
+/* 讓兩段文字中間保持距離 */
+.marquee-text {
+    display: inline-block;
+    padding-right: 50px; /* 文字間距 */
+}
+
+/* 動畫：只移動 50% (因為我們複製了兩份內容) */
+@keyframes marquee-seamless {
+    0% { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-50%, 0, 0); }
 }
         /* --- FAQ 常見問題樣式 --- */
 .faq-box {
@@ -547,11 +560,12 @@
             </div>
         </div>
 
-        <div class="marquee-container" v-if="announcement">
-            <div class="marquee-content">
-                📢 {{ announcement }} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 📢 {{ announcement }}
-            </div>
-        </div>
+       <div class="marquee-container" v-if="announcement">
+    <div class="marquee-content">
+        <span class="marquee-text">📢 {{ announcement }}</span>
+        <span class="marquee-text">📢 {{ announcement }}</span>
+    </div>
+</div>
 
         <div class="container-fluid px-2 py-3" :class="gridModeClass">
             <div v-if="isLoadingData" class="text-center py-5">
@@ -1406,9 +1420,13 @@
             faqList.value = json.data;
             
             // 2. ✅ 設定跑馬燈 (把多條公告串成一條長字串)
-            if (json.announcements && json.announcements.length > 0) {
-                // 這裡使用 " ✦ " 當作分隔符號，你可以自由改成想要的符號
-                announcement.value = json.announcements.join("   ✦   ");
+         if (json.announcements && json.announcements.length > 0) {
+                // 原本是直接 join，現在我們把它「重複三次」再 join，確保內容夠長
+                // 這樣在寬螢幕手機上也不會斷掉
+                const rawList = json.announcements;
+                const repeatList = [...rawList, ...rawList, ...rawList]; 
+                
+                announcement.value = repeatList.join("   ✦   ");
             }
         }
     } catch (e) {
@@ -2554,6 +2572,7 @@ if (driveItems.length > 0) {
     </script>
 </body>
 </html>
+
 
 
 
