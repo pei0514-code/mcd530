@@ -1761,7 +1761,7 @@ const triggerPaymentCheck = async () => {
                 };
                 
                 const reloadApp = () => { window.location.reload(); };
-                const getProductImage = (name) => { const p = products.value.find(prod => prod.name === name); return p ? p.image : 'https://via.placeholder.com/48?text=No+Img'; };
+                const getProductImage = (name) => { const p = products.value.find(prod => prod.name === name); return p ? p.image : 'https://placehold.co/48x48?text=No+Img'; };
                 const checkGuestStatus = () => { const ua = navigator.userAgent || navigator.vendor || window.opera; if (!liff.isInClient() || (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1)) { setTimeout(() => { openModalSafe('guestWarningModal'); }, 1000); } };
                 const hideStaticLoader = () => { const loader = document.getElementById('static-loader'); if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 300); } };
                 const showAlert = (msgs) => { alertMessages.value = Array.isArray(msgs) ? msgs : [msgs]; openModalSafe('alertModal'); };
@@ -2388,6 +2388,7 @@ if (driveItems.length > 0) {
     </script>
 </body>
 </html>
+
 
 
 
