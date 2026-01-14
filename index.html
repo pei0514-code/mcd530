@@ -1361,7 +1361,7 @@
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
     <script>
-        // --- 2. 全域錯誤攔截與工具 (最優先執行) ---
+        // --- 2. 全域錯誤攔截 ---
         window.onerror = function(msg, url, line, col, error) {
             if (msg.indexOf('fetch') > -1) return false;
             const loader = document.getElementById('static-loader');
@@ -1376,7 +1376,6 @@
             return false;
         };
 
-        // 載入逾時保護 (12秒)
         setTimeout(() => {
             const loader = document.getElementById('static-loader');
             if(loader && loader.style.display !== 'none') {
@@ -1385,25 +1384,13 @@
             }
         }, 12000); 
 
-        // LocalStorage 安全存取
-        function safeGetStorage(key, defaultVal) { 
-            try { return localStorage.getItem(key) !== null ? localStorage.getItem(key) : defaultVal; } 
-            catch (e) { return defaultVal; } 
-        }
-        function safeSetStorage(key, val) { 
-            try { localStorage.setItem(key, val); } catch (e) {} 
-        }
-        
-        // Toast 提示
+        function safeGetStorage(key, defaultVal) { try { return localStorage.getItem(key) !== null ? localStorage.getItem(key) : defaultVal; } catch (e) { return defaultVal; } }
+        function safeSetStorage(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
         function showToast(msg) {
             const toast = document.getElementById('toast-msg');
-            if(toast) {
-                toast.innerText = msg; toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 3000);
-            }
+            if(toast) { toast.innerText = msg; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); }
         }
         
-        // 複製工具
         window.copyGuestLink = function() { navigator.clipboard.writeText('https://lin.ee/ejXmXDl').then(() => showToast('連結已複製')).catch(() => showToast('複製失敗')); };
         window.copyLineId = function() { navigator.clipboard.writeText('@034qefaf').then(() => showToast('ID 已複製')).catch(() => showToast('複製失敗')); };
         window.copyBackupTextManual = function() {
@@ -1411,7 +1398,7 @@
             if (el) { el.select(); try { document.execCommand('copy'); showToast('已成功複製'); } catch (e) { showToast('複製失敗'); } }
         };
 
-        // --- 3. Vue 應用程式主體 ---
+        // --- 3. Vue 應用程式 ---
         const { createApp, ref, computed, onMounted, watch } = Vue;
         const API_URL = 'https://script.google.com/macros/s/AKfycbx2xdqkRoBGFibvgKRo05QtVcIWZlUjBq-rr_NRJ-8nK1BsFPSorQqnsNa89IPlG45aeA/exec';
         const NUMBERS = ['❶', '❷', '❸', '❹', '❺', '❻', '❼', '❽', '❾', '❿'];
@@ -1427,11 +1414,11 @@
         createApp({
             setup() {
                 // ==========================
-                // A. 變數定義 (完整展開)
+                // A. 變數定義
                 // ==========================
                 const products = ref([]);
                 const cart = ref({});
-                const settings = ref({ version: 'v3.0 Final', liffId: '' });
+                const settings = ref({ version: 'v3.01 Fixed', liffId: '' });
                 const faqList = ref([]);
                 const announcement = ref("🔥 正在載入最新公告...");
                 const currentCat = ref('ALL');
@@ -1442,18 +1429,13 @@
                 const now = ref(Date.now());
                 const retryCount = ref(0);
 
-                // 用戶資料
                 const userProfile = ref({});
                 const guestName = ref(safeGetStorage('mm_guest_name', ''));
                 const guestUuid = ref(safeGetStorage('mm_guest_uuid', ''));
-                if (!guestUuid.value) { 
-                    guestUuid.value = 'guest_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5); 
-                    safeSetStorage('mm_guest_uuid', guestUuid.value); 
-                }
+                if (!guestUuid.value) { guestUuid.value = 'guest_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5); safeSetStorage('mm_guest_uuid', guestUuid.value); }
                 const getEffectiveUserId = () => (userProfile.value && userProfile.value.userId) || guestUuid.value || 'GUEST';
                 const userContact = ref({ phone: safeGetStorage('mm_user_phone', '') });
 
-                // UI 狀態
                 const viewMode = ref(safeGetStorage('mm_view_mode', 'medium'));
                 const showLayoutMenu = ref(false);
                 const showSortMenu = ref(false);
@@ -1465,20 +1447,17 @@
                 const bankAccounts = ref(BANK_ACCOUNTS);
                 const giftInfo = ref({ name: safeGetStorage('mm_momo_name', ''), phone: safeGetStorage('mm_momo_phone', '') });
 
-                // 優惠券狀態
                 const hasActiveCoupons = ref(false);
                 const useCouponChecked = ref(false);
                 const couponCodeInput = ref('');
                 const appliedCoupon = ref(null);
                 const isVerifyingCoupon = ref(false);
 
-                // 訂單歷史與票券
+                // 訂單歷史
                 let hist = []; try { hist = JSON.parse(safeGetStorage('mm_order_history', '[]')); } catch(e){ hist = []; }
                 const orderHistory = ref(hist);
-                
                 let pending = []; try { pending = JSON.parse(safeGetStorage('mm_pending_payment_orders', '[]')); } catch(e) { pending = []; }
                 const unreportedOrders = ref(pending);
-                
                 const lastOrderIds = ref([]);
                 const pendingSelection = ref([]);
                 const isPendingAlertDismissed = ref(false);
@@ -1489,25 +1468,21 @@
                 const paymentForm = ref({ bankCode: '', accountInfo: '' });
                 const isCartTestMode = ref(false);
                 
-                const availableTickets = ref([]);
+                // 票券相關 (⚠️ 這裡移除了 availableTickets 的重複定義)
                 const walletUnread = ref(false);
                 const lastKnownTicketCount = ref(Number(safeGetStorage('mm_last_ticket_count', 0)));
                 const ticketSearchQuery = ref('');
                 const ticketSortType = ref('expiry');
-                
                 let redeemedMap = {}; try { redeemedMap = JSON.parse(safeGetStorage('mm_redeemed_map', '{}')); } catch(e) { redeemedMap = {}; }
                 const redeemedStatus = ref(redeemedMap);
-                
                 const walletFilter = ref('available');
                 const pendingTicketUrl = ref('');
                 const itemToRedeem = ref(null);
                 const isRedeeming = ref(false);
                 const isBatchMode = ref(false);
                 const batchSelection = ref(new Set());
-                
                 const hiddenTicketKeys = ref(new Set());
                 try { const savedHidden = JSON.parse(safeGetStorage('mm_hidden_tickets', '[]')); savedHidden.forEach(k => hiddenTicketKeys.value.add(k)); } catch(e) {}
-                
                 const expiringTicketsList = ref([]);
                 const vendorInfoMap = ref({});
                 const currentVendorGuide = ref(null);
@@ -1515,7 +1490,7 @@
                 const orderToCancel = ref(null);
                 const relatedOrdersToCancel = ref([]);
 
-                // 管理員相關變數
+                // 管理員
                 const adminPasswordInput = ref('');
                 const adminPendingOrders = ref([]);
                 const adminStats = ref({ today: 0, week: 0, month: 0, total: 0 });
@@ -1537,13 +1512,12 @@
                 const isAdminTestMode = ref(false);
 
                 // ==========================
-                // B. 視窗控制 (Modal Helpers)
+                // B. 視窗控制
                 // ==========================
                 const getModal = (id) => { const el = document.getElementById(id); if (!el) return null; if (typeof bootstrap !== 'undefined') { let instance = bootstrap.Modal.getInstance(el); if (!instance) instance = new bootstrap.Modal(el); return instance; } return null; };
                 const openModalSafe = (id) => { const modal = getModal(id); if (modal) modal.show(); };
                 const hideModalSafe = (id) => { const modal = getModal(id); if (modal) modal.hide(); };
                 
-                // 導航捷徑
                 const openHistory = () => { hideModalSafe('ticketModal'); openModalSafe('historyModal'); fetchOrderStatus(getEffectiveUserId()); };
                 const showGuide = () => openModalSafe('guideModal');
                 const openCart = () => openModalSafe('cartModal');
@@ -1559,19 +1533,16 @@
                 };
 
                 // ==========================
-                // C. 計算屬性 (Computed)
+                // C. 計算屬性
                 // ==========================
                 const cartItems = computed(() => Object.keys(cart.value).map(id => { const p = products.value.find(x => x.id === id); return p ? { ...p, quantity: cart.value[id] } : null; }).filter(x => x));
-                
                 const totalPrice = computed(() => cartItems.value.reduce((sum, item) => sum + (item.price * item.quantity), 0));
                 
-                // ★★★ 最終金額 (修復重複扣抵顯示) ★★★
                 const finalTotalPrice = computed(() => { 
                     let total = totalPrice.value; 
                     if (appliedCoupon.value) total -= appliedCoupon.value.amount; 
                     return total > 0 ? total : 0; 
                 });
-                
                 const totalSavings = computed(() => cartItems.value.reduce((a, b) => { const orig = b.originalPrice && b.originalPrice > b.price ? b.originalPrice : b.price; return a + ((orig - b.price) * b.quantity); }, 0));
 
                 const categories = computed(() => [...new Set(products.value.map(p => p.category))]);
@@ -1603,7 +1574,6 @@
                     return Object.values(groups).sort((a,b) => safeParseDate(b.timestamp).getTime() - safeParseDate(a.timestamp).getTime());
                 });
 
-                // ★★★ 之前漏掉的 UI 輔助函式 ★★★
                 const reportingTotalAmount = computed(() => { if (lastOrderIds.value.length === 0) return 0; return orderHistory.value.filter(o => lastOrderIds.value.includes(o.id)).reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0); });
                 const isGroupSelected = (group) => group.ids.every(id => pendingSelection.value.includes(id));
                 const toggleGroupSelection = (group) => { const all = isGroupSelected(group); if (all) pendingSelection.value = pendingSelection.value.filter(id => !group.ids.includes(id)); else pendingSelection.value = [...pendingSelection.value, ...group.ids.filter(id => !pendingSelection.value.includes(id))]; };
@@ -1624,21 +1594,25 @@
                     return { text: '⏳ 待核對', class: 'status-pending', canReport: true, canCancel: true };
                 };
                 
-                // iOS 日期修復
                 const safeParseDate = (dateStr) => { if (!dateStr) return new Date(); const s = String(dateStr); const m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})$/); return m ? new Date(m[1], m[2]-1, m[3], m[4], m[5], m[6]) : new Date(s); };
-                
-                // 30分鐘過期邏輯
                 const isOrderExpired = (h) => { const b = getStatusBadge(h); if (b.text !== '💰 待付款') return false; const d = safeParseDate(h.timestamp); return !isNaN(d.getTime()) && (now.value - d.getTime()) >= 1800000; };
                 const getRemainingTime = (ts) => { const d = safeParseDate(ts); if (isNaN(d.getTime())) return "00:00"; const rem = d.getTime() + 1800000 - now.value; if (rem <= 0) return "00:00"; const sec = Math.floor(rem/1000); return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`; };
                 const getGroupTimer = (g) => g.orders.some(o => getStatusBadge(o).text === '💰 待付款' && !isOrderExpired(o)) ? getRemainingTime(g.timestamp) : null;
                 const isGroupExpired = (g) => { const p = g.orders.filter(o => getStatusBadge(o).class === 'status-pending'); return p.length > 0 && p.every(o => isOrderExpired(o)); };
 
-                // Watchers
                 watch(canSelectGift, (val) => { if (!val && deliveryMethod.value === 'gift') deliveryMethod.value = 'screenshot'; });
                 watch(deliveryMethod, (val) => { if (val === 'screenshot') selectedPayment.value = '822'; }, { immediate: true });
                 watch(useCouponChecked, (val) => { if (!val) removeCoupon(); });
                 watch(totalPrice, () => { if (appliedCoupon.value) appliedCoupon.value = null; });
-                watch(availableTickets, (val) => { if (val.length > lastKnownTicketCount.value) walletUnread.value = true; else if (val.length < lastKnownTicketCount.value) { safeSetStorage('mm_last_ticket_count', val.length); lastKnownTicketCount.value = val.length; } if (val.length > 0) checkExpiryReminders(); });
+                
+                watch(availableTickets, (val) => { 
+                    if (val.length > lastKnownTicketCount.value) walletUnread.value = true; 
+                    else if (val.length < lastKnownTicketCount.value) { 
+                        safeSetStorage('mm_last_ticket_count', val.length); 
+                        lastKnownTicketCount.value = val.length; 
+                    } 
+                    if (val.length > 0) checkExpiryReminders(); 
+                });
                 watch(acceptTerms, (val) => safeSetStorage('mm_accept_terms', val));
 
                 // ==========================
@@ -1687,7 +1661,7 @@
                 };
 
                 // ==========================
-                // F. UI 互動與優惠券
+                // F. UI 互動
                 // ==========================
                 const reloadApp = () => window.location.reload();
                 const getProductImage = (n) => { const p = products.value.find(x => x.name === n); return p ? p.image : 'https://placehold.co/48x48?text=No+Img'; };
@@ -1704,7 +1678,7 @@
                 const fetchFAQ = async () => { try { const r=await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getFAQ' }) }); const j=await r.json(); if(j.status==='success'){ faqList.value=j.data; if(j.announcements?.length){ let l=[]; for(let i=0;i<10;i++) l=l.concat(j.announcements); announcement.value=l.join("        ✦        "); } } } catch(e){ announcement.value="歡迎光臨"; } };
 
                 // ==========================
-                // G. 購物車與訂單互動 (先前漏掉的部分)
+                // G. 購物車與訂單互動
                 // ==========================
                 const updateCart = (p, d) => { if(d>0 && (cart.value[p.id]||0)>=Number(p.stock)){ showToast('庫存上限'); return; } const n=(cart.value[p.id]||0)+d; if(n<=0) delete cart.value[p.id]; else if(n<=Number(p.stock)) cart.value[p.id]=n; safeSetStorage('mm_cart_storage', JSON.stringify(cart.value)); };
                 
@@ -1719,7 +1693,7 @@
                 const linkifiedGuideInstruction = computed(() => currentVendorGuide.value ? (currentVendorGuide.value.instruction||'').replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="text-decoration:underline;">$1</a>') : '');
 
                 // ==========================
-                // H. 結帳核心 (含重複扣抵修復)
+                // H. 結帳核心
                 // ==========================
                 const handleCheckout = async () => {
                     const err = [];
@@ -1798,8 +1772,6 @@
                 const openAdminProductManager = async () => { openModalSafe('adminProductManagerModal'); try{ const r=await fetch(`${API_URL}?action=adminGetProductList`); const d=await r.json(); adminProducts.value=d.products||[]; } catch(e){} };
                 const adminEditProduct = (p) => { editingProduct.value={...p}; openModalSafe('adminProductEditModal'); };
                 const saveProduct = async () => { isSavingProduct.value=true; try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminSaveProduct',...editingProduct.value})}); showToast('已存'); hideModalSafe('adminProductEditModal'); setTimeout(openAdminProductManager,1000); setTimeout(initApp,2000); } catch(e){} finally{ isSavingProduct.value=false; } };
-                
-                // 訂單CRUD
                 const openAdminOrderManager = async () => { openModalSafe('adminOrderManagerModal'); adminAllOrders.value=[]; try{ const r=await fetch(`${API_URL}?action=adminGetAllOrders`); const d=await r.json(); if(d.orders) adminAllOrders.value=d.orders; } catch(e){} };
                 const openAdminOrderEdit = (o) => { editingOrder.value={...o}; openModalSafe('adminOrderEditModal'); };
                 const saveAdminOrder = async () => { isSavingOrder.value=true; try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminUpdateOrder', orderId:editingOrder.value.orderId, productName:editingOrder.value.productName, paymentNote:editingOrder.value.paymentNote, isPaid:editingOrder.value.isPaid, cartTotal:editingOrder.value.totalAmount, couponCode:appliedCoupon.value?appliedCoupon.value.code:'', isShipped:editingOrder.value.isShipped})}); showToast('已更'); hideModalSafe('adminOrderEditModal'); setTimeout(openAdminOrderManager,1000); } catch(e){} finally{ isSavingOrder.value=false; } };
@@ -1868,7 +1840,7 @@
                     // 管理員
                     isAdmin, openAdminLogin, verifyAdminPassword, adminPasswordInput, adminPendingOrders, adminStats, fetchAdminDashboard, onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning, triggerPaymentCheck, isAdminChecking, fetchLowStock, isAdminFetchingStock, adminLowStockItems, isAdminTestMode, isCartTestMode, openAdminProductManager, adminProducts, adminEditProduct, editingProduct, saveProduct, isSavingProduct,
                     openAdminOrderManager, adminAllOrders, openAdminOrderEdit, editingOrder, saveAdminOrder, deleteAdminOrder, isSavingOrder, copyMomoInfo, copyOrderBackup,
-                    // UI & Helper (確保都已導出)
+                    // UI & Helper
                     viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, showSortMenu, sortType, setSortType, openModalSafe, hideModalSafe, showToast, alertMessages, showAlert, reloadApp, faqList, announcement,
                     showProductDetail, openCancelModal, confirmCancel, openReportForPending, goToPayFromPending, openReportForHistory, linkifiedGuideInstruction, getHistoryItemName, isGroupSelected, toggleGroupSelection, dismissPendingAlertForever, isPendingAlertDismissed, getOrderItems, getOrderAmount
                 };
@@ -1877,5 +1849,6 @@
     </script>
 </body>
 </html>
+
 
 
