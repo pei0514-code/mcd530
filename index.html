@@ -875,8 +875,15 @@
         <!-- Guide Modal -->
         <div class="modal fade" id="guideModal" tabindex="-1">
 
-<div class="faq-box" v-if="faqList.length > 0">
-    <h3 class="faq-title">🔥 常見問題 Q&A</h3>
+<div class="mb-3 text-center">
+    <button class="btn btn-outline-warning w-100 fw-bold" @click="showFaq = !showFaq">
+        <span v-if="!showFaq">❓ 點我看常見問題 (Q&A)</span>
+        <span v-else>❌ 關閉常見問題</span>
+    </button>
+</div>
+
+<div class="faq-box" v-if="showFaq">
+    <h3 class="faq-title" style="margin-top:10px;">🔥 常見問題 Q&A</h3>
     
     <details class="faq-item" v-for="(item, index) in faqList" :key="index">
         <summary>Q：{{ item.question }}</summary>
@@ -884,10 +891,6 @@
     </details>
 
     <hr style="margin: 15px 0; border-top: 1px dashed #ccc;">
-</div>
-
-<div v-else class="text-center p-3 text-muted">
-    <small>正在載入常見問題...</small>
 </div>
 
             
@@ -1355,6 +1358,7 @@
 
         createApp({
             setup() {
+                const showFaq = ref(false);
                 const products = ref([]);
                 const settings = ref({ version: 'v188', liffId: '' });
                 const cart = ref({});
@@ -2488,7 +2492,7 @@ if (driveItems.length > 0) {
                     hideModalSafe('expiryReminderModal');
                     showToast('今日不再提醒');
                 };
-                return { products, cart, currentCat, categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart, openHistory, showGuide, orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayment, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, canSelectDrive, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, fetchOrderStatus, showToast, errorMsg, requestManualScreenshot,
+                return { products, cart, currentCat, showFaq , categories, filteredProducts, updateCart, totalQty, totalPrice, cartItems, handleCheckout, openCart, openHistory, showGuide, orderHistory, userProfile, guestName, userContact, resendHistory, reBuy, acceptTerms, resetCart, isLoadingData, deliveryMethod, giftInfo, viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayment, togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, canSelectDrive, showPaymentForm, openPaymentForm, paymentForm, paymentFormPlaceholder, paymentFormLabel, submitPayment, isSubmittingPayment, openReportForHistory, getStatusBadge, openReportForPending, unreportedOrders, pendingSelection, openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, fetchOrderStatus, showToast, errorMsg, requestManualScreenshot,
                 openWallet, walletFilter, showTicketImage, openVendorGuide, currentVendorGuide, availableTickets, usedTickets, currentDisplayTickets, openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery, linkifiedGuideInstruction,
                 giftOnlyItemsNames, driveOnlyItemsNames, getHistoryItemName, ticketSortType, totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, validUnreportedOrders, isPendingAlertDismissed, isGroupExpired, dismissPendingAlertForever, isRepaying, goToPayFromPending, getOrderItems, getOrderAmount,
                 groupedUnreportedOrders, isGroupSelected, toggleGroupSelection, relatedOrdersToCancel, showSortMenu, sortType, setSortType, walletUnread,
@@ -2512,6 +2516,7 @@ if (driveItems.length > 0) {
     </script>
 </body>
 </html>
+
 
 
 
