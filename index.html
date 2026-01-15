@@ -2385,7 +2385,6 @@ const reBuy = (h) => {
                     hideModalSafe('successModal'); resetCart(); orderHistory.value=orderHistory.value.map(h=>{ if(lastOrderIds.value.includes(h.id)) return {...h, paymentNote:'已回報'}; return h; }); safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
                 };
                 const resetCart = () => { cart.value={}; safeSetStorage('mm_cart_storage', '{}'); deliveryMethod.value='screenshot'; selectedPayment.value=''; showPaymentForm.value=false; requestManualScreenshot.value=false; appliedCoupon.value=null; couponCodeInput.value=''; };
-                const reBuy = (h) => { cart.value={}; h.items.forEach(i=>{ const p=products.value.find(x=>x.name===i.name); if(p) cart.value[p.id]=i.quantity; }); safeSetStorage('mm_cart_storage', JSON.stringify(cart.value)); hideModalSafe('historyModal'); openModalSafe('cartModal'); };
                 const resendHistory = (h) => { let m=`🛒 補傳 #${h.id}\n總額：$${h.totalAmount}`; if(liff.isInClient()) liff.sendMessages([{type:'text',text:m}]).then(()=>liff.closeWindow()); else window.open(`https://line.me/R/msg/text/?${encodeURIComponent(m)}`,'_blank'); };
 
                 // 管理員功能
@@ -2578,6 +2577,7 @@ const reBuy = (h) => {
     </script>
 </body>
 </html>
+
 
 
 
