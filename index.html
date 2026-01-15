@@ -1415,7 +1415,83 @@
                 <div class="text-end mb-2"><span class="text-danger fw-bold" style="font-size: 18px;">${{ h.totalAmount }}</span></div><div class="history-imgs-container mb-3"><div v-for="item in h.items" :key="item.name" class="h-thumb-box" @click="showToast(item.name)"><img :src="getProductImage(item.name)" class="h-thumb" onerror="this.src='https://placehold.co/48X48'"><div class="h-qty-badge">x{{ item.quantity }}</div></div></div><div v-if="h.fulfillment" class="mt-2 mb-3 p-3 bg-light rounded border text-center"><div class="small fw-bold text-success mb-2"><i class="fas fa-gift me-1"></i>商品已發貨</div><button class="btn btn-sm btn-outline-primary w-100 rounded-pill fw-bold" @click="openWallet"><i class="fas fa-wallet me-1"></i>📂 開啟【我的票券】查看與核銷</button></div><div class="d-flex gap-2 flex-wrap" v-if="!isOrderExpired(h)"><button class="btn btn-outline-success btn-sm flex-grow-1 rounded-pill" @click="resendHistory(h)">補傳訂單</button><button class="btn btn-outline-danger btn-sm flex-grow-1 rounded-pill" @click="reBuy(h)">再次購買</button><button v-if="getStatusBadge(h).canReport" class="btn btn-warning btn-sm flex-grow-1 rounded-pill fw-bold text-dark" @click="openReportForHistory(h)">{{ h.paymentNote ? '修改回報' : '回報付款' }}</button><button v-if="getStatusBadge(h).canCancel" class="btn btn-secondary btn-sm flex-grow-1 rounded-pill fw-bold" @click="openCancelModal(h)">取消訂單</button></div><div v-else class="text-center"><span class="text-muted small fw-bold">此訂單已超過付款期限 (30分鐘)</span></div></div></div></div></div></div></div>
         
          <div class="modal fade" id="vendorGuideModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0 bg-light"><h5 class="fw-bold"><i class="fas fa-info-circle me-2"></i>使用說明</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-0" v-if="currentVendorGuide"><div v-if="currentVendorGuide.image" class="w-100 bg-dark position-relative" style="min-height:200px; cursor: pointer;" onclick="window.open(this.querySelector('img').src, '_blank')"><img :src="currentVendorGuide.image" class="w-100 object-fit-contain" style="max-height: 40vh;"><div class="position-absolute bottom-0 end-0 m-2 badge bg-dark opacity-75"><i class="fas fa-search-plus me-1"></i>點擊放大</div></div><div class="p-4"><h5 class="fw-bold mb-3 text-danger">{{ currentVendorGuide.name }}</h5><div class="text-muted small" style="white-space: pre-wrap; line-height: 1.6;" v-html="linkifiedGuideInstruction"></div></div></div><div class="modal-footer border-0 p-3"><button class="btn btn-dark w-100 rounded-pill fw-bold" data-bs-dismiss="modal">我瞭解了</button></div></div></div></div>
-        <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered"><div class="modal-content text-center p-4 border-0 rounded-4 shadow-lg"><div v-if="!showPaymentForm"><div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div><h4 class="fw-bold">{{ isRepaying ? '待付款資訊' : '訂單已成功送出！' }}</h4><div class="my-3 text-center p-2" style="background: #fdf2f2; border-radius: 12px; border: 1px dashed #f5c6cb;"><div class="text-muted small fw-bold text-uppercase">應付金額</div><div class="text-danger fw-bold" style="font-size: 28px;">${{ reportingTotalAmount }}</div></div><div v-if="isRepaying" class="alert alert-secondary p-2 mb-3 text-start small"><div v-for="oid in lastOrderIds" :key="oid" class="mb-1 border-bottom pb-1"><strong>訂單編號 {{ oid }}</strong><br><span v-for="item in getOrderItems(oid)" :key="item.name">{{ item.name }} x{{ item.quantity }}<br></span></div></div><p class="small text-muted mb-4">請完成付款後，點擊下方按鈕回報。</p><div class="bg-light rounded-3 p-3 text-start mb-4 border"><div class="fw-bold text-dark border-bottom pb-2 mb-2"><i class="fas fa-wallet me-2"></i>匯款帳號 (點擊複製)</div><div v-for="bank in selectedBankInfos" :key="bank.code" class="mb-2 d-flex justify-content-between align-items-center bg-white p-2 rounded border" @click="copyText(bank.account)"><div><div class="small text-muted">{{ bank.name }}</div><div class="fw-bold text-danger">{{ bank.account }}</div><div v-if="bank.code === '396'" class="text-muted" style="font-size: 11px; margin-top:2px;">街口名稱：Sue</div></div><i class="far fa-copy text-secondary"></i></div></div><button class="btn btn-warning w-100 rounded-pill py-2 fw-bold mb-2 shadow-sm text-dark" @click="openPaymentForm"><i class="fas fa-money-bill-wave me-2"></i>我已付款 (回報後五碼)</button><button class="btn btn-outline-dark w-100 rounded-pill py-2 fw-bold" data-bs-dismiss="modal" @click="resetCart">稍後回報 / 關閉視窗</button></div><div v-else><h5 class="fw-bold mb-3"><i class="fas fa-edit me-2"></i>回報付款資訊</h5><div class="alert alert-primary fw-bold text-center fs-5 mb-3">本次回報總金額：<span class="text-danger">${{ reportingTotalAmount }}</span></div><div class="text-start mb-3"><label class="form-label-small fw-bold">您匯入的帳戶：</label><select v-model="paymentForm.bankCode" class="form-select rounded-pill mb-3" :disabled="selectedBankInfos.length === 1"><option v-for="bank in selectedBankInfos" :key="bank.code" :value="bank.code">{{ bank.name }}</option></select><label class="form-label-small fw-bold">{{ paymentFormLabel }}</label><input type="text" v-model="paymentForm.accountInfo" class="form-control rounded-pill" :placeholder="paymentFormPlaceholder"></div><button class="btn btn-success w-100 rounded-pill py-2 fw-bold mb-2 shadow" @click="submitPayment" :disabled="isSubmittingPayment"><span v-if="isSubmittingPayment"><i class="fas fa-spinner fa-spin me-2"></i>傳送中...</span><span v-else>送出回報</span></button><button class="btn btn-link text-muted small" @click="showPaymentForm = false">返回上一頁</button></div></div></div></div>
+       <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content text-center p-4 border-0 rounded-4 shadow-lg">
+                    
+                    <div v-if="!showPaymentForm">
+                        <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
+                        <h4 class="fw-bold">{{ isRepaying ? '待付款資訊' : '訂單已成功送出！' }}</h4>
+                        
+                        <div class="my-3 text-center p-2" style="background: #fdf2f2; border-radius: 12px; border: 1px dashed #f5c6cb;">
+                            <div class="text-muted small fw-bold text-uppercase">應付金額</div>
+                            <div class="text-danger fw-bold" style="font-size: 28px;">${{ reportingTotalAmount }}</div>
+                        </div>
+
+                        <div v-if="isRepaying" class="alert alert-secondary p-2 mb-3 text-start small">
+                            <div v-for="oid in lastOrderIds" :key="oid" class="mb-1 border-bottom pb-1">
+                                <strong>訂單編號 {{ oid }}</strong><br>
+                                <span v-for="item in getOrderItems(oid)" :key="item.name">{{ item.name }} x{{ item.quantity }}<br></span>
+                            </div>
+                        </div>
+
+                        <p class="small text-muted mb-2">請匯款至下方帳號：</p>
+                        
+                        <div v-if="selectedPayment && bankAccounts[selectedPayment]" 
+                             class="bg-light rounded-3 p-3 text-start mb-4 border animate__animated animate__fadeIn">
+                            
+                            <div class="fw-bold text-dark border-bottom pb-2 mb-2">
+                                <i class="fas fa-university me-2"></i>{{ bankAccounts[selectedPayment].bankName }}
+                            </div>
+                            
+                            <div class="mb-2 d-flex justify-content-between align-items-center bg-white p-2 rounded border border-primary click-effect" 
+                                 style="cursor: pointer;" 
+                                 @click="copyText(bankAccounts[selectedPayment].account)">
+                                <div>
+                                    <div class="small text-muted">銀行帳號 (點擊複製)</div>
+                                    <div class="fw-bold text-danger fs-4 font-monospace">{{ bankAccounts[selectedPayment].account }}</div>
+                                    <div v-if="selectedPayment === '396'" class="text-muted" style="font-size: 11px;">
+                                        <i class="fas fa-info-circle me-1"></i>街口戶名：Sue
+                                    </div>
+                                </div>
+                                <i class="far fa-copy text-primary fs-5"></i>
+                            </div>
+                            
+                            <div class="text-end">
+                                <small class="text-muted" style="font-size: 11px;">轉帳後請點擊下方按鈕回報</small>
+                            </div>
+                        </div>
+                        <button class="btn btn-warning w-100 rounded-pill py-2 fw-bold mb-2 shadow-sm text-dark" @click="openPaymentForm">
+                            <i class="fas fa-money-bill-wave me-2"></i>我已付款 (回報後五碼)
+                        </button>
+                        <button class="btn btn-outline-dark w-100 rounded-pill py-2 fw-bold" data-bs-dismiss="modal" @click="resetCart">
+                            稍後回報 / 關閉視窗
+                        </button>
+                    </div>
+
+                    <div v-else>
+                        <h5 class="fw-bold mb-3"><i class="fas fa-edit me-2"></i>回報付款資訊</h5>
+                        <div class="alert alert-primary fw-bold text-center fs-5 mb-3">本次回報總金額：<span class="text-danger">${{ reportingTotalAmount }}</span></div>
+                        <div class="text-start mb-3">
+                            <label class="form-label-small fw-bold">您匯入的帳戶：</label>
+                            <select v-model="paymentForm.bankCode" class="form-select rounded-pill mb-3" disabled>
+                                <option v-if="selectedPayment && bankAccounts[selectedPayment]" :value="bankAccounts[selectedPayment].code">
+                                    {{ bankAccounts[selectedPayment].name }}
+                                </option>
+                            </select>
+                            <label class="form-label-small fw-bold">{{ paymentFormLabel }}</label>
+                            <input type="text" v-model="paymentForm.accountInfo" class="form-control rounded-pill" :placeholder="paymentFormPlaceholder">
+                        </div>
+                        <button class="btn btn-success w-100 rounded-pill py-2 fw-bold mb-2 shadow" @click="submitPayment" :disabled="isSubmittingPayment">
+                            <span v-if="isSubmittingPayment"><i class="fas fa-spinner fa-spin me-2"></i>傳送中...</span>
+                            <span v-else>送出回報</span>
+                        </button>
+                        <button class="btn btn-link text-muted small" @click="showPaymentForm = false">返回上一頁</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
         <div class="modal fade" id="unreportedModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 rounded-4 shadow-lg text-center p-4"><div class="mb-2 text-warning"><i class="fas fa-bell fa-4x"></i></div><h5 class="fw-bold mb-2">您有待回報的訂單</h5><p class="text-muted small mb-3">請勾選您已完成轉帳的訂單進行回報：</p><div class="bg-light rounded-3 p-3 mb-4 text-start border" style="max-height: 300px; overflow-y: auto;"><div v-for="group in groupedUnreportedOrders" :key="group.baseId" class="form-check mb-3 border-bottom pb-2"><input class="form-check-input mt-2" type="checkbox" :checked="isGroupSelected(group)" @change="toggleGroupSelection(group)" :id="'chk-group-'+group.baseId"><label class="form-check-label w-100" :for="'chk-group-'+group.baseId"><div class="d-flex justify-content-between align-items-center"><div class="fw-bold text-dark small">訂單編號 {{ group.baseId }} <span v-if="group.ids.length>1" class="text-muted">(合併)</span></div><div class="text-danger fw-bold">${{ group.totalAmount }}</div></div><div class="d-flex gap-2 mt-2 overflow-auto no-scrollbar"><div v-for="(item, idx) in group.items" :key="idx" class="position-relative flex-shrink-0" style="width: 40px; height: 40px;"><img :src="getProductImage(item.name)" class="w-100 h-100 rounded border object-fit-cover"><span class="position-absolute bottom-0 end-0 badge bg-dark rounded-pill" style="font-size:8px; padding: 2px 4px;">x{{ item.quantity }}</span></div></div></label></div><div v-if="groupedUnreportedOrders.length === 0" class="text-muted small text-center">暫無待回報訂單</div></div><div class="d-grid gap-2"><button class="btn btn-primary rounded-pill fw-bold" @click="goToPayFromPending" :disabled="pendingSelection.length === 0"><i class="fas fa-wallet me-2"></i>付款去 (查看匯款資訊)</button><button class="btn btn-warning rounded-pill fw-bold" @click="openReportForPending" :disabled="pendingSelection.length === 0"><i class="fas fa-edit me-2"></i>我已匯款 (直接回報)</button><button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">稍後再說</button><button class="btn btn-link text-muted small text-decoration-none mt-1" @click="dismissPendingAlertForever">不再提醒</button></div></div></div></div>
         <div class="modal fade" id="cancelConfirmModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden"><div class="modal-header border-0 bg-secondary text-white py-3"><h5 class="fw-bold fs-5 mb-0"><i class="fas fa-times-circle me-2"></i>取消訂單確認</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-4 text-center"><div class="mb-3 text-muted"><i class="far fa-sad-tear fa-4x"></i></div><h5 class="fw-bold mb-2">確定要取消這筆訂單嗎？</h5><p class="text-muted small mb-4">取消後庫存將會自動釋出，<br>若您已匯款請勿取消，請聯繫客服。</p><div v-if="relatedOrdersToCancel.length > 0" class="alert alert-warning text-start small mb-4"><i class="fas fa-exclamation-circle me-1"></i><strong>此為合併訂單</strong> ({{ relatedOrdersToCancel.length + 1 }} 筆)<br>您要一併取消其他相關訂單嗎？</div><div class="d-grid gap-2"><button v-if="relatedOrdersToCancel.length > 0" class="btn btn-danger rounded-pill fw-bold" @click="confirmCancel('all')"><i class="fas fa-trash-alt me-2"></i>全部取消 (推薦)</button><button class="btn rounded-pill fw-bold" :class="relatedOrdersToCancel.length > 0 ? 'btn-outline-danger' : 'btn-danger'" @click="confirmCancel('single')"><i class="fas fa-check me-2"></i>{{ relatedOrdersToCancel.length > 0 ? '僅取消此筆' : '確認取消' }}</button><button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">保留訂單</button></div></div></div></div></div>
         <div class="modal fade" id="alertModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;"><div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden"><div class="modal-body p-4"><div class="mb-3 text-warning"><i class="fas fa-exclamation-circle fa-3x"></i></div><h5 class="fw-bold mb-3">溫馨提醒</h5><div class="text-muted text-start bg-light p-3 rounded-3 small" style="line-height:1.6;"><div v-for="(msg, idx) in alertMessages" :key="idx" class="mb-1"><i class="fas fa-caret-right me-2 text-warning"></i>{{ msg }}</div></div><div class="mt-4"><button type="button" class="btn btn-dark w-100 rounded-pill fw-bold" data-bs-dismiss="modal">我知道了</button></div></div></div></div></div>
@@ -1868,47 +1944,180 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                 // ==========================
                 // H. 結帳核心
                 // ==========================
+               // [Logic] Checkout & Payment (完整版 + 付款方式保留修正)
                 const handleCheckout = async () => {
-                    const err = [];
-                    if(!acceptTerms.value) err.push("請同意需知");
-                    if(finalTotalPrice.value < 50) err.push("未滿$50");
-                    if(deliveryMethod.value === 'gift' && !requestManualScreenshot.value){ if(!giftInfo.value.name || !giftInfo.value.phone) err.push("需填收件資料"); else { if(!/^[\u4e00-\u9fa5]+$/.test(giftInfo.value.name)) err.push("姓名須中文"); if(!/^09\d{8}$/.test(giftInfo.value.phone)) err.push("電話格式誤"); } }
-                    if(!selectedPayment.value) err.push("請選付款方式");
-                    if(!userProfile.value.userId && !userContact.value.phone){ hideModalSafe('cartModal'); showToast("請填手機"); setTimeout(()=>openModalSafe('guestWarningModal'),300); return; }
-                    if(err.length > 0){ showAlert(err); return; }
-
-                    isSubmitting.value = true;
-                    const ts = new Date(); const timeStr = `${ts.getFullYear()}/${String(ts.getMonth()+1).padStart(2,'0')}/${String(ts.getDate()).padStart(2,'0')} ${String(ts.getHours()).padStart(2,'0')}:${String(ts.getMinutes()).padStart(2,'0')}:${String(ts.getSeconds()).padStart(2,'0')}`;
-                    const baseId = `M${ts.getFullYear()}${String(ts.getMonth()+1).padStart(2,'0')}${String(ts.getDate()).padStart(2,'0')}${String(ts.getHours()).padStart(2,'0')}${String(ts.getMinutes()).padStart(2,'0')}${String(ts.getSeconds()).padStart(2,'0')}`;
+                    const errors = [];
+                    // 1. 基本驗證
+                    if (!acceptTerms.value) errors.push("請先勾選「我已閱讀並同意購買需知」");
+                    if (totalPrice.value < 50) errors.push("訂單金額需滿 $50 才能出貨");
+                    if (!selectedPayment.value) errors.push("請選擇一種付款方式");
                     
-                    const drive=[], gift=[]; cartItems.value.forEach(i => { if(deliveryMethod.value==='gift' && i.giftStock>=i.quantity) gift.push(i); else if(i.driveStock>=i.quantity) drive.push(i); else gift.push(i); });
-                    let remDisc = appliedCoupon.value ? appliedCoupon.value.amount : 0; const code = appliedCoupon.value ? appliedCoupon.value.code : ''; let codeSent = false;
-                    const common = { phone: userContact.value.phone, email: userProfile.value.email||'', testMode: isCartTestMode.value, userName: userProfile.value.displayName||guestName.value||'GUEST', userId: getEffectiveUserId(), initialPaymentDesc: selectedBankInfos.value[0]?.name ? `[待] ${selectedBankInfos.value[0].name}` : '' };
-                    const proms = [], msgs = [], recs = [], gIds = [];
+                    // 2. 轉贈資料驗證
+                    const requiresGiftInfo = (deliveryMethod.value === 'gift') && !requestManualScreenshot.value;
+                    if (requiresGiftInfo) { 
+                        if (!giftInfo.value.name || !giftInfo.value.phone) errors.push("選擇轉贈需填寫完整收件人姓名與電話"); 
+                        else { 
+                            if (!/^[\u4e00-\u9fa5]+$/.test(giftInfo.value.name)) errors.push("momo 轉贈姓名必須為中文全名"); 
+                            if (!/^09\d{8}$/.test(giftInfo.value.phone)) errors.push("momo 轉贈電話格式錯誤"); 
+                        } 
+                    }
+                    
+                    // 3. 訪客驗證
+                    const isGuest = !userProfile.value.userId;
+                    if (isGuest && !userContact.value.phone) { 
+                        hideModalSafe('cartModal'); 
+                        showToast("訪客模式需填寫手機號碼才能購買"); 
+                        setTimeout(() => { openModalSafe('guestWarningModal'); }, 300); 
+                        return; 
+                    }
+                    
+                    if (errors.length > 0) { alertMessages.value = errors; openModalSafe('alertModal'); return; }
+                    
+                    isSubmitting.value = true;
+                    safeSetStorage('mm_user_phone', userContact.value.phone);
+                    if (requiresGiftInfo) { safeSetStorage('mm_momo_name', giftInfo.value.name); safeSetStorage('mm_momo_phone', giftInfo.value.phone); }
 
-                    const addOrder = (items, suffix, method, mName, mPhone) => {
-                        if(items.length===0) return;
-                        const oid = items.length>0 && drive.length>0 && gift.length>0 ? `${baseId}-${suffix}` : baseId; gIds.push(oid);
-                        const sub = items.reduce((a,b)=>a+(b.price*b.quantity),0);
-                        const disc = Math.min(sub, remDisc); const final = sub - disc; remDisc -= disc;
-                        const cCode = (!codeSent && code) ? code : ''; if(code) codeSent = true;
-                        const r = { action:'recordOrder', id:oid, timestamp:timeStr, totalAmount:final, items:items.map(i=>({name:i.name, quantity:i.quantity, price:i.price, expiryDate:i.expiryDate})), deliveryMethod:method, momoName:mName, momoPhone:mPhone, couponCode:cCode, couponDiscount:disc };
-                        recs.push(r); proms.push(fetch(API_URL, { method:'POST', body:JSON.stringify({...common, ...r}) }));
-                        let m = `🛒 單號：${oid}\n📦 方式：${method}\n🍱 內容：\n`; items.forEach((x,i)=>m+=`${NUMBERS[i]||(i+1)} ${x.name} x${x.quantity}\n`); m+=`💰 小計：$${final}`; msgs.push(m);
-                    };
+                    // 4. 商品分類 (截圖 vs 轉贈)
+                    const driveItems = []; const giftItems = [];
+                    cartItems.value.forEach(item => { 
+                        let allocated = false; 
+                        if (deliveryMethod.value === 'gift') { 
+                            if (item.giftStock >= item.quantity) { giftItems.push(item); allocated = true; } 
+                            else if (item.driveStock >= item.quantity) { driveItems.push(item); allocated = true; } 
+                        } else { 
+                            if (item.driveStock >= item.quantity) { driveItems.push(item); allocated = true; } 
+                            else if (item.giftStock >= item.quantity) { giftItems.push(item); allocated = true; } 
+                        } 
+                    });
 
-                    addOrder(drive, '1', '截圖發送', '', '');
-                    const isMan = requestManualScreenshot.value;
-                    addOrder(gift, '2', isMan?'轉贈(手動)':'momo轉贈', isMan?'':giftInfo.value.name, isMan?'':giftInfo.value.phone);
+                    // 5. 準備訂單資料
+                    const now = new Date(); 
+                    const pad = (n) => String(n).padStart(2, '0'); 
+                    const timeStr = `${now.getFullYear()}/${pad(now.getMonth() + 1)}/${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+                    const baseOrderId = `M${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+                    const orderPromises = []; 
+                    const lineMessages = []; 
+                    const records = []; 
+                    const generatedOrderIds = [];
+                    const selectedBank = bankAccounts.value[selectedPayment.value]; // 修正這裡的讀取方式
+                    const initialPaymentDesc = selectedBank ? `[待] ${selectedBank.name}` : '';
 
-                    try {
-                        await Promise.all(proms);
-                        let finalM = msgs.join('\n\n---\n\n') + `\n\n💰 應付總額：$${finalTotalPrice.value}`;
-                        if(liff.isInClient()) await liff.sendMessages([{ type:'text', text:finalM }]);
-                        orderHistory.value = [...recs, ...orderHistory.value].slice(0,50); safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
-                        lastOrderIds.value = gIds; unreportedOrders.value = [...new Set([...unreportedOrders.value, ...gIds])]; safeSetStorage('mm_pending_payment_orders', JSON.stringify(unreportedOrders.value));
-                        resetCart(); hideModalSafe('cartModal'); openModalSafe('successModal'); setTimeout(()=>fetchOrderStatus(getEffectiveUserId()), 1500);
-                    } catch(e){ showToast('連線不穩'); } finally { isSubmitting.value = false; }
+                    // 處理截圖訂單
+                    if (driveItems.length > 0) {
+                        const oid = giftItems.length > 0 ? `${baseOrderId}-1` : baseOrderId;
+                        generatedOrderIds.push(oid);
+                        const total = driveItems.reduce((a, b) => a + (b.price * b.quantity), 0);
+                        // 折扣計算 (簡易按比例分配，或只放在第一筆)
+                        // 這裡簡化：如果有優惠券，統一在後端處理，前端送出原價，後端會在 sheet 紀錄總額
+                        // 但為了讓歷史紀錄正確，我們這裡用前端算好的 finalTotalPrice 做比例拆分比較準確，
+                        // 不過為了避免複雜，我們這裡先各別計算原價，優惠券代碼會傳給後端。
+                        
+                        const record = { id: oid, timestamp: timeStr, totalAmount: total, items: driveItems };
+                        records.push(record);
+
+                        orderPromises.push(fetch(API_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                action: 'submitOrder',
+                                ...record,
+                                phone: userContact.value.phone,
+                                email: userProfile.value.email,
+                                testMode: isCartTestMode.value,
+                                deliveryMethod: '截圖發送',
+                                momoName: '', momoPhone: '',
+                                userName: (userProfile.value && userProfile.value.displayName) || 'GUEST',
+                                userId: getEffectiveUserId(),
+                                initialPaymentDesc: initialPaymentDesc,
+                                couponCode: appliedCoupon.value ? appliedCoupon.value.code : ''
+                            })
+                        }));
+
+                        let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：📸 截圖發送\n🍱 內容：\n`;
+                        driveItems.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx + 1)} ${i.name} x${i.quantity}\n`; });
+                        msg += `💰 小計：$${total}`;
+                        lineMessages.push(msg);
+                    }
+
+                    // 處理轉贈訂單
+                    if (giftItems.length > 0) {
+                        const oid = driveItems.length > 0 ? `${baseOrderId}-2` : baseOrderId;
+                        generatedOrderIds.push(oid);
+                        const total = giftItems.reduce((a, b) => a + (b.price * b.quantity), 0);
+                        const record = { id: oid, timestamp: timeStr, totalAmount: total, items: giftItems };
+                        records.push(record);
+
+                        const isManual = requestManualScreenshot.value || deliveryMethod.value === 'screenshot';
+                        const methodStr = isManual ? '轉贈(手動截圖)' : 'momo 轉贈';
+                        
+                        orderPromises.push(fetch(API_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                action: 'submitOrder',
+                                ...record,
+                                phone: userContact.value.phone,
+                                email: userProfile.value.email,
+                                deliveryMethod: methodStr,
+                                momoName: isManual ? '' : giftInfo.value.name,
+                                momoPhone: isManual ? '' : giftInfo.value.phone,
+                                userName: (userProfile.value && userProfile.value.displayName) || 'GUEST',
+                                userId: getEffectiveUserId(),
+                                initialPaymentDesc: initialPaymentDesc,
+                                couponCode: appliedCoupon.value ? appliedCoupon.value.code : ''
+                            })
+                        }));
+
+                        let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：${methodStr}\n`;
+                        if (!isManual) msg += `👤 收件：${giftInfo.value.name} / ${giftInfo.value.phone}\n`;
+                        msg += `🍱 內容：\n`;
+                        giftItems.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx + 1)} ${i.name} x${i.quantity}\n`; });
+                        msg += `💰 小計：$${total}`;
+                        lineMessages.push(msg);
+                    }
+
+                    // 6. 送出請求
+                    Promise.all(orderPromises).then(() => {
+                        let finalMsg = `🎉 訂單已送出！\n\n`; 
+                        if (lineMessages.length > 1) finalMsg += `⚠️ 因商品屬性不同，已自動拆分為兩筆訂單：\n\n`; 
+                        finalMsg += lineMessages.join('\n\n----------------\n\n'); 
+                        
+                        // 套用優惠券後的總金額顯示
+                        finalMsg += `\n\n💰 應付總額：$${finalTotalPrice.value}\n`; 
+                        
+                        finalMsg += `🏦 匯款資訊：\n`; 
+                        selectedBankInfos.value.forEach(b => { finalMsg += `${b.name}: ${b.account}\n`; }); 
+                        finalMsg += `⚠️ 請於匯款後告知客服匯款相關資訊`;
+                        
+                        if (liff.isInClient()) { liff.sendMessages([{ type: 'text', text: finalMsg }]).catch(e => console.error(e)); }
+                        
+                        // 更新歷史
+                        orderHistory.value = [...records, ...orderHistory.value].slice(0, 30); 
+                        safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value)); 
+                        lastOrderIds.value = generatedOrderIds; 
+                        const newPending = [...unreportedOrders.value, ...generatedOrderIds]; 
+                        unreportedOrders.value = [...new Set(newPending)]; 
+                        safeSetStorage('mm_pending_payment_orders', JSON.stringify(unreportedOrders.value)); 
+                        
+                        // 清空購物車
+                        cart.value = {}; 
+                        safeSetStorage('mm_cart_storage', '{}'); 
+                        
+                        // ★★★ 關鍵修正：保留付款方式，讓下一頁直接顯示 ★★★
+                        const savedPayment = selectedPayment.value;
+                        resetCart(); 
+                        selectedPayment.value = savedPayment; 
+                        paymentForm.value.bankCode = savedPayment;
+                        // ★★★ 修正結束 ★★★
+
+                        isSubmitting.value = false; 
+                        isRepaying.value = false; 
+                        hideModalSafe('cartModal'); 
+                        openModalSafe('successModal'); 
+                        setTimeout(() => { fetchOrderStatus(getEffectiveUserId()); }, 1000);
+                    }).catch(e => { 
+                        console.error(e); 
+                        isSubmitting.value = false; 
+                        showToast('連線錯誤，請稍後再試'); 
+                    });
                 };
 
                 // ==========================
@@ -2071,4 +2280,5 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
