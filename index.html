@@ -755,13 +755,13 @@
     </span>
     <button class="btn btn-sm btn-outline-success border-0" @click="removeCoupon">✕</button>
 </div>                     
-                            <div class="d-flex justify-content-between align-items-center fw-bold fs-5 mt-2 px-2">
-                                <span>應付金額</span>
-                                <div class="text-end">
-                                    <span v-if="totalSavings > 0" class="savings-tag">已省下 ${{ totalSavings }}</span>
-                                    <span class="text-danger ms-1">${{ totalPrice }}</span>
-                                </div>
-                            </div>
+                           <div class="d-flex justify-content-between align-items-center fw-bold fs-5 mt-2 px-2">
+    <span>應付金額</span>
+    <div class="text-end">
+        <span v-if="totalSavings > 0" class="savings-tag">已省下 ${{ totalSavings }}</span>
+        <span class="text-danger ms-1">${{ finalTotalPrice }}</span>
+    </div>
+</div>
                         </div>
                         <div v-if="isAdmin" class="bg-warning bg-opacity-10 p-2 rounded border border-warning mb-3">
     <div class="form-check form-switch">
@@ -1775,21 +1775,25 @@
                 const totalQty = computed(() => cartItems.value.reduce((a, b) => a + b.quantity, 0));
                 
                 const totalPrice = computed(() => cartItems.value.reduce((sum, item) => sum + (item.price * item.quantity), 0));
-              const finalTotalPrice = computed(() => {
-    let total = totalPrice.value;
-    if (appliedCoupon.value) {
-        // 確保 c.type 與 c.value 都有值
+          const finalTotalPrice = computed(() => {
+    let total = totalPrice.value; // 這是原始總價
+    
+    // 如果有套用優惠券，且優惠券有數值
+    if (appliedCoupon.value && appliedCoupon.value.value !== undefined) {
         const c = appliedCoupon.value;
+        const discountValue = Number(c.value) || 0; // 強制轉數字，防止字串相減
+
         if (c.type === '減價') {
-            total = Math.max(0, total - Number(c.value));
+            total = total - discountValue;
         } else if (c.type === '折數') {
-            // 如果是 0.9 代表 9 折，如果是 90 代表 9 折，這裡做個相容判斷
-            let discountFactor = Number(c.value);
-            if (discountFactor > 1) discountFactor = discountFactor / 100;
-            total = Math.round(total * discountFactor);
+            // 自動判定 90 (9折) 或 0.9 (9折)
+            let factor = discountValue;
+            if (factor > 1) factor = factor / 100;
+            total = total * factor;
         }
     }
-    return total;
+    // 確保金額不會低於 0，且四捨五入到整數
+    return Math.max(0, Math.round(total));
 });
                 const totalSavings = computed(() => cartItems.value.reduce((a, b) => { const orig = b.originalPrice && b.originalPrice > b.price ? b.originalPrice : b.price; return a + ((orig - b.price) * b.quantity); }, 0));
 
@@ -2578,6 +2582,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
