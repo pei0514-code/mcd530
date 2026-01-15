@@ -2034,6 +2034,13 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                         isVerifyingCoupon.value = false; 
                     }
                 };
+
+                // ★★★ 補回遺失的移除優惠券函式 ★★★
+                const removeCoupon = () => { 
+                    appliedCoupon.value = null; 
+                    couponCodeInput.value = ''; // 順便清空輸入框
+                    showToast('已移除優惠券');
+                };
                 const fetchFAQ = async () => { try { const r=await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getFAQ' }) }); const j=await r.json(); if(j.status==='success'){ faqList.value=j.data; if(j.announcements?.length){ let l=[]; for(let i=0;i<10;i++) l=l.concat(j.announcements); announcement.value=l.join("        ✦        "); } } } catch(e){ announcement.value="歡迎光臨"; } };
 
                 // ==========================
@@ -2545,6 +2552,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
