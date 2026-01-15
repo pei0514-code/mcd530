@@ -1601,12 +1601,13 @@
         const NUMBERS = ['❶', '❷', '❸', '❹', '❺', '❻', '❼', '❽', '❾', '❿'];
         const ADMIN_IDS = ['U427b3a2987866247f59e69e4a9400fc5', 'Uff13b47f1e66048edc970326f2bfea77'];
         
-        const BANK_ACCOUNTS = [
-            { code: '823', name: '將來銀行(823)', account: '88658888888840' },
-            { code: '822', name: '中國信託(822)', account: '864540221080', note: '(優先截圖自動發貨)' },
-            { code: '812', name: '台新銀行(812)', account: '28881013072004' },
-            { code: '396', name: '街口支付', account: '901794346' }
-        ];
+        // ★★★ 請用這段取代原本的 BANK_ACCOUNTS ★★★
+        const BANK_ACCOUNTS = {
+            '823': { code: '823', bankName: '將來銀行(823)', name: '將來銀行', account: '88658888888840' },
+            '822': { code: '822', bankName: '中國信託(822)', name: '中國信託', account: '864540221080', note: '(優先截圖自動發貨)' },
+            '812': { code: '812', bankName: '台新銀行(812)', name: '台新銀行', account: '28881013072004' },
+            '396': { code: '396', bankName: '街口支付(396)', name: '街口支付', account: '901794346' }
+        };
         createApp({
             setup() {
                 // ==========================
@@ -2280,5 +2281,6 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
