@@ -2251,6 +2251,7 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                 const fetchLowStock = async () => { isAdminFetchingStock.value=true; try{ const r=await fetch(`${API_URL}?action=getLowStockItems`); const d=await r.json(); adminLowStockItems.value=d.lowStockItems||[]; openModalSafe('adminLowStockModal'); } catch(e){} finally{ isAdminFetchingStock.value=false; } };
                 const onAdminShipClick = (o) => { adminShipTarget.value=o; hideModalSafe('adminPanelModal'); openModalSafe('adminShipConfirmModal'); };
                 // ★★★ 修正版：發貨後彈出備份視窗 ★★★
+                // ★★★ 終極修正版：解決視窗被擋住或沒彈出的問題 ★★★
                 const executeAdminShip = async (push) => { 
                     isAdminShipping.value = true; 
                     try { 
@@ -2264,25 +2265,43 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                                 testMode: isAdminTestMode.value
                             }) 
                         }); 
-                        const json = await res.json(); // 解析回傳結果
+                        const json = await res.json(); 
 
                         // 2. 判斷結果
                         if (json.status === 'OK') {
                             showToast('✅ 發貨指令已執行'); 
+                            
+                            // 關閉確認視窗
                             hideModalSafe('adminShipConfirmModal'); 
                             
-                            // 3. ★★★ 關鍵：如果有備份文字，填入並彈出視窗 ★★★
+                            // 3. 處理備份文字 (延遲開啟，防止被舊視窗擋住)
                             if (json.backupText) {
-                                const textArea = document.getElementById('backupTextArea');
-                                if (textArea) {
-                                    textArea.value = json.backupText; // 填入文字
-                                    openModalSafe('manualCopyBackupModal'); // 彈出視窗
-                                }
-                                
-                                // (選用) 順便嘗試自動複製到剪貼簿，增加方便性
-                                if (navigator.clipboard && navigator.clipboard.writeText) {
-                                    navigator.clipboard.writeText(json.backupText).catch(() => {});
-                                }
+                                setTimeout(() => {
+                                    const textArea = document.getElementById('backupTextArea');
+                                    const modalEl = document.getElementById('manualCopyBackupModal');
+                                    
+                                    if (textArea && modalEl) {
+                                        // 填入文字
+                                        textArea.value = json.backupText; 
+                                        
+                                        // ★ 強制拉高層級，確保它在最上面 ★
+                                        modalEl.style.zIndex = "9999"; 
+                                        
+                                        // 開啟視窗
+                                        openModalSafe('manualCopyBackupModal');
+                                        
+                                        // 嘗試自動複製
+                                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                                            navigator.clipboard.writeText(json.backupText).catch(() => {});
+                                        }
+                                    } else {
+                                        alert("錯誤：找不到備份視窗元件 (manualCopyBackupModal)");
+                                    }
+                                }, 500); // 延遲 0.5 秒
+                            } else {
+                                // 如果成功但沒文字，可能是後端 GAS 沒更新
+                                console.warn("後端未回傳 backupText", json);
+                                // alert("注意：發貨成功但沒有回傳備份文字\n(請檢查 GAS 後端代碼是否已更新並部署)");
                             }
                             
                             // 4. 刷新後台數據
@@ -2428,6 +2447,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
