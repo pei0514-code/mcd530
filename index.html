@@ -740,20 +740,30 @@
         </button>
     </div>
     
-    <div v-if="appliedCoupon" class="mt-2 d-flex justify-content-between text-success fw-bold small">
-        <span>✅ 已套用 {{ appliedCoupon.code }}</span>
-        <span>- ${{ appliedCoupon.amount }}</span>
+ <div v-if="appliedCoupon" class="alert alert-success d-flex justify-content-between align-items-center p-2 mb-2 shadow-sm">
+    <div class="text-start">
+        <div class="fw-bold" style="font-size: 0.9rem;">
+            <i class="fas fa-ticket-alt me-1"></i>已套用: {{ appliedCoupon.code }}
+        </div>
+        <small class="text-muted">{{ appliedCoupon.title }}</small>
+    </div>
+    <div class="text-end d-flex align-items-center gap-2">
+        <span class="fw-bold text-danger">
+            - {{ appliedCoupon.type === '減價' ? '$' + appliedCoupon.value : (appliedCoupon.value < 1 ? (appliedCoupon.value * 10) + '折' : appliedCoupon.value + '折') }}
+        </span>
+        <button class="btn btn-sm btn-link text-danger p-0" @click="removeCoupon" title="移除優惠券">
+            <i class="fas fa-times-circle"></i>
+        </button>
     </div>
 </div>
-                            
-                            <div class="d-flex justify-content-between align-items-center fw-bold fs-5 mt-2 px-2">
-                                <span>應付金額</span>
-                                <div class="text-end">
-                                    <span v-if="totalSavings > 0" class="savings-tag">已省下 ${{ totalSavings }}</span>
-                                    <span class="text-danger ms-1">${{ totalPrice }}</span>
-                                </div>
-                            </div>
-                        </div>
+
+<div class="d-flex justify-content-between align-items-center fw-bold fs-5 mt-2 px-2">
+    <span>應付金額</span>
+    <div class="text-end">
+        <span v-if="totalSavings > 0" class="savings-tag">已省下 ${{ totalSavings }}</span>
+        <span class="text-danger ms-1">${{ finalTotalPrice }}</span>
+    </div>
+</div>
                         <div v-if="isAdmin" class="bg-warning bg-opacity-10 p-2 rounded border border-warning mb-3">
     <div class="form-check form-switch">
         <input class="form-check-input" type="checkbox" id="cartTestMode" v-model="isCartTestMode">
@@ -1058,7 +1068,18 @@
                         <div class="col-6"><label>數值 (20元 或 0.9折)</label><input type="number" step="0.01" class="form-control" v-model="editingCouponData.value" required></div>
                         <div class="col-6"><label>低消門檻</label><input type="number" class="form-control" v-model="editingCouponData.min" required></div>
                         <div class="col-6"><label>單人限用次數</label><input type="number" class="form-control" v-model="editingCouponData.uLimit"></div>
-                        <div class="col-12"><label>適用商品關鍵字 (選填)</label><input class="form-control" v-model="editingCouponData.item" placeholder="留空則全部適用"></div>
+                       <div class="col-12">
+    <label class="form-label-small fw-bold">適用商品 (可多選，不勾選則全館適用)</label>
+    <div class="border rounded p-2 bg-light" style="max-height: 150px; overflow-y: auto;">
+        <div v-for="p in products" :key="p.id" class="form-check form-check-inline mb-1 me-3">
+            <input class="form-check-input" type="checkbox" :id="'cp-prod-'+p.id" :value="p.name" v-model="selectedCouponItems">
+            <label class="form-check-label small" :for="'cp-prod-'+p.id">{{ p.name }}</label>
+        </div>
+    </div>
+    <div class="text-muted mt-1" style="font-size: 10px;">
+        <i class="fas fa-check-circle me-1"></i>已選：{{ selectedCouponItems.length > 0 ? selectedCouponItems.join(', ') : '全部商品適用' }}
+    </div>
+</div>
                         <div class="col-6"><label>開始日期</label><input type="date" class="form-control" v-model="editingCouponData.start"></div>
                         <div class="col-6"><label>結束日期</label><input type="date" class="form-control" v-model="editingCouponData.end"></div>
                         <div class="col-12"><label>總張數限制 (0=不限)</label><input type="number" class="form-control" v-model="editingCouponData.tLimit"></div>
@@ -1415,7 +1436,89 @@
                 <div class="text-end mb-2"><span class="text-danger fw-bold" style="font-size: 18px;">${{ h.totalAmount }}</span></div><div class="history-imgs-container mb-3"><div v-for="item in h.items" :key="item.name" class="h-thumb-box" @click="showToast(item.name)"><img :src="getProductImage(item.name)" class="h-thumb" onerror="this.src='https://placehold.co/48X48'"><div class="h-qty-badge">x{{ item.quantity }}</div></div></div><div v-if="h.fulfillment" class="mt-2 mb-3 p-3 bg-light rounded border text-center"><div class="small fw-bold text-success mb-2"><i class="fas fa-gift me-1"></i>商品已發貨</div><button class="btn btn-sm btn-outline-primary w-100 rounded-pill fw-bold" @click="openWallet"><i class="fas fa-wallet me-1"></i>📂 開啟【我的票券】查看與核銷</button></div><div class="d-flex gap-2 flex-wrap" v-if="!isOrderExpired(h)"><button class="btn btn-outline-success btn-sm flex-grow-1 rounded-pill" @click="resendHistory(h)">補傳訂單</button><button class="btn btn-outline-danger btn-sm flex-grow-1 rounded-pill" @click="reBuy(h)">再次購買</button><button v-if="getStatusBadge(h).canReport" class="btn btn-warning btn-sm flex-grow-1 rounded-pill fw-bold text-dark" @click="openReportForHistory(h)">{{ h.paymentNote ? '修改回報' : '回報付款' }}</button><button v-if="getStatusBadge(h).canCancel" class="btn btn-secondary btn-sm flex-grow-1 rounded-pill fw-bold" @click="openCancelModal(h)">取消訂單</button></div><div v-else class="text-center"><span class="text-muted small fw-bold">此訂單已超過付款期限 (30分鐘)</span></div></div></div></div></div></div></div>
         
          <div class="modal fade" id="vendorGuideModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0 bg-light"><h5 class="fw-bold"><i class="fas fa-info-circle me-2"></i>使用說明</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-0" v-if="currentVendorGuide"><div v-if="currentVendorGuide.image" class="w-100 bg-dark position-relative" style="min-height:200px; cursor: pointer;" onclick="window.open(this.querySelector('img').src, '_blank')"><img :src="currentVendorGuide.image" class="w-100 object-fit-contain" style="max-height: 40vh;"><div class="position-absolute bottom-0 end-0 m-2 badge bg-dark opacity-75"><i class="fas fa-search-plus me-1"></i>點擊放大</div></div><div class="p-4"><h5 class="fw-bold mb-3 text-danger">{{ currentVendorGuide.name }}</h5><div class="text-muted small" style="white-space: pre-wrap; line-height: 1.6;" v-html="linkifiedGuideInstruction"></div></div></div><div class="modal-footer border-0 p-3"><button class="btn btn-dark w-100 rounded-pill fw-bold" data-bs-dismiss="modal">我瞭解了</button></div></div></div></div>
-        <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered"><div class="modal-content text-center p-4 border-0 rounded-4 shadow-lg"><div v-if="!showPaymentForm"><div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div><h4 class="fw-bold">{{ isRepaying ? '待付款資訊' : '訂單已成功送出！' }}</h4><div class="my-3 text-center p-2" style="background: #fdf2f2; border-radius: 12px; border: 1px dashed #f5c6cb;"><div class="text-muted small fw-bold text-uppercase">應付金額</div><div class="text-danger fw-bold" style="font-size: 28px;">${{ reportingTotalAmount }}</div></div><div v-if="isRepaying" class="alert alert-secondary p-2 mb-3 text-start small"><div v-for="oid in lastOrderIds" :key="oid" class="mb-1 border-bottom pb-1"><strong>訂單編號 {{ oid }}</strong><br><span v-for="item in getOrderItems(oid)" :key="item.name">{{ item.name }} x{{ item.quantity }}<br></span></div></div><p class="small text-muted mb-4">請完成付款後，點擊下方按鈕回報。</p><div class="bg-light rounded-3 p-3 text-start mb-4 border"><div class="fw-bold text-dark border-bottom pb-2 mb-2"><i class="fas fa-wallet me-2"></i>匯款帳號 (點擊複製)</div><div v-for="bank in selectedBankInfos" :key="bank.code" class="mb-2 d-flex justify-content-between align-items-center bg-white p-2 rounded border" @click="copyText(bank.account)"><div><div class="small text-muted">{{ bank.name }}</div><div class="fw-bold text-danger">{{ bank.account }}</div><div v-if="bank.code === '396'" class="text-muted" style="font-size: 11px; margin-top:2px;">街口名稱：Sue</div></div><i class="far fa-copy text-secondary"></i></div></div><button class="btn btn-warning w-100 rounded-pill py-2 fw-bold mb-2 shadow-sm text-dark" @click="openPaymentForm"><i class="fas fa-money-bill-wave me-2"></i>我已付款 (回報後五碼)</button><button class="btn btn-outline-dark w-100 rounded-pill py-2 fw-bold" data-bs-dismiss="modal" @click="resetCart">稍後回報 / 關閉視窗</button></div><div v-else><h5 class="fw-bold mb-3"><i class="fas fa-edit me-2"></i>回報付款資訊</h5><div class="alert alert-primary fw-bold text-center fs-5 mb-3">本次回報總金額：<span class="text-danger">${{ reportingTotalAmount }}</span></div><div class="text-start mb-3"><label class="form-label-small fw-bold">您匯入的帳戶：</label><select v-model="paymentForm.bankCode" class="form-select rounded-pill mb-3" :disabled="selectedBankInfos.length === 1"><option v-for="bank in selectedBankInfos" :key="bank.code" :value="bank.code">{{ bank.name }}</option></select><label class="form-label-small fw-bold">{{ paymentFormLabel }}</label><input type="text" v-model="paymentForm.accountInfo" class="form-control rounded-pill" :placeholder="paymentFormPlaceholder"></div><button class="btn btn-success w-100 rounded-pill py-2 fw-bold mb-2 shadow" @click="submitPayment" :disabled="isSubmittingPayment"><span v-if="isSubmittingPayment"><i class="fas fa-spinner fa-spin me-2"></i>傳送中...</span><span v-else>送出回報</span></button><button class="btn btn-link text-muted small" @click="showPaymentForm = false">返回上一頁</button></div></div></div></div>
+       <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content text-center p-4 border-0 rounded-4 shadow-lg">
+                    
+                    <div v-if="!showPaymentForm">
+                        <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
+                        <h4 class="fw-bold">{{ isRepaying ? '待付款資訊' : '訂單已成功送出！' }}</h4>
+                        
+                        <div class="my-3 text-center p-2" style="background: #fdf2f2; border-radius: 12px; border: 1px dashed #f5c6cb;">
+                            <div class="text-muted small fw-bold text-uppercase">應付金額</div>
+                            <div class="text-danger fw-bold" style="font-size: 28px;">${{ reportingTotalAmount }}</div>
+                        </div>
+
+                        <div v-if="isRepaying" class="alert alert-secondary p-2 mb-3 text-start small">
+                            <div v-for="oid in lastOrderIds" :key="oid" class="mb-1 border-bottom pb-1">
+                                <strong>訂單編號 {{ oid }}</strong><br>
+                                <span v-for="item in getOrderItems(oid)" :key="item.name">{{ item.name }} x{{ item.quantity }}<br></span>
+                            </div>
+                        </div>
+
+                        <p class="small text-muted mb-2">請匯款至下方帳號：</p>
+                        
+                        <div v-if="selectedPayment && bankAccounts[selectedPayment]" 
+                             class="bg-light rounded-3 p-3 text-start mb-4 border animate__animated animate__fadeIn">
+                            
+                            <div class="fw-bold text-dark border-bottom pb-2 mb-2">
+                                <i class="fas fa-university me-2"></i>{{ bankAccounts[selectedPayment].bankName }}
+                            </div>
+                            
+                            <div class="mb-2 d-flex justify-content-between align-items-center bg-white p-2 rounded border border-primary click-effect" 
+                                 style="cursor: pointer;" 
+                                 @click="copyText(bankAccounts[selectedPayment].account)">
+                                <div>
+                                    <div class="small text-muted">銀行帳號 (點擊複製)</div>
+                                    <div class="fw-bold text-danger fs-4 font-monospace">{{ bankAccounts[selectedPayment].account }}</div>
+                                    <div v-if="selectedPayment === '396'" class="text-muted" style="font-size: 11px;">
+                                        <i class="fas fa-info-circle me-1"></i>街口戶名：Sue
+                                    </div>
+                                </div>
+                                <i class="far fa-copy text-primary fs-5"></i>
+                            </div>
+                            
+                            <div class="text-end">
+                                <small class="text-muted" style="font-size: 11px;">轉帳後請點擊下方按鈕回報</small>
+                            </div>
+                        </div>
+                        <button class="btn btn-warning w-100 rounded-pill py-2 fw-bold mb-2 shadow-sm text-dark" @click="openPaymentForm">
+                            <i class="fas fa-money-bill-wave me-2"></i>我已付款 (回報後五碼)
+                        </button>
+                        <button class="btn btn-outline-dark w-100 rounded-pill py-2 fw-bold" data-bs-dismiss="modal" @click="resetCart">
+                            稍後回報 / 關閉視窗
+                        </button>
+                    </div>
+
+                    <div v-else>
+                        <h5 class="fw-bold mb-3"><i class="fas fa-edit me-2"></i>回報付款資訊</h5>
+                        <div class="alert alert-primary fw-bold text-center fs-5 mb-3">本次回報總金額：<span class="text-danger">${{ reportingTotalAmount }}</span></div>
+                        <div class="text-start mb-3">
+                            <label class="form-label-small fw-bold">您匯入的帳戶：</label>
+                            <select v-model="paymentForm.bankCode" class="form-select rounded-pill mb-3" disabled>
+                                <option v-if="selectedPayment && bankAccounts[selectedPayment]" :value="bankAccounts[selectedPayment].code">
+                                    {{ bankAccounts[selectedPayment].name }}
+                                </option>
+                            </select>
+                            <label class="form-label-small fw-bold">{{ paymentFormLabel }}</label>
+                          <input type="text" 
+       v-model="paymentForm.accountInfo" 
+       class="form-control rounded-pill" 
+       :placeholder="paymentFormPlaceholder"
+       :maxlength="paymentForm.bankCode === '396' ? 20 : 5"
+       :inputmode="paymentForm.bankCode === '396' ? 'text' : 'numeric'"
+       @input="handleAccountInput">
+                        </div>
+                        <button class="btn btn-success w-100 rounded-pill py-2 fw-bold mb-2 shadow" @click="submitPayment" :disabled="isSubmittingPayment">
+                            <span v-if="isSubmittingPayment"><i class="fas fa-spinner fa-spin me-2"></i>傳送中...</span>
+                            <span v-else>送出回報</span>
+                        </button>
+                        <button class="btn btn-link text-muted small" @click="showPaymentForm = false">返回上一頁</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
         <div class="modal fade" id="unreportedModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 rounded-4 shadow-lg text-center p-4"><div class="mb-2 text-warning"><i class="fas fa-bell fa-4x"></i></div><h5 class="fw-bold mb-2">您有待回報的訂單</h5><p class="text-muted small mb-3">請勾選您已完成轉帳的訂單進行回報：</p><div class="bg-light rounded-3 p-3 mb-4 text-start border" style="max-height: 300px; overflow-y: auto;"><div v-for="group in groupedUnreportedOrders" :key="group.baseId" class="form-check mb-3 border-bottom pb-2"><input class="form-check-input mt-2" type="checkbox" :checked="isGroupSelected(group)" @change="toggleGroupSelection(group)" :id="'chk-group-'+group.baseId"><label class="form-check-label w-100" :for="'chk-group-'+group.baseId"><div class="d-flex justify-content-between align-items-center"><div class="fw-bold text-dark small">訂單編號 {{ group.baseId }} <span v-if="group.ids.length>1" class="text-muted">(合併)</span></div><div class="text-danger fw-bold">${{ group.totalAmount }}</div></div><div class="d-flex gap-2 mt-2 overflow-auto no-scrollbar"><div v-for="(item, idx) in group.items" :key="idx" class="position-relative flex-shrink-0" style="width: 40px; height: 40px;"><img :src="getProductImage(item.name)" class="w-100 h-100 rounded border object-fit-cover"><span class="position-absolute bottom-0 end-0 badge bg-dark rounded-pill" style="font-size:8px; padding: 2px 4px;">x{{ item.quantity }}</span></div></div></label></div><div v-if="groupedUnreportedOrders.length === 0" class="text-muted small text-center">暫無待回報訂單</div></div><div class="d-grid gap-2"><button class="btn btn-primary rounded-pill fw-bold" @click="goToPayFromPending" :disabled="pendingSelection.length === 0"><i class="fas fa-wallet me-2"></i>付款去 (查看匯款資訊)</button><button class="btn btn-warning rounded-pill fw-bold" @click="openReportForPending" :disabled="pendingSelection.length === 0"><i class="fas fa-edit me-2"></i>我已匯款 (直接回報)</button><button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">稍後再說</button><button class="btn btn-link text-muted small text-decoration-none mt-1" @click="dismissPendingAlertForever">不再提醒</button></div></div></div></div>
         <div class="modal fade" id="cancelConfirmModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden"><div class="modal-header border-0 bg-secondary text-white py-3"><h5 class="fw-bold fs-5 mb-0"><i class="fas fa-times-circle me-2"></i>取消訂單確認</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-4 text-center"><div class="mb-3 text-muted"><i class="far fa-sad-tear fa-4x"></i></div><h5 class="fw-bold mb-2">確定要取消這筆訂單嗎？</h5><p class="text-muted small mb-4">取消後庫存將會自動釋出，<br>若您已匯款請勿取消，請聯繫客服。</p><div v-if="relatedOrdersToCancel.length > 0" class="alert alert-warning text-start small mb-4"><i class="fas fa-exclamation-circle me-1"></i><strong>此為合併訂單</strong> ({{ relatedOrdersToCancel.length + 1 }} 筆)<br>您要一併取消其他相關訂單嗎？</div><div class="d-grid gap-2"><button v-if="relatedOrdersToCancel.length > 0" class="btn btn-danger rounded-pill fw-bold" @click="confirmCancel('all')"><i class="fas fa-trash-alt me-2"></i>全部取消 (推薦)</button><button class="btn rounded-pill fw-bold" :class="relatedOrdersToCancel.length > 0 ? 'btn-outline-danger' : 'btn-danger'" @click="confirmCancel('single')"><i class="fas fa-check me-2"></i>{{ relatedOrdersToCancel.length > 0 ? '僅取消此筆' : '確認取消' }}</button><button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">保留訂單</button></div></div></div></div></div>
         <div class="modal fade" id="alertModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;"><div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden"><div class="modal-body p-4"><div class="mb-3 text-warning"><i class="fas fa-exclamation-circle fa-3x"></i></div><h5 class="fw-bold mb-3">溫馨提醒</h5><div class="text-muted text-start bg-light p-3 rounded-3 small" style="line-height:1.6;"><div v-for="(msg, idx) in alertMessages" :key="idx" class="mb-1"><i class="fas fa-caret-right me-2 text-warning"></i>{{ msg }}</div></div><div class="mt-4"><button type="button" class="btn btn-dark w-100 rounded-pill fw-bold" data-bs-dismiss="modal">我知道了</button></div></div></div></div></div>
@@ -1525,17 +1628,19 @@
         const NUMBERS = ['❶', '❷', '❸', '❹', '❺', '❻', '❼', '❽', '❾', '❿'];
         const ADMIN_IDS = ['U427b3a2987866247f59e69e4a9400fc5', 'Uff13b47f1e66048edc970326f2bfea77'];
         
-        const BANK_ACCOUNTS = [
-            { code: '823', name: '將來銀行(823)', account: '88658888888840' },
-            { code: '822', name: '中國信託(822)', account: '864540221080', note: '(優先截圖自動發貨)' },
-            { code: '812', name: '台新銀行(812)', account: '28881013072004' },
-            { code: '396', name: '街口支付', account: '901794346' }
-        ];
+        // ★★★ 請用這段取代原本的 BANK_ACCOUNTS ★★★
+        const BANK_ACCOUNTS = {
+            '823': { code: '823', bankName: '將來銀行(823)', name: '將來銀行', account: '88658888888840' },
+            '822': { code: '822', bankName: '中國信託(822)', name: '中國信託', account: '864540221080', note: '(優先截圖自動發貨)' },
+            '812': { code: '812', bankName: '台新銀行(812)', name: '台新銀行', account: '28881013072004' },
+            '396': { code: '396', bankName: '街口支付(396)', name: '街口支付', account: '901794346' }
+        };
         createApp({
             setup() {
                 // ==========================
                 // A. 變數定義
                 // ==========================
+                const selectedCouponItems = ref([]);
                 const adminCoupons = ref([]); // 優惠券列表
                 const isEditingCoupon = ref(false); // 是否正在編輯模式
                 const editingCouponData = ref({}); // 正在編輯的資料
@@ -1671,11 +1776,25 @@
                 const totalQty = computed(() => cartItems.value.reduce((a, b) => a + b.quantity, 0));
                 
                 const totalPrice = computed(() => cartItems.value.reduce((sum, item) => sum + (item.price * item.quantity), 0));
-                const finalTotalPrice = computed(() => { 
-                    let total = totalPrice.value; 
-                    if (appliedCoupon.value) total -= appliedCoupon.value.amount; 
-                    return total > 0 ? total : 0; 
-                });
+             const finalTotalPrice = computed(() => {
+    let total = totalPrice.value;
+    // 增加判斷：確保 appliedCoupon 存在且內部有數值
+    if (appliedCoupon.value && appliedCoupon.value.value !== undefined) {
+        const c = appliedCoupon.value;
+        const discountValue = Number(c.value); // 強制轉為數字，避免字串計算錯誤
+
+        if (c.type === '減價') {
+            total = total - discountValue;
+        } else if (c.type === '折數') {
+            let discountFactor = discountValue;
+            // 相容性處理：90 或 0.9 都視為 9 折
+            if (discountFactor > 1) discountFactor = discountFactor / 100;
+            total = total * discountFactor;
+        }
+    }
+    // 確保最終金額不會變成負數，並四捨五入到整數
+    return Math.max(0, Math.round(total));
+});
                 const totalSavings = computed(() => cartItems.value.reduce((a, b) => { const orig = b.originalPrice && b.originalPrice > b.price ? b.originalPrice : b.price; return a + ((orig - b.price) * b.quantity); }, 0));
 
                 const categories = computed(() => [...new Set(products.value.map(p => p.category))]);
@@ -1714,8 +1833,13 @@
                 const gridRowClass = computed(() => (viewMode.value === 'small' || viewMode.value === 'medium' || viewMode.value === 'xsmall') ? 'g-1' : 'g-2');
                 const gridColClass = computed(() => { if (viewMode.value === 'xlarge') return 'col-12'; if (viewMode.value === 'large') return 'col-6'; if (viewMode.value === 'medium') return 'col-4'; if (viewMode.value === 'small') return 'col-3'; if (viewMode.value === 'xsmall') return 'col-2'; return 'col-4'; });
 
-                 const selectedBankInfos = computed(() => { if (!selectedPayment.value) return bankAccounts.value; return bankAccounts.value.filter(b => b.code === selectedPayment.value); });
-                 const hasGiftOnlyItems = computed(() => cartItems.value.some(item => item.driveStock < item.quantity && item.giftStock >= item.quantity));
+              // ★★★ 修正版：因為 bankAccounts 變成了物件，要用 Object.values 轉成陣列 ★★★
+                const selectedBankInfos = computed(() => { 
+                    const list = Object.values(bankAccounts.value); // 關鍵修正：轉為陣列
+                    if (!selectedPayment.value) return list; 
+                    return list.filter(b => b.code === selectedPayment.value); 
+                });
+                const hasGiftOnlyItems = computed(() => cartItems.value.some(item => item.driveStock < item.quantity && item.giftStock >= item.quantity));
                 const hasDriveOnlyItems = computed(() => cartItems.value.some(item => item.giftStock < item.quantity && item.driveStock >= item.quantity));
                 const giftOnlyItemsNames = computed(() => cartItems.value.filter(item => item.driveStock < item.quantity && item.giftStock >= item.quantity).map(i => i.name));
                 const driveOnlyItemsNames = computed(() => cartItems.value.filter(item => item.giftStock < item.quantity && item.driveStock >= item.quantity).map(i => i.name));
@@ -1762,10 +1886,49 @@
                 // --- 優惠券管理邏輯 (單行極簡版) ---
 const openAdminCoupons = async () => { openModalSafe('couponAdminModal'); showToast('載入優惠券中...'); try { const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCouponAction', subAction: 'list' }) }); const j = await res.json(); if(j.status === 'success') { adminCoupons.value = j.coupons; } } catch(e) { showToast('載入失敗'); } };
 
-const openCouponEditor = (coupon) => { isEditingCoupon.value = true; if (coupon) { isNewCoupon.value = false; originalCouponCode.value = coupon.code; editingCouponData.value = JSON.parse(JSON.stringify(coupon)); if(editingCouponData.value.start) editingCouponData.value.start = new Date(editingCouponData.value.start).toISOString().split('T')[0]; if(editingCouponData.value.end) editingCouponData.value.end = new Date(editingCouponData.value.end).toISOString().split('T')[0]; } else { isNewCoupon.value = true; editingCouponData.value = { type: '減價', value: 0, min: 0, uLimit: 1, tLimit: 0, item: '' }; } };
+const openCouponEditor = (coupon) => {
+                    isEditingCoupon.value = true;
+                    if (coupon) {
+                        isNewCoupon.value = false; 
+                        originalCouponCode.value = coupon.code;
+                        editingCouponData.value = JSON.parse(JSON.stringify(coupon));
+                        
+                        // ★★★ 新增邏輯：把 "漢堡,薯条" 拆解成 ['漢堡', '薯条'] 給勾選框用
+                        if (coupon.item && String(coupon.item).trim()) {
+                            // 使用逗號分割，並去除多餘空白
+                            selectedCouponItems.value = String(coupon.item).split(',').map(s => s.trim()).filter(s => s);
+                        } else {
+                            selectedCouponItems.value = [];
+                        }
 
-const saveCoupon = async () => { showToast('儲存中...'); try { const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCouponAction', subAction: 'save', isNew: isNewCoupon.value, oldCode: originalCouponCode.value, data: editingCouponData.value }) }); const j = await res.json(); if (j.status === 'success') { showToast('儲存成功'); isEditingCoupon.value = false; openAdminCoupons(); } else { showToast('儲存失敗'); } } catch(e) { showToast('連線錯誤'); } };
+                        // 日期格式化
+                        if(editingCouponData.value.start) editingCouponData.value.start = new Date(editingCouponData.value.start).toISOString().split('T')[0];
+                        if(editingCouponData.value.end) editingCouponData.value.end = new Date(editingCouponData.value.end).toISOString().split('T')[0];
+                    } else {
+                        isNewCoupon.value = true; 
+                        editingCouponData.value = { type: '減價', value: 0, min: 0, uLimit: 1, tLimit: 0, item: '' };
+                        selectedCouponItems.value = []; // 新增時清空
+                    }
+                };
+const saveCoupon = async () => {
+                    showToast('儲存中...');
+                    
+                    // ★★★ 新增邏輯：儲存前把勾選的陣列組合成字串 "A,B,C"
+                    // 這樣後端 Google Sheet 就會存入逗號分隔的字串
+                    editingCouponData.value.item = selectedCouponItems.value.join(',');
 
+                    try {
+                        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCouponAction', subAction: 'save', isNew: isNewCoupon.value, oldCode: originalCouponCode.value, data: editingCouponData.value }) });
+                        const j = await res.json(); 
+                        if (j.status === 'success') { 
+                            showToast('儲存成功'); 
+                            isEditingCoupon.value = false; 
+                            openAdminCoupons(); 
+                        } else { 
+                            showToast('儲存失敗'); 
+                        }
+                    } catch(e) { showToast('連線錯誤'); }
+                };
 const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠券嗎？')) return; try { const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCouponAction', subAction: 'delete', code: code }) }); const j = await res.json(); if(j.status === 'success') { showToast('已刪除'); openAdminCoupons(); } } catch(e) { showToast('刪除失敗'); } };
                 const safeParseDate = (dateStr) => { if (!dateStr) return new Date(); const s = String(dateStr); const m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})$/); return m ? new Date(m[1], m[2]-1, m[3], m[4], m[5], m[6]) : new Date(s); };
                 const isOrderExpired = (h) => { const b = getStatusBadge(h); if (b.text !== '💰 待付款') return false; const d = safeParseDate(h.timestamp); return !isNaN(d.getTime()) && (now.value - d.getTime()) >= 1800000; };
@@ -1847,16 +2010,91 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                 const togglePayment = (c) => selectedPayment.value = c;
                 const copyText = (t) => navigator.clipboard.writeText(t).then(()=>showToast('已複製')).catch(()=>showToast('複製失敗'));
                 
-                const verifyCoupon = async () => { if (!couponCodeInput.value) return; isVerifyingCoupon.value = true; try { const data = await (await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'verifyCoupon', code: couponCodeInput.value, userId: userProfile.value.userId }) })).json(); if (data.status === 'success') { const c = data.coupon; if (totalPrice.value < c.minSpend) { showToast(`此優惠券需滿 $${c.minSpend} 才能使用`); appliedCoupon.value = null; return; } if (c.applicableItems && c.applicableItems.trim() !== '') { const hasItem = cartItems.value.some(item => c.applicableItems.includes(item.name) || item.name.includes(c.applicableItems)); if (!hasItem) { showToast(`此優惠券僅適用於：${c.applicableItems}`); appliedCoupon.value = null; return; } } appliedCoupon.value = c; showToast(`優惠券 "${c.title}" 已套用！`); couponCodeInput.value = ''; } else { showToast(data.message); appliedCoupon.value = null; } } catch (e) { showToast('驗證失敗，請檢查網路'); } finally { isVerifyingCoupon.value = false; } };  const removeCoupon = () => { appliedCoupon.value = null; couponCodeInput.value = ''; };
-                const fetchFAQ = async () => { try { const r=await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getFAQ' }) }); const j=await r.json(); if(j.status==='success'){ faqList.value=j.data; if(j.announcements?.length){ let l=[]; for(let i=0;i<10;i++) l=l.concat(j.announcements); announcement.value=l.join("        ✦        "); } } } catch(e){ announcement.value="歡迎光臨"; } };
+                               // ★★★ 強力除錯版 verifyCoupon ★★★
+                const verifyCoupon = async () => {
+                    if (!couponCodeInput.value) return;
+                    isVerifyingCoupon.value = true;
+                    try {
+                        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'verifyCoupon', code: couponCodeInput.value, userId: getEffectiveUserId() }) });
+                        const data = await res.json();
+                        
+                        if (data.status === 'success') {
+                            const c = data.coupon;
+                            
+                            // 除錯：直接彈出視窗看後端回傳了什麼
+                            // alert(`【除錯模式】\n優惠券名稱: ${c.title}\n適用商品設定: ${c.applicableItems}`);
 
+                            // 1. 檢查低消
+                            if (totalPrice.value < c.minSpend) { 
+                                showToast(`需滿 $${c.minSpend} 才能使用`); 
+                                appliedCoupon.value = null; 
+                                return; 
+                            }
+
+                            // 2. 檢查適用商品 (寬鬆模糊比對)
+                            if (c.applicableItems && String(c.applicableItems).trim() !== '') {
+                                const validKeywords = String(c.applicableItems).split(',').map(s => s.trim()).filter(s => s);
+                                
+                                // 檢查：購物車內是否有商品名稱「包含」這些關鍵字
+                                const hasItem = cartItems.value.some(cartItem => {
+                                    return validKeywords.some(keyword => cartItem.name.includes(keyword));
+                                });
+                                
+                                if (!hasItem) {
+                                    // 失敗時彈出詳細原因
+                                    const cartNames = cartItems.value.map(i => i.name).join(', ');
+                                    alert(`❌ 無法套用！\n\n您的購物車：${cartNames}\n優惠券指定：${validKeywords.join(', ')}\n\n原因：購物車商品名稱不包含指定的關鍵字`);
+                                    
+                                    appliedCoupon.value = null; 
+                                    return; 
+                                }
+                            }
+
+                            appliedCoupon.value = c; 
+                            showToast(`優惠券 "${c.title}" 已套用！`); 
+                            couponCodeInput.value = '';
+                        } else { 
+                            showToast(data.message); 
+                            appliedCoupon.value = null; 
+                        }
+                    } catch (e) { 
+                        console.error(e);
+                        alert('驗證發生錯誤: ' + e.message);
+                    } finally { 
+                        isVerifyingCoupon.value = false; 
+                    }
+                };
+
+                // ★★★ 補回遺失的移除優惠券函式 ★★★
+                const removeCoupon = () => { 
+                    appliedCoupon.value = null; 
+                    couponCodeInput.value = ''; // 順便清空輸入框
+                    showToast('已移除優惠券');
+                };
+                
                 // ==========================
                 // G. 購物車與訂單互動
                 // ==========================
                 const updateCart = (p, d) => { if(d>0 && (cart.value[p.id]||0)>=Number(p.stock)){ showToast('庫存上限'); return; } const n=(cart.value[p.id]||0)+d; if(n<=0) delete cart.value[p.id]; else if(n<=Number(p.stock)) cart.value[p.id]=n; safeSetStorage('mm_cart_storage', JSON.stringify(cart.value)); };
                 
-                const showProductDetail = (p) => { selectedProduct.value = p; openModalSafe('productDetailModal'); };
-                
+                // --- 修復：商品圖點選說明 ---
+const showProductDetail = (p) => {
+    selectedProduct.value = p;
+    openModalSafe('productDetailModal');
+};
+
+// --- 修復：再次購買 (解決 openCart 未定義報錯) ---
+const reBuy = (h) => {
+    cart.value = {}; 
+    h.items.forEach(it => {
+        const p = products.value.find(x => x.name === it.name);
+        if (p) cart.value[p.id] = it.quantity;
+    });
+    safeSetStorage('mm_cart_storage', JSON.stringify(cart.value));
+    hideModalSafe('historyModal');
+    // 確保這裡呼叫的是 openModalSafe 而不是可能未定義的 openCart
+    openModalSafe('cartModal'); 
+};
                 const openCancelModal = (h) => { hideModalSafe('historyModal'); orderToCancel.value = h; relatedOrdersToCancel.value = []; if(h.id.includes('-')){ const base=h.id.split('-')[0]; relatedOrdersToCancel.value=orderHistory.value.filter(o=>o.id.startsWith(base)&&o.id!==h.id&&getStatusBadge(o).canCancel); } openModalSafe('cancelConfirmModal'); };
                 const confirmCancel = async (mode='single') => { if(!orderToCancel.value) return; const t=[orderToCancel.value]; if(mode==='all') t.push(...relatedOrdersToCancel.value); hideModalSafe('cancelConfirmModal'); showToast('取消中...'); try{ await Promise.all(t.map(o=>fetch(API_URL,{ method:'POST', body:JSON.stringify({ action:'cancelOrder', orderId:o.id, userId:getEffectiveUserId() }) }))); orderHistory.value=orderHistory.value.map(h=>{ if(t.find(x=>x.id===h.id)) return {...h, paymentNote:'用戶自行取消'}; return h; }); safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value)); unreportedOrders.value=unreportedOrders.value.filter(id=>!t.find(x=>x.id===id)); safeSetStorage('mm_pending_payment_orders', JSON.stringify(unreportedOrders.value)); showToast('已取消'); setTimeout(initApp, 1000); } catch(e){ showToast('取消失敗'); } };
                 
@@ -1868,69 +2106,307 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                 // ==========================
                 // H. 結帳核心
                 // ==========================
+               // [Logic] Checkout & Payment (完整版 + 付款方式保留修正)
                 const handleCheckout = async () => {
-                    const err = [];
-                    if(!acceptTerms.value) err.push("請同意需知");
-                    if(finalTotalPrice.value < 50) err.push("未滿$50");
-                    if(deliveryMethod.value === 'gift' && !requestManualScreenshot.value){ if(!giftInfo.value.name || !giftInfo.value.phone) err.push("需填收件資料"); else { if(!/^[\u4e00-\u9fa5]+$/.test(giftInfo.value.name)) err.push("姓名須中文"); if(!/^09\d{8}$/.test(giftInfo.value.phone)) err.push("電話格式誤"); } }
-                    if(!selectedPayment.value) err.push("請選付款方式");
-                    if(!userProfile.value.userId && !userContact.value.phone){ hideModalSafe('cartModal'); showToast("請填手機"); setTimeout(()=>openModalSafe('guestWarningModal'),300); return; }
-                    if(err.length > 0){ showAlert(err); return; }
+    const errors = [];
+    // 1. 基本驗證
+    if (!acceptTerms.value) errors.push("請先勾選「我已閱讀並同意購買需知」");
+    if (totalPrice.value < 50) errors.push("訂單金額需滿 $50 才能出貨");
+    if (!selectedPayment.value) errors.push("請選擇一種付款方式");
+    
+    // 2. 轉贈資料驗證
+    const requiresGiftInfo = (deliveryMethod.value === 'gift') && !requestManualScreenshot.value;
+    if (requiresGiftInfo) { 
+        if (!giftInfo.value.name || !giftInfo.value.phone) errors.push("選擇轉贈需填寫完整收件人姓名與電話"); 
+        else { 
+            if (!/^[\u4e00-\u9fa5]+$/.test(giftInfo.value.name)) errors.push("momo 轉贈姓名必須為中文全名"); 
+            if (!/^09\d{8}$/.test(giftInfo.value.phone)) errors.push("momo 轉贈電話格式錯誤"); 
+        } 
+    }
+    
+    // 3. 訪客驗證
+    const isGuest = !userProfile.value.userId;
+    if (isGuest && !userContact.value.phone) { 
+        hideModalSafe('cartModal'); 
+        showToast("訪客模式需填寫手機號碼才能購買"); 
+        setTimeout(() => { openModalSafe('guestWarningModal'); }, 300); 
+        return; 
+    }
+    
+    if (errors.length > 0) { alertMessages.value = errors; openModalSafe('alertModal'); return; }
+    
+    isSubmitting.value = true;
+    safeSetStorage('mm_user_phone', userContact.value.phone);
+    if (requiresGiftInfo) { safeSetStorage('mm_momo_name', giftInfo.value.name); safeSetStorage('mm_momo_phone', giftInfo.value.phone); }
 
-                    isSubmitting.value = true;
-                    const ts = new Date(); const timeStr = `${ts.getFullYear()}/${String(ts.getMonth()+1).padStart(2,'0')}/${String(ts.getDate()).padStart(2,'0')} ${String(ts.getHours()).padStart(2,'0')}:${String(ts.getMinutes()).padStart(2,'0')}:${String(ts.getSeconds()).padStart(2,'0')}`;
-                    const baseId = `M${ts.getFullYear()}${String(ts.getMonth()+1).padStart(2,'0')}${String(ts.getDate()).padStart(2,'0')}${String(ts.getHours()).padStart(2,'0')}${String(ts.getMinutes()).padStart(2,'0')}${String(ts.getSeconds()).padStart(2,'0')}`;
-                    
-                    const drive=[], gift=[]; cartItems.value.forEach(i => { if(deliveryMethod.value==='gift' && i.giftStock>=i.quantity) gift.push(i); else if(i.driveStock>=i.quantity) drive.push(i); else gift.push(i); });
-                    let remDisc = appliedCoupon.value ? appliedCoupon.value.amount : 0; const code = appliedCoupon.value ? appliedCoupon.value.code : ''; let codeSent = false;
-                    const common = { phone: userContact.value.phone, email: userProfile.value.email||'', testMode: isCartTestMode.value, userName: userProfile.value.displayName||guestName.value||'GUEST', userId: getEffectiveUserId(), initialPaymentDesc: selectedBankInfos.value[0]?.name ? `[待] ${selectedBankInfos.value[0].name}` : '' };
-                    const proms = [], msgs = [], recs = [], gIds = [];
+    // 4. 商品分類 (截圖 vs 轉贈)
+    const driveItems = []; const giftItems = [];
+    cartItems.value.forEach(item => { 
+        let allocated = false; 
+        if (deliveryMethod.value === 'gift') { 
+            if (item.giftStock >= item.quantity) { giftItems.push(item); allocated = true; } 
+            else if (item.driveStock >= item.quantity) { driveItems.push(item); allocated = true; } 
+        } else { 
+            if (item.driveStock >= item.quantity) { driveItems.push(item); allocated = true; } 
+            else if (item.giftStock >= item.quantity) { giftItems.push(item); allocated = true; } 
+        } 
+    });
 
-                    const addOrder = (items, suffix, method, mName, mPhone) => {
-                        if(items.length===0) return;
-                        const oid = items.length>0 && drive.length>0 && gift.length>0 ? `${baseId}-${suffix}` : baseId; gIds.push(oid);
-                        const sub = items.reduce((a,b)=>a+(b.price*b.quantity),0);
-                        const disc = Math.min(sub, remDisc); const final = sub - disc; remDisc -= disc;
-                        const cCode = (!codeSent && code) ? code : ''; if(code) codeSent = true;
-                        const r = { action:'recordOrder', id:oid, timestamp:timeStr, totalAmount:final, items:items.map(i=>({name:i.name, quantity:i.quantity, price:i.price, expiryDate:i.expiryDate})), deliveryMethod:method, momoName:mName, momoPhone:mPhone, couponCode:cCode, couponDiscount:disc };
-                        recs.push(r); proms.push(fetch(API_URL, { method:'POST', body:JSON.stringify({...common, ...r}) }));
-                        let m = `🛒 單號：${oid}\n📦 方式：${method}\n🍱 內容：\n`; items.forEach((x,i)=>m+=`${NUMBERS[i]||(i+1)} ${x.name} x${x.quantity}\n`); m+=`💰 小計：$${final}`; msgs.push(m);
-                    };
+    // 5. 準備訂單資料
+    const now = new Date(); 
+    const pad = (n) => String(n).padStart(2, '0'); 
+    const timeStr = `${now.getFullYear()}/${pad(now.getMonth() + 1)}/${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    const baseOrderId = `M${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const orderPromises = []; 
+    const lineMessages = []; 
+    const records = []; 
+    const generatedOrderIds = [];
 
-                    addOrder(drive, '1', '截圖發送', '', '');
-                    const isMan = requestManualScreenshot.value;
-                    addOrder(gift, '2', isMan?'轉贈(手動)':'momo轉贈', isMan?'':giftInfo.value.name, isMan?'':giftInfo.value.phone);
+    // ★ 修正 1：因為 BANK_ACCOUNTS 現在是物件格式，直接用 Key 讀取
+    const selectedBank = bankAccounts.value[selectedPayment.value]; 
+    const initialPaymentDesc = selectedBank ? `[待] ${selectedBank.name}` : '';
 
-                    try {
-                        await Promise.all(proms);
-                        let finalM = msgs.join('\n\n---\n\n') + `\n\n💰 應付總額：$${finalTotalPrice.value}`;
-                        if(liff.isInClient()) await liff.sendMessages([{ type:'text', text:finalM }]);
-                        orderHistory.value = [...recs, ...orderHistory.value].slice(0,50); safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
-                        lastOrderIds.value = gIds; unreportedOrders.value = [...new Set([...unreportedOrders.value, ...gIds])]; safeSetStorage('mm_pending_payment_orders', JSON.stringify(unreportedOrders.value));
-                        resetCart(); hideModalSafe('cartModal'); openModalSafe('successModal'); setTimeout(()=>fetchOrderStatus(getEffectiveUserId()), 1500);
-                    } catch(e){ showToast('連線不穩'); } finally { isSubmitting.value = false; }
-                };
+    // 處理截圖訂單
+    if (driveItems.length > 0) {
+        const oid = giftItems.length > 0 ? `${baseOrderId}-1` : baseOrderId;
+        generatedOrderIds.push(oid);
+        const total = driveItems.reduce((a, b) => a + (b.price * b.quantity), 0);
+        
+        const record = { id: oid, timestamp: timeStr, totalAmount: total, items: driveItems };
+        records.push(record);
+
+        orderPromises.push(fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'submitOrder',
+                ...record,
+                phone: userContact.value.phone,
+                email: userProfile.value.email,
+                testMode: isCartTestMode.value,
+                deliveryMethod: '截圖發送',
+                momoName: '', momoPhone: '',
+                userName: (userProfile.value && userProfile.value.displayName) || 'GUEST',
+                userId: getEffectiveUserId(),
+                initialPaymentDesc: initialPaymentDesc,
+                couponCode: appliedCoupon.value ? appliedCoupon.value.code : ''
+            })
+        }));
+
+        let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：📸 截圖發送\n🍱 內容：\n`;
+        driveItems.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx + 1)} ${i.name} x${i.quantity}\n`; });
+        msg += `💰 小計：$${total}`;
+        lineMessages.push(msg);
+    }
+
+    // 處理轉贈訂單
+    if (giftItems.length > 0) {
+        const oid = driveItems.length > 0 ? `${baseOrderId}-2` : baseOrderId;
+        generatedOrderIds.push(oid);
+        const total = giftItems.reduce((a, b) => a + (b.price * b.quantity), 0);
+        const record = { id: oid, timestamp: timeStr, totalAmount: total, items: giftItems };
+        records.push(record);
+
+        const isManual = requestManualScreenshot.value || deliveryMethod.value === 'screenshot';
+        const methodStr = isManual ? '轉贈(手動截圖)' : 'momo 轉贈';
+        
+        orderPromises.push(fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'submitOrder',
+                ...record,
+                phone: userContact.value.phone,
+                email: userProfile.value.email,
+                deliveryMethod: methodStr,
+                momoName: isManual ? '' : giftInfo.value.name,
+                momoPhone: isManual ? '' : giftInfo.value.phone,
+                userName: (userProfile.value && userProfile.value.displayName) || 'GUEST',
+                userId: getEffectiveUserId(),
+                initialPaymentDesc: initialPaymentDesc,
+                couponCode: appliedCoupon.value ? appliedCoupon.value.code : ''
+            })
+        }));
+
+        let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：${methodStr}\n`;
+        if (!isManual) msg += `👤 收件：${giftInfo.value.name} / ${giftInfo.value.phone}\n`;
+        msg += `🍱 內容：\n`;
+        giftItems.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx + 1)} ${i.name} x${i.quantity}\n`; });
+        msg += `💰 小計：$${total}`;
+        lineMessages.push(msg);
+    }
+
+    // 6. 送出請求
+    Promise.all(orderPromises).then(() => {
+        let finalMsg = `🎉 訂單已送出！\n\n`; 
+        if (lineMessages.length > 1) finalMsg += `⚠️ 因商品屬性不同，已自動拆分為兩筆訂單：\n\n`; 
+        finalMsg += lineMessages.join('\n\n----------------\n\n'); 
+        
+        finalMsg += `\n\n💰 應付總額：$${finalTotalPrice.value}\n`; 
+        
+        finalMsg += `🏦 匯款資訊：\n`; 
+        // ★ 修正 2：同樣使用 Object.values 以適配物件格式
+        Object.values(selectedBankInfos.value).forEach(b => { finalMsg += `${b.name}: ${b.account}\n`; }); 
+        finalMsg += `⚠️ 請於匯款後告知客服匯款相關資訊`;
+        
+        if (liff.isInClient()) { liff.sendMessages([{ type: 'text', text: finalMsg }]).catch(e => console.error(e)); }
+        
+        orderHistory.value = [...records, ...orderHistory.value].slice(0, 30); 
+        safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value)); 
+        lastOrderIds.value = generatedOrderIds; 
+        const newPending = [...unreportedOrders.value, ...generatedOrderIds]; 
+        unreportedOrders.value = [...new Set(newPending)]; 
+        safeSetStorage('mm_pending_payment_orders', JSON.stringify(unreportedOrders.value)); 
+        
+        cart.value = {}; 
+        safeSetStorage('mm_cart_storage', '{}'); 
+        
+        // ★ 修正 3：關鍵修正：保留付款方式，讓下一頁直接顯示
+        const savedPayment = selectedPayment.value;
+        resetCart(); 
+        selectedPayment.value = savedPayment; 
+        paymentForm.value.bankCode = savedPayment;
+
+        isSubmitting.value = false; 
+        isRepaying.value = false; 
+        hideModalSafe('cartModal'); 
+        openModalSafe('successModal'); 
+        setTimeout(() => { fetchOrderStatus(getEffectiveUserId()); }, 1000);
+    }).catch(e => { 
+        console.error(e); 
+        isSubmitting.value = false; 
+        showToast('連線錯誤，請稍後再試'); 
+    });
+};
 
                 // ==========================
                 // I. 付款回報與管理員
                 // ==========================
+                const fetchFAQ = async () => { 
+    try { 
+        const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getFAQ' }) }); 
+        const j = await r.json(); 
+        if(j.status === 'success') { 
+            faqList.value = j.data; 
+            // --- 加入速度讀取 ---
+            if (j.speed) {
+                marqueeDuration.value = j.speed;
+                marqueeConfig.value.speed = j.speed;
+            }
+            // --- 公告處理 ---
+            if(j.announcements?.length && j.announcements[0].trim() !== ""){ 
+                let rawText = j.announcements[0];
+                marqueeConfig.value.text = rawText;
+                let formattedText = rawText.replace(/\n/g, "        ✦        ");
+                announcement.value = (formattedText + "        ✦        ").repeat(10); 
+            } else {
+                announcement.value = null; // 修正：沒公告就隱藏
+            }
+        } 
+    } catch(e) { announcement.value = null; } 
+};
                 const openPaymentForm = () => { if(selectedBankInfos.value.length===1) paymentForm.value.bankCode=selectedBankInfos.value[0].code; showPaymentForm.value=true; };
                 const paymentFormPlaceholder = computed(() => paymentForm.value.bankCode==='396'?'輸入街口暱稱':'輸入帳號後五碼');
                 const paymentFormLabel = computed(() => paymentForm.value.bankCode==='396'?'街口名稱：':'帳號末五碼：');
+               // ★★★ 新增：輸入限制邏輯 (銀行限5碼數字，街口不限) ★★★
+                // 1. 輸入限制 (銀行限5碼，街口不限)
+                const handleAccountInput = (e) => {
+                    const code = paymentForm.value.bankCode;
+                    if (code === '396') return; // 街口不限
+                    let val = e.target.value.replace(/\D/g, ''); // 只留數字
+                    if (val.length > 5) val = val.slice(0, 5); // 截斷
+                    paymentForm.value.accountInfo = val;
+                    e.target.value = val;
+                };
+
+                // 2. 回報付款 (修復 LIFF 發送 + 解決重複提示問題)
                 const submitPayment = async () => {
-                    if(!paymentForm.value.bankCode || !paymentForm.value.accountInfo) return showToast('請填寫完整'); isSubmittingPayment.value=true;
-                    const bn = bankAccounts.value.find(b=>b.code===paymentForm.value.bankCode)?.name || '未知';
-                    const p = fetch(API_URL, { method:'POST', body:JSON.stringify({ action:'submitPayment', orderIds:lastOrderIds.value, bankName:bn, accountInfo:paymentForm.value.accountInfo }) });
-                    const t = new Promise((_,r)=>setTimeout(()=>r(new Error("Timeout")), 25000));
-                    try { await Promise.race([p,t]); if(liff.isInClient()) liff.sendMessages([{type:'text',text:`💰 回報\n單號：${lastOrderIds.value.join(', ')}\n帳號：${paymentForm.value.accountInfo}`}]); showToast('回報成功'); finishPaymentFlow(); } 
-                    catch(e){ if(e.message==="Timeout"){ showToast('已送出'); finishPaymentFlow(); } else showToast('失敗'); } finally { isSubmittingPayment.value=false; }
+                    // --- A. 驗證區 ---
+                    if (!paymentForm.value.bankCode || !paymentForm.value.accountInfo) { 
+                        showToast('請完整填寫資訊'); return; 
+                    }
+                    if (paymentForm.value.bankCode !== '396' && paymentForm.value.accountInfo.length !== 5) {
+                        showToast('銀行帳號末五碼必須剛好 5 個數字'); return;
+                    }
+
+                    isSubmittingPayment.value = true;
+                    
+                    const bankObj = bankAccounts.value[paymentForm.value.bankCode];
+                    const bankName = bankObj ? bankObj.name : '未知銀行';
+                    const payDetailText = `[${bankName}] ${paymentForm.value.accountInfo}`;
+
+                    // --- B. 送出請求 (含超時防護) ---
+                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 25000));
+                    const fetchPromise = fetch(API_URL, { 
+                        method: 'POST', 
+                        body: JSON.stringify({ 
+                            action: 'submitPayment', 
+                            orderIds: lastOrderIds.value, 
+                            bankName: bankName, 
+                            accountInfo: paymentForm.value.accountInfo 
+                        }) 
+                    });
+
+                    try {
+                        const response = await Promise.race([fetchPromise, timeoutPromise]);
+                        if (!response.ok) throw new Error('Network error');
+                        
+                        // --- C. 成功後的處理 (關鍵修正) ---
+                        
+                        // 1. 發送 LINE 訊息 (補上 await)
+                        if (liff.isInClient()) {
+                            try {
+                                const msg = `💰【付款回報】\n單號：${lastOrderIds.value.join(', ')}\n銀行：${bankName}\n帳號/名稱：${paymentForm.value.accountInfo}\n總金額：$${reportingTotalAmount.value}`;
+                                await liff.sendMessages([{ type: 'text', text: msg }]); // ★ 關鍵：等待發送完成
+                            } catch (err) {
+                                console.error('LIFF send error:', err); // 記錄錯誤但不阻擋流程
+                            }
+                        }
+
+                        // 2. ★★★ 樂觀更新 (直接修改本地資料，不等後端) ★★★
+                        // 這步能解決「一直提示待回報」的問題
+                        
+                        // (a) 更新歷史訂單的備註 (讓它變成「已回報」狀態)
+                        orderHistory.value = orderHistory.value.map(o => {
+                            if (lastOrderIds.value.includes(o.id)) {
+                                return { ...o, paymentNote: payDetailText };
+                            }
+                            return o;
+                        });
+                        safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
+
+                        // (b) 從「待回報清單」中移除這些訂單
+                        const remainingPending = unreportedOrders.value.filter(id => !lastOrderIds.value.includes(id));
+                        unreportedOrders.value = remainingPending;
+                        safeSetStorage('mm_pending_payment_orders', JSON.stringify(remainingPending));
+                        
+                        // (c) 清空選取狀態
+                        pendingSelection.value = [];
+
+                        // 3. UI 回饋與關閉
+                        showToast('回報成功！我們會盡快對帳'); 
+                        showPaymentForm.value = false; 
+                        hideModalSafe('successModal');
+                        hideModalSafe('unreportedModal'); // 確保提示視窗也關閉
+
+                        // 4. 最後才去後端拉最新資料 (延遲 2 秒讓 GAS 有時間寫入)
+                        setTimeout(() => { fetchOrderStatus(getEffectiveUserId()); }, 2000);
+
+                    } catch(e) {
+                        console.error(e);
+                        if (e.message === "Timeout") {
+                            showToast('連線逾時，但可能已送出，請稍後檢查');
+                            hideModalSafe('successModal');
+                        } else {
+                            showToast('回報失敗，請截圖聯繫客服');
+                        }
+                    } finally { 
+                        isSubmittingPayment.value = false; 
+                    }
                 };
                 const finishPaymentFlow = () => {
                     const rem = unreportedOrders.value.filter(id=>!lastOrderIds.value.includes(id)); unreportedOrders.value=rem; safeSetStorage('mm_pending_payment_orders', JSON.stringify(rem));
                     hideModalSafe('successModal'); resetCart(); orderHistory.value=orderHistory.value.map(h=>{ if(lastOrderIds.value.includes(h.id)) return {...h, paymentNote:'已回報'}; return h; }); safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
                 };
                 const resetCart = () => { cart.value={}; safeSetStorage('mm_cart_storage', '{}'); deliveryMethod.value='screenshot'; selectedPayment.value=''; showPaymentForm.value=false; requestManualScreenshot.value=false; appliedCoupon.value=null; couponCodeInput.value=''; };
-                const reBuy = (h) => { cart.value={}; h.items.forEach(i=>{ const p=products.value.find(x=>x.name===i.name); if(p) cart.value[p.id]=i.quantity; }); safeSetStorage('mm_cart_storage', JSON.stringify(cart.value)); hideModalSafe('historyModal'); openModalSafe('cartModal'); };
                 const resendHistory = (h) => { let m=`🛒 補傳 #${h.id}\n總額：$${h.totalAmount}`; if(liff.isInClient()) liff.sendMessages([{type:'text',text:m}]).then(()=>liff.closeWindow()); else window.open(`https://line.me/R/msg/text/?${encodeURIComponent(m)}`,'_blank'); };
 
                 // 管理員功能
@@ -1941,7 +2417,72 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                 const triggerPaymentCheck = async () => { isAdminChecking.value=true; try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminCheckPayments'})}); showToast('已查帳'); setTimeout(fetchAdminDashboard,2000); } catch(e){} finally{ isAdminChecking.value=false; } };
                 const fetchLowStock = async () => { isAdminFetchingStock.value=true; try{ const r=await fetch(`${API_URL}?action=getLowStockItems`); const d=await r.json(); adminLowStockItems.value=d.lowStockItems||[]; openModalSafe('adminLowStockModal'); } catch(e){} finally{ isAdminFetchingStock.value=false; } };
                 const onAdminShipClick = (o) => { adminShipTarget.value=o; hideModalSafe('adminPanelModal'); openModalSafe('adminShipConfirmModal'); };
-                const executeAdminShip = async (auto) => { isAdminShipping.value=true; try{ const r=await fetch(API_URL,{ method:'POST', body:JSON.stringify({ action:'adminShipOrder', orderId:adminShipTarget.value.orderId, isAutoPush:auto, testMode:isAdminTestMode.value }) }); const j=await r.json(); if(j.status==='OK'){ showToast('成功'); if(!auto && j.backupText) fallbackCopyTextToClipboard(j.backupText); } else showToast(j.message); hideModalSafe('adminShipConfirmModal'); adminShipTarget.value=null; openModalSafe('adminPanelModal'); fetchAdminDashboard(); } catch(e){ showToast('失敗'); } finally { isAdminShipping.value=false; } };
+                // ★★★ 修正版：發貨後彈出備份視窗 ★★★
+                // ★★★ 終極修正版：解決視窗被擋住或沒彈出的問題 ★★★
+                const executeAdminShip = async (push) => { 
+                    isAdminShipping.value = true; 
+                    try { 
+                        // 1. 發送請求
+                        const res = await fetch(API_URL, { 
+                            method: 'POST', 
+                            body: JSON.stringify({
+                                action: 'adminShipOrder', 
+                                orderId: adminShipTarget.value.orderId, 
+                                isAutoPush: push, 
+                                testMode: isAdminTestMode.value
+                            }) 
+                        }); 
+                        const json = await res.json(); 
+
+                        // 2. 判斷結果
+                        if (json.status === 'OK') {
+                            showToast('✅ 發貨指令已執行'); 
+                            
+                            // 關閉確認視窗
+                            hideModalSafe('adminShipConfirmModal'); 
+                            
+                            // 3. 處理備份文字 (延遲開啟，防止被舊視窗擋住)
+                            if (json.backupText) {
+                                setTimeout(() => {
+                                    const textArea = document.getElementById('backupTextArea');
+                                    const modalEl = document.getElementById('manualCopyBackupModal');
+                                    
+                                    if (textArea && modalEl) {
+                                        // 填入文字
+                                        textArea.value = json.backupText; 
+                                        
+                                        // ★ 強制拉高層級，確保它在最上面 ★
+                                        modalEl.style.zIndex = "9999"; 
+                                        
+                                        // 開啟視窗
+                                        openModalSafe('manualCopyBackupModal');
+                                        
+                                        // 嘗試自動複製
+                                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                                            navigator.clipboard.writeText(json.backupText).catch(() => {});
+                                        }
+                                    } else {
+                                        alert("錯誤：找不到備份視窗元件 (manualCopyBackupModal)");
+                                    }
+                                }, 500); // 延遲 0.5 秒
+                            } else {
+                                // 如果成功但沒文字，可能是後端 GAS 沒更新
+                                console.warn("後端未回傳 backupText", json);
+                                // alert("注意：發貨成功但沒有回傳備份文字\n(請檢查 GAS 後端代碼是否已更新並部署)");
+                            }
+                            
+                            // 4. 刷新後台數據
+                            setTimeout(fetchAdminDashboard, 1000);
+                        } else {
+                            showToast('❌ 發貨失敗：' + (json.message || '未知錯誤'));
+                        }
+                    } catch(e){ 
+                        console.error(e);
+                        showToast('連線失敗，請檢查網路'); 
+                    } finally { 
+                        isAdminShipping.value = false; 
+                    }
+                };
                 const openAdminProductManager = async () => { openModalSafe('adminProductManagerModal'); try{ const r=await fetch(`${API_URL}?action=adminGetProductList`); const d=await r.json(); adminProducts.value=d.products||[]; } catch(e){} };
                 const adminEditProduct = (p) => { editingProduct.value={...p}; openModalSafe('adminProductEditModal'); };
                 const saveProduct = async () => { isSavingProduct.value=true; try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminSaveProduct',...editingProduct.value})}); showToast('已存'); hideModalSafe('adminProductEditModal'); setTimeout(openAdminProductManager,1000); setTimeout(initApp,2000); } catch(e){} finally{ isSavingProduct.value=false; } };
@@ -1979,9 +2520,9 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
 
                 onMounted(() => { initApp(); fetchFAQ(); setInterval(() => { now.value = Date.now(); }, 1000); });
 
-              return {
+          return {
                     // ===========================
-                    // 1. 原本穩定版包含的變數 (保留)
+                    // 1. 核心基礎變數
                     // ===========================
                     products, cart, currentCat, showFaq, categories, filteredProducts, 
                     updateCart, totalQty, totalPrice, cartItems, handleCheckout, 
@@ -1993,82 +2534,86 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                     togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, 
                     hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, canSelectDrive, 
                     showPaymentForm, openPaymentForm, paymentForm, paymentFormLabel, paymentFormPlaceholder, 
-                    submitPayment, isSubmittingPayment, 
+                    submitPayment, isSubmittingPayment, handleAccountInput,
                     openReportForHistory, getStatusBadge, openReportForPending, 
                     unreportedOrders, pendingSelection, 
                     openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, 
                     fetchOrderStatus, showToast, errorMsg, requestManualScreenshot,
+
+                    // ===========================
+                    // 2. 票券夾與核銷
+                    // ===========================
                     openWallet, walletFilter, showTicketImage, openVendorGuide, currentVendorGuide, 
                     availableTickets, usedTickets, currentDisplayTickets, 
                     openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery, 
-                    linkifiedGuideInstruction,
+                    linkifiedGuideInstruction, itemToRedeem, pendingTicketUrl,
                     giftOnlyItemsNames, driveOnlyItemsNames, getHistoryItemName, ticketSortType, 
-                    totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, 
+                    isOrderExpired, groupedHistory, getGroupTimer, 
                     validUnreportedOrders, isPendingAlertDismissed, isGroupExpired, dismissPendingAlertForever, 
                     isRepaying, goToPayFromPending, getOrderItems, getOrderAmount,
                     groupedUnreportedOrders, isGroupSelected, toggleGroupSelection, relatedOrdersToCancel, 
                     showSortMenu, sortType, setSortType, walletUnread,
                     confirmMergedWarning, isCartTestMode, isAdminTestMode, expiringTicketsList, 
-                    
-                    // 注意：這裡原本是 openRedeemFromReminder，下面會做別名處理
-                    openRedeemFromReminder, 
-                    
                     dismissExpiryToday,
                     isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, 
                     executeBatchRedeem, confirmBatchRedeemAction, selectAllTickets,
+
+                    // ===========================
+                    // 3. 優惠券系統 (精準對應)
+                    // ===========================
+                    hasActiveCoupons, useCouponChecked, couponCodeInput, appliedCoupon, 
+                    verifyCoupon, removeCoupon, isVerifyingCoupon,
+                    finalTotalPrice, totalSavings, // 折抵計算核心
+                    adminCoupons, isEditingCoupon, editingCouponData, openAdminCoupons,
+                    openCouponEditor, saveCoupon, deleteCoupon, selectedCouponItems,
+
+                    // ===========================
+                    // 4. 管理員後台功能
+                    // ===========================
                     isAdmin, openAdminLogin, verifyAdminPassword, adminPasswordInput, 
                     faqList, announcement, adminPendingOrders, fetchAdminDashboard, 
                     onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, 
                     adminStats, adminLowStockItems,
+                    marqueeConfig, marqueeDuration, saveMarqueeSettings, isSavingMarquee,
                     triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning, 
                     triggerPaymentCheck, isAdminChecking, isAdminFetchingStock, fetchLowStock,
                     clearRedeemedHistory, confirmClearHistoryAction,
-                    // fetchExpiringItems (這個舊版可能有，新版用 computed 處理，保留也無妨)
                     adminExpiringItems, adminBestSellers, openModalSafe,
                     
-                    // v2.99 Patches Exports
+                    // 商品與訂單管理
                     openAdminProductManager, adminProducts, adminEditProduct, editingProduct, saveProduct, isSavingProduct,
                     openAdminOrderManager, adminAllOrders, openAdminOrderEdit, editingOrder, saveAdminOrder, deleteAdminOrder, isSavingOrder,
-                    copyMomoInfo, copyOrderBackup,
-
-                    // ===========================
-                    // 2. ★★★ V3.0 新增補漏區 (必加！) ★★★
-                    // ===========================
+                    copyMomoInfo, copyOrderBackup, 
                     
-                    // [A] 優惠券系統 (缺少這些會導致優惠券無法使用)
-                    hasActiveCoupons, 
-                    useCouponChecked, 
-                    couponCodeInput, 
-                    appliedCoupon, 
-                    verifyCoupon, 
-                    removeCoupon, 
-                    isVerifyingCoupon,
-                    finalTotalPrice, // 計算折抵後總金額的重要變數
+                    // 系統與檢查邏輯
+                    vendorInfoMap, checkGuestStatus, lastOrderIds,
 
-                    // [B] UI 與邏輯修復 (缺少這些會導致彈窗報錯)
-                    itemToRedeem,     // 核銷確認視窗需要
-                    pendingTicketUrl, // 合併訂單警告視窗需要
-                    vendorInfoMap,    // 廠商 Logo 列表
-                    checkGuestStatus, // 訪客身分檢查
-                    lastOrderIds,     // 結帳後顯示單號
-marqueeConfig,
-isSavingMarquee,
-saveMarqueeSettings,
-                  adminCoupons, 
-    isEditingCoupon, 
-    editingCouponData, 
-    openAdminCoupons, 
-    openCouponEditor, 
-    saveCoupon, 
-    deleteCoupon ,
-                    // [C] 名稱對應修復 (Alias)
-                    // 舊版 HTML 可能呼叫 openWallet... 但程式裡是 openRedeem...
-                    openWalletFromReminder: openRedeemFromReminder 
-
-                }; // 結束 return
+                    // ===========================
+                    // 5. 名稱對應修復 (Alias)
+                    // ===========================
+                    openRedeemFromReminder, // 提醒視窗點擊用
+                    openWalletFromReminder: openRedeemFromReminder // 兼容舊版呼叫
+                };// 結束 return
             } // 結束 setup
         }).mount('#app'); // 結束 Vue
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
