@@ -2071,8 +2071,7 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                     couponCodeInput.value = ''; // 順便清空輸入框
                     showToast('已移除優惠券');
                 };
-                const fetchFAQ = async () => { try { const r=await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getFAQ' }) }); const j=await r.json(); if(j.status==='success'){ faqList.value=j.data; if(j.announcements?.length){ let l=[]; for(let i=0;i<10;i++) l=l.concat(j.announcements); announcement.value=l.join("        ✦        "); } } } catch(e){ announcement.value="歡迎光臨"; } };
-
+                
                 // ==========================
                 // G. 購物車與訂單互動
                 // ==========================
@@ -2281,6 +2280,29 @@ const reBuy = (h) => {
                 // ==========================
                 // I. 付款回報與管理員
                 // ==========================
+                const fetchFAQ = async () => { 
+    try { 
+        const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getFAQ' }) }); 
+        const j = await r.json(); 
+        if(j.status === 'success') { 
+            faqList.value = j.data; 
+            // --- 加入速度讀取 ---
+            if (j.speed) {
+                marqueeDuration.value = j.speed;
+                marqueeConfig.value.speed = j.speed;
+            }
+            // --- 公告處理 ---
+            if(j.announcements?.length && j.announcements[0].trim() !== ""){ 
+                let rawText = j.announcements[0];
+                marqueeConfig.value.text = rawText;
+                let formattedText = rawText.replace(/\n/g, "        ✦        ");
+                announcement.value = (formattedText + "        ✦        ").repeat(10); 
+            } else {
+                announcement.value = null; // 修正：沒公告就隱藏
+            }
+        } 
+    } catch(e) { announcement.value = null; } 
+};
                 const openPaymentForm = () => { if(selectedBankInfos.value.length===1) paymentForm.value.bankCode=selectedBankInfos.value[0].code; showPaymentForm.value=true; };
                 const paymentFormPlaceholder = computed(() => paymentForm.value.bankCode==='396'?'輸入街口暱稱':'輸入帳號後五碼');
                 const paymentFormLabel = computed(() => paymentForm.value.bankCode==='396'?'街口名稱：':'帳號末五碼：');
@@ -2577,6 +2599,7 @@ const reBuy = (h) => {
     </script>
 </body>
 </html>
+
 
 
 
