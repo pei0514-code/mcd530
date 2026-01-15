@@ -1058,7 +1058,18 @@
                         <div class="col-6"><label>數值 (20元 或 0.9折)</label><input type="number" step="0.01" class="form-control" v-model="editingCouponData.value" required></div>
                         <div class="col-6"><label>低消門檻</label><input type="number" class="form-control" v-model="editingCouponData.min" required></div>
                         <div class="col-6"><label>單人限用次數</label><input type="number" class="form-control" v-model="editingCouponData.uLimit"></div>
-                        <div class="col-12"><label>適用商品關鍵字 (選填)</label><input class="form-control" v-model="editingCouponData.item" placeholder="留空則全部適用"></div>
+                       <div class="col-12">
+    <label class="form-label-small fw-bold">適用商品 (可多選，不勾選則全館適用)</label>
+    <div class="border rounded p-2 bg-light" style="max-height: 150px; overflow-y: auto;">
+        <div v-for="p in products" :key="p.id" class="form-check form-check-inline mb-1 me-3">
+            <input class="form-check-input" type="checkbox" :id="'cp-prod-'+p.id" :value="p.name" v-model="selectedCouponItems">
+            <label class="form-check-label small" :for="'cp-prod-'+p.id">{{ p.name }}</label>
+        </div>
+    </div>
+    <div class="text-muted mt-1" style="font-size: 10px;">
+        <i class="fas fa-check-circle me-1"></i>已選：{{ selectedCouponItems.length > 0 ? selectedCouponItems.join(', ') : '全部商品適用' }}
+    </div>
+</div>
                         <div class="col-6"><label>開始日期</label><input type="date" class="form-control" v-model="editingCouponData.start"></div>
                         <div class="col-6"><label>結束日期</label><input type="date" class="form-control" v-model="editingCouponData.end"></div>
                         <div class="col-12"><label>總張數限制 (0=不限)</label><input type="number" class="form-control" v-model="editingCouponData.tLimit"></div>
@@ -1619,6 +1630,7 @@
                 // ==========================
                 // A. 變數定義
                 // ==========================
+                const selectedCouponItems = ref([]);
                 const adminCoupons = ref([]); // 優惠券列表
                 const isEditingCoupon = ref(false); // 是否正在編輯模式
                 const editingCouponData = ref({}); // 正在編輯的資料
@@ -1850,10 +1862,49 @@
                 // --- 優惠券管理邏輯 (單行極簡版) ---
 const openAdminCoupons = async () => { openModalSafe('couponAdminModal'); showToast('載入優惠券中...'); try { const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCouponAction', subAction: 'list' }) }); const j = await res.json(); if(j.status === 'success') { adminCoupons.value = j.coupons; } } catch(e) { showToast('載入失敗'); } };
 
-const openCouponEditor = (coupon) => { isEditingCoupon.value = true; if (coupon) { isNewCoupon.value = false; originalCouponCode.value = coupon.code; editingCouponData.value = JSON.parse(JSON.stringify(coupon)); if(editingCouponData.value.start) editingCouponData.value.start = new Date(editingCouponData.value.start).toISOString().split('T')[0]; if(editingCouponData.value.end) editingCouponData.value.end = new Date(editingCouponData.value.end).toISOString().split('T')[0]; } else { isNewCoupon.value = true; editingCouponData.value = { type: '減價', value: 0, min: 0, uLimit: 1, tLimit: 0, item: '' }; } };
+const openCouponEditor = (coupon) => {
+                    isEditingCoupon.value = true;
+                    if (coupon) {
+                        isNewCoupon.value = false; 
+                        originalCouponCode.value = coupon.code;
+                        editingCouponData.value = JSON.parse(JSON.stringify(coupon));
+                        
+                        // ★★★ 新增邏輯：把 "漢堡,薯条" 拆解成 ['漢堡', '薯条'] 給勾選框用
+                        if (coupon.item && String(coupon.item).trim()) {
+                            // 使用逗號分割，並去除多餘空白
+                            selectedCouponItems.value = String(coupon.item).split(',').map(s => s.trim()).filter(s => s);
+                        } else {
+                            selectedCouponItems.value = [];
+                        }
 
-const saveCoupon = async () => { showToast('儲存中...'); try { const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCouponAction', subAction: 'save', isNew: isNewCoupon.value, oldCode: originalCouponCode.value, data: editingCouponData.value }) }); const j = await res.json(); if (j.status === 'success') { showToast('儲存成功'); isEditingCoupon.value = false; openAdminCoupons(); } else { showToast('儲存失敗'); } } catch(e) { showToast('連線錯誤'); } };
+                        // 日期格式化
+                        if(editingCouponData.value.start) editingCouponData.value.start = new Date(editingCouponData.value.start).toISOString().split('T')[0];
+                        if(editingCouponData.value.end) editingCouponData.value.end = new Date(editingCouponData.value.end).toISOString().split('T')[0];
+                    } else {
+                        isNewCoupon.value = true; 
+                        editingCouponData.value = { type: '減價', value: 0, min: 0, uLimit: 1, tLimit: 0, item: '' };
+                        selectedCouponItems.value = []; // 新增時清空
+                    }
+                };
+const saveCoupon = async () => {
+                    showToast('儲存中...');
+                    
+                    // ★★★ 新增邏輯：儲存前把勾選的陣列組合成字串 "A,B,C"
+                    // 這樣後端 Google Sheet 就會存入逗號分隔的字串
+                    editingCouponData.value.item = selectedCouponItems.value.join(',');
 
+                    try {
+                        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCouponAction', subAction: 'save', isNew: isNewCoupon.value, oldCode: originalCouponCode.value, data: editingCouponData.value }) });
+                        const j = await res.json(); 
+                        if (j.status === 'success') { 
+                            showToast('儲存成功'); 
+                            isEditingCoupon.value = false; 
+                            openAdminCoupons(); 
+                        } else { 
+                            showToast('儲存失敗'); 
+                        }
+                    } catch(e) { showToast('連線錯誤'); }
+                };
 const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠券嗎？')) return; try { const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCouponAction', subAction: 'delete', code: code }) }); const j = await res.json(); if(j.status === 'success') { showToast('已刪除'); openAdminCoupons(); } } catch(e) { showToast('刪除失敗'); } };
                 const safeParseDate = (dateStr) => { if (!dateStr) return new Date(); const s = String(dateStr); const m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})$/); return m ? new Date(m[1], m[2]-1, m[3], m[4], m[5], m[6]) : new Date(s); };
                 const isOrderExpired = (h) => { const b = getStatusBadge(h); if (b.text !== '💰 待付款') return false; const d = safeParseDate(h.timestamp); return !isNaN(d.getTime()) && (now.value - d.getTime()) >= 1800000; };
@@ -1935,7 +1986,54 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                 const togglePayment = (c) => selectedPayment.value = c;
                 const copyText = (t) => navigator.clipboard.writeText(t).then(()=>showToast('已複製')).catch(()=>showToast('複製失敗'));
                 
-                const verifyCoupon = async () => { if (!couponCodeInput.value) return; isVerifyingCoupon.value = true; try { const data = await (await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'verifyCoupon', code: couponCodeInput.value, userId: userProfile.value.userId }) })).json(); if (data.status === 'success') { const c = data.coupon; if (totalPrice.value < c.minSpend) { showToast(`此優惠券需滿 $${c.minSpend} 才能使用`); appliedCoupon.value = null; return; } if (c.applicableItems && c.applicableItems.trim() !== '') { const hasItem = cartItems.value.some(item => c.applicableItems.includes(item.name) || item.name.includes(c.applicableItems)); if (!hasItem) { showToast(`此優惠券僅適用於：${c.applicableItems}`); appliedCoupon.value = null; return; } } appliedCoupon.value = c; showToast(`優惠券 "${c.title}" 已套用！`); couponCodeInput.value = ''; } else { showToast(data.message); appliedCoupon.value = null; } } catch (e) { showToast('驗證失敗，請檢查網路'); } finally { isVerifyingCoupon.value = false; } };  const removeCoupon = () => { appliedCoupon.value = null; couponCodeInput.value = ''; };
+                const verifyCoupon = async () => {
+                    if (!couponCodeInput.value) return;
+                    isVerifyingCoupon.value = true;
+                    try {
+                        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'verifyCoupon', code: couponCodeInput.value, userId: getEffectiveUserId() }) });
+                        const data = await res.json();
+                        
+                        if (data.status === 'success') {
+                            const c = data.coupon;
+                            
+                            // 1. 檢查低消
+                            if (totalPrice.value < c.minSpend) { 
+                                showToast(`需滿 $${c.minSpend} 才能使用`); 
+                                appliedCoupon.value = null; 
+                                return; 
+                            }
+
+                            // 2. ★★★ 檢查適用商品 (精準比對版) ★★★
+                            // 如果 applicableItems 是空的，代表全館適用，直接通過
+                            if (c.applicableItems && String(c.applicableItems).trim() !== '') {
+                                // 把後端回傳的 "A,B,C" 轉成陣列 ["A", "B", "C"]
+                                const validItems = String(c.applicableItems).split(',').map(s => s.trim());
+                                
+                                // 檢查購物車內是否有任何一個商品在清單中
+                                const hasItem = cartItems.value.some(item => validItems.includes(item.name));
+                                
+                                if (!hasItem) { 
+                                    showToast(`此優惠券僅適用於指定商品`); 
+                                    // console.log('購物車:', cartItems.value.map(i=>i.name), '優惠券適用:', validItems); // 除錯用
+                                    appliedCoupon.value = null; 
+                                    return; 
+                                }
+                            }
+
+                            appliedCoupon.value = c; 
+                            showToast(`優惠券 "${c.title}" 已套用！`); 
+                            couponCodeInput.value = '';
+                        } else { 
+                            showToast(data.message); 
+                            appliedCoupon.value = null; 
+                        }
+                    } catch (e) { 
+                        console.error(e);
+                        showToast('驗證失敗'); 
+                    } finally { 
+                        isVerifyingCoupon.value = false; 
+                    }
+                };
                 const fetchFAQ = async () => { try { const r=await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getFAQ' }) }); const j=await r.json(); if(j.status==='success'){ faqList.value=j.data; if(j.announcements?.length){ let l=[]; for(let i=0;i<10;i++) l=l.concat(j.announcements); announcement.value=l.join("        ✦        "); } } } catch(e){ announcement.value="歡迎光臨"; } };
 
                 // ==========================
@@ -2433,7 +2531,7 @@ saveMarqueeSettings,
     editingCouponData, 
     openAdminCoupons, 
     openCouponEditor, 
-    saveCoupon, 
+    saveCoupon, selectedCouponItems,
     deleteCoupon ,submitPayment, 
                     isSubmittingPayment,
                     handleAccountInput,
@@ -2447,6 +2545,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
