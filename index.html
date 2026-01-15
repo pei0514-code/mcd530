@@ -1855,11 +1855,16 @@
                     return res;
                 });
                 
+           // --- Logic Helpers (修正版：補回漏掉的變數) ---
                 const giftOnlyItemsNames = computed(() => cartItems.value.filter(item => item.driveStock < item.quantity && item.giftStock >= item.quantity).map(i => i.name));
                 const driveOnlyItemsNames = computed(() => cartItems.value.filter(item => item.giftStock < item.quantity && item.driveStock >= item.quantity).map(i => i.name));
+                
+                // ★★★ 補上這兩行，解決 ReferenceError ★★★
+                const hasGiftOnlyItems = computed(() => cartItems.value.some(item => item.driveStock < item.quantity && item.giftStock >= item.quantity));
+                const hasDriveOnlyItems = computed(() => cartItems.value.some(item => item.giftStock < item.quantity && item.driveStock >= item.quantity));
+                
                 watch(canSelectGift, (val) => { if (!val && deliveryMethod.value === 'gift') { deliveryMethod.value = 'screenshot'; } });
                 watch(deliveryMethod, (newVal) => { if (newVal === 'screenshot') { selectedPayment.value = '822'; } }, { immediate: true });
-
                 // Init Logic
                 const initApp = async () => {
                     isLoadingData.value = true; errorMsg.value = '';
@@ -2068,6 +2073,7 @@
     </script>
 </body>
 </html>    
+
 
 
 
