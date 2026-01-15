@@ -2071,7 +2071,8 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                     couponCodeInput.value = ''; // 順便清空輸入框
                     showToast('已移除優惠券');
                 };
-                
+                const fetchFAQ = async () => { try { const r=await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getFAQ' }) }); const j=await r.json(); if(j.status==='success'){ faqList.value=j.data; if(j.announcements?.length){ let l=[]; for(let i=0;i<10;i++) l=l.concat(j.announcements); announcement.value=l.join("        ✦        "); } } } catch(e){ announcement.value="歡迎光臨"; } };
+
                 // ==========================
                 // G. 購物車與訂單互動
                 // ==========================
@@ -2280,29 +2281,6 @@ const reBuy = (h) => {
                 // ==========================
                 // I. 付款回報與管理員
                 // ==========================
-                const fetchFAQ = async () => { 
-    try { 
-        const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getFAQ' }) }); 
-        const j = await r.json(); 
-        if(j.status === 'success') { 
-            faqList.value = j.data; 
-            // --- 加入速度讀取 ---
-            if (j.speed) {
-                marqueeDuration.value = j.speed;
-                marqueeConfig.value.speed = j.speed;
-            }
-            // --- 公告處理 ---
-            if(j.announcements?.length && j.announcements[0].trim() !== ""){ 
-                let rawText = j.announcements[0];
-                marqueeConfig.value.text = rawText;
-                let formattedText = rawText.replace(/\n/g, "        ✦        ");
-                announcement.value = (formattedText + "        ✦        ").repeat(10); 
-            } else {
-                announcement.value = null; // 修正：沒公告就隱藏
-            }
-        } 
-    } catch(e) { announcement.value = null; } 
-};
                 const openPaymentForm = () => { if(selectedBankInfos.value.length===1) paymentForm.value.bankCode=selectedBankInfos.value[0].code; showPaymentForm.value=true; };
                 const paymentFormPlaceholder = computed(() => paymentForm.value.bankCode==='396'?'輸入街口暱稱':'輸入帳號後五碼');
                 const paymentFormLabel = computed(() => paymentForm.value.bankCode==='396'?'街口名稱：':'帳號末五碼：');
@@ -2407,6 +2385,7 @@ const reBuy = (h) => {
                     hideModalSafe('successModal'); resetCart(); orderHistory.value=orderHistory.value.map(h=>{ if(lastOrderIds.value.includes(h.id)) return {...h, paymentNote:'已回報'}; return h; }); safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
                 };
                 const resetCart = () => { cart.value={}; safeSetStorage('mm_cart_storage', '{}'); deliveryMethod.value='screenshot'; selectedPayment.value=''; showPaymentForm.value=false; requestManualScreenshot.value=false; appliedCoupon.value=null; couponCodeInput.value=''; };
+                const reBuy = (h) => { cart.value={}; h.items.forEach(i=>{ const p=products.value.find(x=>x.name===i.name); if(p) cart.value[p.id]=i.quantity; }); safeSetStorage('mm_cart_storage', JSON.stringify(cart.value)); hideModalSafe('historyModal'); openModalSafe('cartModal'); };
                 const resendHistory = (h) => { let m=`🛒 補傳 #${h.id}\n總額：$${h.totalAmount}`; if(liff.isInClient()) liff.sendMessages([{type:'text',text:m}]).then(()=>liff.closeWindow()); else window.open(`https://line.me/R/msg/text/?${encodeURIComponent(m)}`,'_blank'); };
 
                 // 管理員功能
@@ -2520,9 +2499,9 @@ const reBuy = (h) => {
 
                 onMounted(() => { initApp(); fetchFAQ(); setInterval(() => { now.value = Date.now(); }, 1000); });
 
-          return {
+              return {
                     // ===========================
-                    // 1. 核心基礎變數
+                    // 1. 原本穩定版包含的變數 (保留)
                     // ===========================
                     products, cart, currentCat, showFaq, categories, filteredProducts, 
                     updateCart, totalQty, totalPrice, cartItems, handleCheckout, 
@@ -2534,74 +2513,87 @@ const reBuy = (h) => {
                     togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, 
                     hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, canSelectDrive, 
                     showPaymentForm, openPaymentForm, paymentForm, paymentFormLabel, paymentFormPlaceholder, 
-                    submitPayment, isSubmittingPayment, handleAccountInput,
+                    submitPayment, isSubmittingPayment, 
                     openReportForHistory, getStatusBadge, openReportForPending, 
                     unreportedOrders, pendingSelection, 
                     openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, 
                     fetchOrderStatus, showToast, errorMsg, requestManualScreenshot,
-
-                    // ===========================
-                    // 2. 票券夾與核銷
-                    // ===========================
                     openWallet, walletFilter, showTicketImage, openVendorGuide, currentVendorGuide, 
                     availableTickets, usedTickets, currentDisplayTickets, 
                     openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery, 
-                    linkifiedGuideInstruction, itemToRedeem, pendingTicketUrl,
+                    linkifiedGuideInstruction,
                     giftOnlyItemsNames, driveOnlyItemsNames, getHistoryItemName, ticketSortType, 
-                    isOrderExpired, groupedHistory, getGroupTimer, 
+                    totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, 
                     validUnreportedOrders, isPendingAlertDismissed, isGroupExpired, dismissPendingAlertForever, 
                     isRepaying, goToPayFromPending, getOrderItems, getOrderAmount,
                     groupedUnreportedOrders, isGroupSelected, toggleGroupSelection, relatedOrdersToCancel, 
                     showSortMenu, sortType, setSortType, walletUnread,
                     confirmMergedWarning, isCartTestMode, isAdminTestMode, expiringTicketsList, 
+                    
+                    // 注意：這裡原本是 openRedeemFromReminder，下面會做別名處理
+                    openRedeemFromReminder, 
+                    
                     dismissExpiryToday,
                     isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, 
                     executeBatchRedeem, confirmBatchRedeemAction, selectAllTickets,
-
-                    // ===========================
-                    // 3. 優惠券系統 (精準對應)
-                    // ===========================
-                    hasActiveCoupons, useCouponChecked, couponCodeInput, appliedCoupon, 
-                    verifyCoupon, removeCoupon, isVerifyingCoupon,
-                    finalTotalPrice, totalSavings, // 折抵計算核心
-                    adminCoupons, isEditingCoupon, editingCouponData, openAdminCoupons,
-                    openCouponEditor, saveCoupon, deleteCoupon, selectedCouponItems,
-
-                    // ===========================
-                    // 4. 管理員後台功能
-                    // ===========================
                     isAdmin, openAdminLogin, verifyAdminPassword, adminPasswordInput, 
                     faqList, announcement, adminPendingOrders, fetchAdminDashboard, 
                     onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, 
                     adminStats, adminLowStockItems,
-                    marqueeConfig, marqueeDuration, saveMarqueeSettings, isSavingMarquee,
                     triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning, 
                     triggerPaymentCheck, isAdminChecking, isAdminFetchingStock, fetchLowStock,
                     clearRedeemedHistory, confirmClearHistoryAction,
+                    // fetchExpiringItems (這個舊版可能有，新版用 computed 處理，保留也無妨)
                     adminExpiringItems, adminBestSellers, openModalSafe,
                     
-                    // 商品與訂單管理
+                    // v2.99 Patches Exports
                     openAdminProductManager, adminProducts, adminEditProduct, editingProduct, saveProduct, isSavingProduct,
                     openAdminOrderManager, adminAllOrders, openAdminOrderEdit, editingOrder, saveAdminOrder, deleteAdminOrder, isSavingOrder,
-                    copyMomoInfo, copyOrderBackup, 
-                    
-                    // 系統與檢查邏輯
-                    vendorInfoMap, checkGuestStatus, lastOrderIds,
+                    copyMomoInfo, copyOrderBackup,
 
                     // ===========================
-                    // 5. 名稱對應修復 (Alias)
+                    // 2. ★★★ V3.0 新增補漏區 (必加！) ★★★
                     // ===========================
-                    openRedeemFromReminder, // 提醒視窗點擊用
-                    openWalletFromReminder: openRedeemFromReminder // 兼容舊版呼叫
-                };// 結束 return
+                    
+                    // [A] 優惠券系統 (缺少這些會導致優惠券無法使用)
+                    hasActiveCoupons, 
+                    useCouponChecked, 
+                    couponCodeInput, 
+                    appliedCoupon, 
+                    verifyCoupon, 
+                    removeCoupon, 
+                    isVerifyingCoupon,
+                    finalTotalPrice, // 計算折抵後總金額的重要變數
+
+                    // [B] UI 與邏輯修復 (缺少這些會導致彈窗報錯)
+                    itemToRedeem,     // 核銷確認視窗需要
+                    pendingTicketUrl, // 合併訂單警告視窗需要
+                    vendorInfoMap,    // 廠商 Logo 列表
+                    checkGuestStatus, // 訪客身分檢查
+                    lastOrderIds,     // 結帳後顯示單號
+marqueeConfig,
+isSavingMarquee,
+saveMarqueeSettings,
+                  adminCoupons, 
+    isEditingCoupon, 
+    editingCouponData, 
+    openAdminCoupons, showProductDetail,
+    reBuy,
+    openCouponEditor, 
+    saveCoupon, selectedCouponItems,
+    deleteCoupon ,submitPayment, 
+                    isSubmittingPayment,
+                    handleAccountInput,
+                    // [C] 名稱對應修復 (Alias)
+                    // 舊版 HTML 可能呼叫 openWallet... 但程式裡是 openRedeem...
+                    openWalletFromReminder: openRedeemFromReminder 
+
+                }; // 結束 return
             } // 結束 setup
         }).mount('#app'); // 結束 Vue
     </script>
 </body>
 </html>
-
-
-
 
 
 
