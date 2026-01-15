@@ -1640,6 +1640,9 @@
                 // ==========================
                 // A. 變數定義
                 // ==========================
+                // --- 補上跑馬燈相關變數 ---
+                const marqueeDuration = ref(30); // 預設 20 秒跑一次
+                const isSavingMarquee = ref(false); // 儲存狀態開關
                 const selectedCouponItems = ref([]);
                 const adminCoupons = ref([]); // 優惠券列表
                 const isEditingCoupon = ref(false); // 是否正在編輯模式
@@ -2599,6 +2602,7 @@ const reBuy = (h) => {
     </script>
 </body>
 </html>
+
 
 
 
