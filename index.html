@@ -2078,8 +2078,24 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                 // ==========================
                 const updateCart = (p, d) => { if(d>0 && (cart.value[p.id]||0)>=Number(p.stock)){ showToast('庫存上限'); return; } const n=(cart.value[p.id]||0)+d; if(n<=0) delete cart.value[p.id]; else if(n<=Number(p.stock)) cart.value[p.id]=n; safeSetStorage('mm_cart_storage', JSON.stringify(cart.value)); };
                 
-                const showProductDetail = (p) => { selectedProduct.value = p; openModalSafe('productDetailModal'); };
-                
+                // --- 修復：商品圖點選說明 ---
+const showProductDetail = (p) => {
+    selectedProduct.value = p;
+    openModalSafe('productDetailModal');
+};
+
+// --- 修復：再次購買 (解決 openCart 未定義報錯) ---
+const reBuy = (h) => {
+    cart.value = {}; 
+    h.items.forEach(it => {
+        const p = products.value.find(x => x.name === it.name);
+        if (p) cart.value[p.id] = it.quantity;
+    });
+    safeSetStorage('mm_cart_storage', JSON.stringify(cart.value));
+    hideModalSafe('historyModal');
+    // 確保這裡呼叫的是 openModalSafe 而不是可能未定義的 openCart
+    openModalSafe('cartModal'); 
+};
                 const openCancelModal = (h) => { hideModalSafe('historyModal'); orderToCancel.value = h; relatedOrdersToCancel.value = []; if(h.id.includes('-')){ const base=h.id.split('-')[0]; relatedOrdersToCancel.value=orderHistory.value.filter(o=>o.id.startsWith(base)&&o.id!==h.id&&getStatusBadge(o).canCancel); } openModalSafe('cancelConfirmModal'); };
                 const confirmCancel = async (mode='single') => { if(!orderToCancel.value) return; const t=[orderToCancel.value]; if(mode==='all') t.push(...relatedOrdersToCancel.value); hideModalSafe('cancelConfirmModal'); showToast('取消中...'); try{ await Promise.all(t.map(o=>fetch(API_URL,{ method:'POST', body:JSON.stringify({ action:'cancelOrder', orderId:o.id, userId:getEffectiveUserId() }) }))); orderHistory.value=orderHistory.value.map(h=>{ if(t.find(x=>x.id===h.id)) return {...h, paymentNote:'用戶自行取消'}; return h; }); safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value)); unreportedOrders.value=unreportedOrders.value.filter(id=>!t.find(x=>x.id===id)); safeSetStorage('mm_pending_payment_orders', JSON.stringify(unreportedOrders.value)); showToast('已取消'); setTimeout(initApp, 1000); } catch(e){ showToast('取消失敗'); } };
                 
@@ -2561,7 +2577,8 @@ saveMarqueeSettings,
                   adminCoupons, 
     isEditingCoupon, 
     editingCouponData, 
-    openAdminCoupons, 
+    openAdminCoupons, showProductDetail,
+    reBuy,
     openCouponEditor, 
     saveCoupon, selectedCouponItems,
     deleteCoupon ,submitPayment, 
@@ -2577,6 +2594,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
