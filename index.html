@@ -1562,13 +1562,6 @@
             </div>
         </div>
         <!-- Admin Login Modal -->
-      這段代碼中，最嚴重的問題依然是標籤的嵌套錯誤，這就是導致你看到 Template compilation error 的原因。
-
-在 Vue 的運作邏輯中，所有的 <script> 載入和你的 JavaScript 程式碼，絕對不能放在 <div id="app"> 裡面。
-
-以下是修正後的結構，我已經幫你把標籤對齊，並修正了 setup() 以上的所有代碼：
-
-HTML
 
         <div class="modal fade" id="adminLoginModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 280px;">
@@ -2622,6 +2615,7 @@ const reBuy = (h) => {
     </script>
 </body>
 </html>
+
 
 
 
