@@ -2499,9 +2499,9 @@ const reBuy = (h) => {
 
                 onMounted(() => { initApp(); fetchFAQ(); setInterval(() => { now.value = Date.now(); }, 1000); });
 
-              return {
+          return {
                     // ===========================
-                    // 1. 原本穩定版包含的變數 (保留)
+                    // 1. 核心基礎變數
                     // ===========================
                     products, cart, currentCat, showFaq, categories, filteredProducts, 
                     updateCart, totalQty, totalPrice, cartItems, handleCheckout, 
@@ -2513,87 +2513,72 @@ const reBuy = (h) => {
                     togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, 
                     hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, canSelectDrive, 
                     showPaymentForm, openPaymentForm, paymentForm, paymentFormLabel, paymentFormPlaceholder, 
-                    submitPayment, isSubmittingPayment, 
+                    submitPayment, isSubmittingPayment, handleAccountInput,
                     openReportForHistory, getStatusBadge, openReportForPending, 
                     unreportedOrders, pendingSelection, 
                     openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, 
                     fetchOrderStatus, showToast, errorMsg, requestManualScreenshot,
+
+                    // ===========================
+                    // 2. 票券夾與核銷
+                    // ===========================
                     openWallet, walletFilter, showTicketImage, openVendorGuide, currentVendorGuide, 
                     availableTickets, usedTickets, currentDisplayTickets, 
                     openRedeemConfirm, confirmRedeemAction, isRedeeming, ticketSearchQuery, 
-                    linkifiedGuideInstruction,
+                    linkifiedGuideInstruction, itemToRedeem, pendingTicketUrl,
                     giftOnlyItemsNames, driveOnlyItemsNames, getHistoryItemName, ticketSortType, 
-                    totalSavings, getRemainingTime, isOrderExpired, groupedHistory, getGroupTimer, 
+                    isOrderExpired, groupedHistory, getGroupTimer, 
                     validUnreportedOrders, isPendingAlertDismissed, isGroupExpired, dismissPendingAlertForever, 
                     isRepaying, goToPayFromPending, getOrderItems, getOrderAmount,
                     groupedUnreportedOrders, isGroupSelected, toggleGroupSelection, relatedOrdersToCancel, 
                     showSortMenu, sortType, setSortType, walletUnread,
                     confirmMergedWarning, isCartTestMode, isAdminTestMode, expiringTicketsList, 
-                    
-                    // 注意：這裡原本是 openRedeemFromReminder，下面會做別名處理
-                    openRedeemFromReminder, 
-                    
                     dismissExpiryToday,
                     isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, 
                     executeBatchRedeem, confirmBatchRedeemAction, selectAllTickets,
+
+                    // ===========================
+                    // 3. 優惠券系統 (精準對應)
+                    // ===========================
+                    hasActiveCoupons, useCouponChecked, couponCodeInput, appliedCoupon, 
+                    verifyCoupon, removeCoupon, isVerifyingCoupon,
+                    finalTotalPrice, totalSavings, // 折抵計算核心
+                    adminCoupons, isEditingCoupon, editingCouponData, openAdminCoupons,
+                    openCouponEditor, saveCoupon, deleteCoupon, selectedCouponItems,
+
+                    // ===========================
+                    // 4. 管理員後台功能
+                    // ===========================
                     isAdmin, openAdminLogin, verifyAdminPassword, adminPasswordInput, 
                     faqList, announcement, adminPendingOrders, fetchAdminDashboard, 
                     onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, 
                     adminStats, adminLowStockItems,
+                    marqueeConfig, marqueeDuration, saveMarqueeSettings, isSavingMarquee,
                     triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning, 
                     triggerPaymentCheck, isAdminChecking, isAdminFetchingStock, fetchLowStock,
                     clearRedeemedHistory, confirmClearHistoryAction,
-                    // fetchExpiringItems (這個舊版可能有，新版用 computed 處理，保留也無妨)
                     adminExpiringItems, adminBestSellers, openModalSafe,
                     
-                    // v2.99 Patches Exports
+                    // 商品與訂單管理
                     openAdminProductManager, adminProducts, adminEditProduct, editingProduct, saveProduct, isSavingProduct,
                     openAdminOrderManager, adminAllOrders, openAdminOrderEdit, editingOrder, saveAdminOrder, deleteAdminOrder, isSavingOrder,
-                    copyMomoInfo, copyOrderBackup,
-
-                    // ===========================
-                    // 2. ★★★ V3.0 新增補漏區 (必加！) ★★★
-                    // ===========================
+                    copyMomoInfo, copyOrderBackup, 
                     
-                    // [A] 優惠券系統 (缺少這些會導致優惠券無法使用)
-                    hasActiveCoupons, 
-                    useCouponChecked, 
-                    couponCodeInput, 
-                    appliedCoupon, 
-                    verifyCoupon, 
-                    removeCoupon, 
-                    isVerifyingCoupon,
-                    finalTotalPrice, // 計算折抵後總金額的重要變數
+                    // 系統與檢查邏輯
+                    vendorInfoMap, checkGuestStatus, lastOrderIds,
 
-                    // [B] UI 與邏輯修復 (缺少這些會導致彈窗報錯)
-                    itemToRedeem,     // 核銷確認視窗需要
-                    pendingTicketUrl, // 合併訂單警告視窗需要
-                    vendorInfoMap,    // 廠商 Logo 列表
-                    checkGuestStatus, // 訪客身分檢查
-                    lastOrderIds,     // 結帳後顯示單號
-marqueeConfig,
-isSavingMarquee,
-saveMarqueeSettings,
-                  adminCoupons, 
-    isEditingCoupon, 
-    editingCouponData, 
-    openAdminCoupons, showProductDetail,
-    reBuy,
-    openCouponEditor, 
-    saveCoupon, selectedCouponItems,
-    deleteCoupon ,submitPayment, 
-                    isSubmittingPayment,
-                    handleAccountInput,
-                    // [C] 名稱對應修復 (Alias)
-                    // 舊版 HTML 可能呼叫 openWallet... 但程式裡是 openRedeem...
-                    openWalletFromReminder: openRedeemFromReminder 
-
-                }; // 結束 return
+                    // ===========================
+                    // 5. 名稱對應修復 (Alias)
+                    // ===========================
+                    openRedeemFromReminder, // 提醒視窗點擊用
+                    openWalletFromReminder: openRedeemFromReminder // 兼容舊版呼叫
+                };// 結束 return
             } // 結束 setup
         }).mount('#app'); // 結束 Vue
     </script>
 </body>
 </html>
+
 
 
 
