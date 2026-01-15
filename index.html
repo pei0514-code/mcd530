@@ -1986,6 +1986,7 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                 const togglePayment = (c) => selectedPayment.value = c;
                 const copyText = (t) => navigator.clipboard.writeText(t).then(()=>showToast('已複製')).catch(()=>showToast('複製失敗'));
                 
+               // ★★★ 修正版：verifyCoupon (支援模糊比對 + 除錯) ★★★
                 const verifyCoupon = async () => {
                     if (!couponCodeInput.value) return;
                     isVerifyingCoupon.value = true;
@@ -2003,23 +2004,29 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                                 return; 
                             }
 
-                            // 2. ★★★ 檢查適用商品 (精準比對版) ★★★
-                            // 如果 applicableItems 是空的，代表全館適用，直接通過
+                            // 2. ★★★ 檢查適用商品 (模糊比對修正版) ★★★
                             if (c.applicableItems && String(c.applicableItems).trim() !== '') {
-                                // 把後端回傳的 "A,B,C" 轉成陣列 ["A", "B", "C"]
-                                const validItems = String(c.applicableItems).split(',').map(s => s.trim());
+                                // 把後端回傳的字串 "A,B" 拆成陣列
+                                const validKeywords = String(c.applicableItems).split(',').map(s => s.trim()).filter(s => s);
                                 
-                                // 檢查購物車內是否有任何一個商品在清單中
-                                const hasItem = cartItems.value.some(item => validItems.includes(item.name));
+                                // 檢查購物車：只要購物車內有商品的名稱「包含」任何一個關鍵字，就通過
+                                const hasItem = cartItems.value.some(cartItem => {
+                                    return validKeywords.some(keyword => cartItem.name.includes(keyword));
+                                });
                                 
                                 if (!hasItem) { 
-                                    showToast(`此優惠券僅適用於指定商品`); 
-                                    // console.log('購物車:', cartItems.value.map(i=>i.name), '優惠券適用:', validItems); // 除錯用
+                                    // 為了方便除錯，如果失敗，會在 Console 印出原因
+                                    console.log('❌ 比對失敗');
+                                    console.log('購物車商品:', cartItems.value.map(i => i.name));
+                                    console.log('優惠券要求:', validKeywords);
+                                    
+                                    showToast(`此優惠券不適用於目前購物車商品`); 
                                     appliedCoupon.value = null; 
                                     return; 
                                 }
                             }
 
+                            // 通過驗證
                             appliedCoupon.value = c; 
                             showToast(`優惠券 "${c.title}" 已套用！`); 
                             couponCodeInput.value = '';
@@ -2029,7 +2036,7 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                         }
                     } catch (e) { 
                         console.error(e);
-                        showToast('驗證失敗'); 
+                        showToast('驗證失敗，請檢查連線'); 
                     } finally { 
                         isVerifyingCoupon.value = false; 
                     }
@@ -2552,6 +2559,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
