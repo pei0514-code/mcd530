@@ -1480,7 +1480,13 @@
                                 </option>
                             </select>
                             <label class="form-label-small fw-bold">{{ paymentFormLabel }}</label>
-                            <input type="text" v-model="paymentForm.accountInfo" class="form-control rounded-pill" :placeholder="paymentFormPlaceholder">
+                          <input type="text" 
+       v-model="paymentForm.accountInfo" 
+       class="form-control rounded-pill" 
+       :placeholder="paymentFormPlaceholder"
+       :maxlength="paymentForm.bankCode === '396' ? 20 : 5"
+       :inputmode="paymentForm.bankCode === '396' ? 'text' : 'numeric'"
+       @input="handleAccountInput">
                         </div>
                         <button class="btn btn-success w-100 rounded-pill py-2 fw-bold mb-2 shadow" @click="submitPayment" :disabled="isSubmittingPayment">
                             <span v-if="isSubmittingPayment"><i class="fas fa-spinner fa-spin me-2"></i>傳送中...</span>
@@ -2132,13 +2138,100 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                 const openPaymentForm = () => { if(selectedBankInfos.value.length===1) paymentForm.value.bankCode=selectedBankInfos.value[0].code; showPaymentForm.value=true; };
                 const paymentFormPlaceholder = computed(() => paymentForm.value.bankCode==='396'?'輸入街口暱稱':'輸入帳號後五碼');
                 const paymentFormLabel = computed(() => paymentForm.value.bankCode==='396'?'街口名稱：':'帳號末五碼：');
+               // ★★★ 新增：輸入限制邏輯 (銀行限5碼數字，街口不限) ★★★
+                const handleAccountInput = (e) => {
+                    const code = paymentForm.value.bankCode;
+                    // 如果是街口 (396)，不做限制 (允許中文/英文)
+                    if (code === '396') return;
+
+                    // 如果是銀行，強制只留數字
+                    let val = e.target.value.replace(/\D/g, ''); 
+                    
+                    // 強制截斷為 5 碼
+                    if (val.length > 5) val = val.slice(0, 5);
+                    
+                    // 更新數值
+                    paymentForm.value.accountInfo = val;
+                    e.target.value = val; // 確保介面同步更新
+                };
+
+                // ★★★ 修改：回報付款 (加入 20秒 強制超時機制，防止卡住) ★★★
                 const submitPayment = async () => {
-                    if(!paymentForm.value.bankCode || !paymentForm.value.accountInfo) return showToast('請填寫完整'); isSubmittingPayment.value=true;
-                    const bn = bankAccounts.value.find(b=>b.code===paymentForm.value.bankCode)?.name || '未知';
-                    const p = fetch(API_URL, { method:'POST', body:JSON.stringify({ action:'submitPayment', orderIds:lastOrderIds.value, bankName:bn, accountInfo:paymentForm.value.accountInfo }) });
-                    const t = new Promise((_,r)=>setTimeout(()=>r(new Error("Timeout")), 25000));
-                    try { await Promise.race([p,t]); if(liff.isInClient()) liff.sendMessages([{type:'text',text:`💰 回報\n單號：${lastOrderIds.value.join(', ')}\n帳號：${paymentForm.value.accountInfo}`}]); showToast('回報成功'); finishPaymentFlow(); } 
-                    catch(e){ if(e.message==="Timeout"){ showToast('已送出'); finishPaymentFlow(); } else showToast('失敗'); } finally { isSubmittingPayment.value=false; }
+                    // 1. 基礎驗證
+                    if (!paymentForm.value.bankCode || !paymentForm.value.accountInfo) { 
+                        showToast('請完整填寫資訊'); 
+                        return; 
+                    }
+                    
+                    // 2. 針對銀行再次檢查是否為 5 碼
+                    if (paymentForm.value.bankCode !== '396' && paymentForm.value.accountInfo.length !== 5) {
+                        showToast('銀行帳號末五碼必須剛好 5 個數字');
+                        return;
+                    }
+
+                    isSubmittingPayment.value = true;
+                    
+                    // 3. 準備資料
+                    // 注意：這裡使用 bankAccounts.value[code] 物件讀取法
+                    const bankObj = bankAccounts.value[paymentForm.value.bankCode];
+                    const bankName = bankObj ? bankObj.name : '未知銀行';
+
+                    // 4. 定義超時 Promise (20秒後自動報錯)
+                    const timeoutPromise = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error("Timeout")), 20000)
+                    );
+
+                    // 5. 定義請求 Promise
+                    const fetchPromise = fetch(API_URL, { 
+                        method: 'POST', 
+                        body: JSON.stringify({ 
+                            action: 'submitPayment', 
+                            orderIds: lastOrderIds.value, 
+                            bankName: bankName, 
+                            accountInfo: paymentForm.value.accountInfo 
+                        }) 
+                    });
+
+                    try {
+                        // 使用 Promise.race 讓 fetch 和 timeout 賽跑
+                        // 如果 fetch 卡超過 20 秒，timeout 會先觸發錯誤，強制結束轉圈圈
+                        const response = await Promise.race([fetchPromise, timeoutPromise]);
+                        
+                        // 檢查回應是否正常
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        
+                        // 嘗試解析 JSON (防止後端回傳 HTML 錯誤導致崩潰)
+                        const text = await response.text();
+                        let json;
+                        try {
+                            json = JSON.parse(text);
+                        } catch (e) {
+                            console.error("Backend Error (Not JSON):", text);
+                            throw new Error("系統回應格式錯誤");
+                        }
+
+                        // 成功！
+                        showToast('回報成功！我們會盡快對帳'); 
+                        
+                        // 關閉視窗與重置
+                        showPaymentForm.value = false; 
+                        hideModalSafe('successModal');
+                        
+                        // 重新整理訂單狀態
+                        setTimeout(() => { fetchOrderStatus(getEffectiveUserId()); }, 1000);
+
+                    } catch(e) {
+                        console.error(e);
+                        if (e.message === "Timeout") {
+                            showToast('連線逾時，但可能已送出，請稍後檢查歷史訂單');
+                            hideModalSafe('successModal');
+                        } else {
+                            showToast('回報失敗，請截圖聯繫客服');
+                        }
+                    } finally { 
+                        // ★★★ 無論成功失敗，這裡一定會執行，確保按鈕恢復 ★★★
+                        isSubmittingPayment.value = false; 
+                    }
                 };
                 const finishPaymentFlow = () => {
                     const rem = unreportedOrders.value.filter(id=>!lastOrderIds.value.includes(id)); unreportedOrders.value=rem; safeSetStorage('mm_pending_payment_orders', JSON.stringify(rem));
@@ -2275,7 +2368,9 @@ saveMarqueeSettings,
     openAdminCoupons, 
     openCouponEditor, 
     saveCoupon, 
-    deleteCoupon ,
+    deleteCoupon ,submitPayment, 
+                    isSubmittingPayment,
+                    handleAccountInput,
                     // [C] 名稱對應修復 (Alias)
                     // 舊版 HTML 可能呼叫 openWallet... 但程式裡是 openRedeem...
                     openWalletFromReminder: openRedeemFromReminder 
@@ -2286,6 +2381,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
