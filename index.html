@@ -1484,35 +1484,48 @@
         </div>
 
         <!-- Admin Shipment Confirmation Modal -->
-        <div class="modal fade" id="adminShipConfirmModal" tabindex="-1" style="z-index: 2000;">
-            <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 300px;">
-                <div class="modal-content border-0 rounded-4 shadow-lg text-center">
-                    <div class="modal-body p-4">
-                        <div class="mb-3 text-primary"><i class="fas fa-shipping-fast fa-3x"></i></div>
-                       
-                        <h5 class="fw-bold mb-1">確認發貨？</h5>
-<p class="text-muted small mb-4">單號：{{ adminShipTarget?.orderId }}</p>
+      <div class="modal fade" id="adminShipConfirmModal" tabindex="-1" style="z-index: 2000;">
+    <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 300px;">
+        <div class="modal-content border-0 rounded-4 shadow-lg text-center">
+            <div class="modal-body p-4">
+                <div class="mb-3 text-primary"><i class="fas fa-shipping-fast fa-3x"></i></div>
+                <h5 class="fw-bold mb-1">確認發貨？</h5>
+                <p class="text-muted small mb-4">單號：{{ adminShipTarget?.orderId }}</p>
 
-<div class="form-check form-switch d-inline-block text-start bg-light p-2 rounded mb-3 border">
-    <input class="form-check-input" type="checkbox" id="adminShipTestCheck" v-model="isAdminTestMode">
-    <label class="form-check-label small fw-bold text-primary" for="adminShipTestCheck">
-        🧪 測試發貨 (複製檔案/不移走)
-    </label>
-</div>
-                        <div class="d-grid gap-4">
-                            <button class="btn btn-success rounded-pill fw-bold" @click="executeAdminShip(true)" :disabled="isAdminShipping">
-                                <span v-if="isAdminShipping"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</span>
-                                <span v-else>🟢 確認發貨 (自動推播)</span>
-                            </button>
-                            <button class="btn btn-outline-secondary rounded-pill fw-bold" @click="executeAdminShip(false)" :disabled="isAdminShipping">
-                                ⚪ 僅產生備份 (不推播)
-                            </button>
-                            <button class="btn btn-light rounded-pill fw-bold text-muted" data-bs-dismiss="modal">✖️ 取消</button>
-                        </div>
+                <div class="bg-light p-3 rounded mb-4 border text-start">
+                    
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="adminShipTestCheck" v-model="isAdminTestMode">
+                        <label class="form-check-label small fw-bold text-dark" for="adminShipTestCheck">
+                            🧪 測試發貨 (複製檔案)
+                        </label>
                     </div>
+                    
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="adminShipManualCheck" v-model="isAdminManualShip">
+                        <label class="form-check-label small fw-bold text-primary" for="adminShipManualCheck">
+                            📝 手動模式 (僅文字/不發圖)
+                        </label>
+                    </div>
+
+                </div>
+                <div class="d-grid gap-3">
+                    <button class="btn btn-success rounded-pill fw-bold py-2" @click="executeAdminShip(true)" :disabled="isAdminShipping">
+                        <span v-if="isAdminShipping"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</span>
+                        <span v-else>🟢 確認發貨 (自動推播)</span>
+                    </button>
+                    
+                    <button class="btn btn-outline-secondary rounded-pill fw-bold py-2" @click="executeAdminShip(false)" :disabled="isAdminShipping">
+                        <span v-if="isAdminShipping">處理中...</span>
+                        <span v-else>⚪ 僅產生備份 (不推播)</span>
+                    </button>
+                    
+                    <button class="btn btn-link text-muted text-decoration-none small" data-bs-dismiss="modal">✖️ 取消</button>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
         <!-- Other Modals (Redeem, Confirm, etc.) -->
         <div class="modal fade" id="redeemConfirmModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;"><div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden"><div class="modal-header border-0 pb-0 justify-content-end"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body px-4 pb-4"><div class="mb-3 text-warning"><i class="fas fa-stamp fa-4x"></i></div><h5 class="fw-bold mb-2">是否已完成使用？</h5><p class="text-muted small mb-2">請確認您已向店家出示畫面。</p><p class="text-danger fw-bold mb-4 fs-5" style="letter-spacing: 1px; text-shadow: 0px 0px 1px rgba(218, 41, 28, 0.2);">⚠️ 一經核銷將無法復原</p><div class="d-grid gap-2"><button class="btn btn-warning rounded-pill fw-bold shadow-sm" @click="confirmRedeemAction" :disabled="isRedeeming"><span v-if="isRedeeming"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</span><span v-else>確認核銷</span></button><button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">還沒使用</button></div></div></div></div></div>
@@ -1845,6 +1858,7 @@
                 const editingOrder = ref({});
                 const isSavingOrder = ref(false);
                 const isAdminTestMode = ref(false);
+                const isAdminManualShip = ref(false);
                 const marqueeConfig = ref({ enabled: true, text: '' });
                 const isSavingMarquee = ref(false);
                 // ==========================
@@ -2533,70 +2547,62 @@ const fetchLowStock = async (rangeType = '0-5') => {
                 const onAdminShipClick = (o) => { adminShipTarget.value=o; hideModalSafe('adminPanelModal'); openModalSafe('adminShipConfirmModal'); };
                 // ★★★ 修正版：發貨後彈出備份視窗 ★★★
                 // ★★★ 終極修正版：解決視窗被擋住或沒彈出的問題 ★★★
-                const executeAdminShip = async (push) => { 
-                    isAdminShipping.value = true; 
-                    try { 
-                        // 1. 發送請求
-                        const res = await fetch(API_URL, { 
-                            method: 'POST', 
-                            body: JSON.stringify({
-                                action: 'adminShipOrder', 
-                                orderId: adminShipTarget.value.orderId, 
-                                isAutoPush: push, 
-                                testMode: isAdminTestMode.value
-                            }) 
-                        }); 
-                        const json = await res.json(); 
+                // --- 管理員執行發貨 (v3.5 支援手動參數) ---
+const executeAdminShip = async (push) => { 
+    isAdminShipping.value = true; 
+    try { 
+        // 1. 發送請求
+        const res = await fetch(API_URL, { 
+            method: 'POST', 
+            body: JSON.stringify({
+                action: 'adminShipOrder', 
+                orderId: adminShipTarget.value.orderId, 
+                isAutoPush: push, 
+                testMode: isAdminTestMode.value,
+                // ★★★ 關鍵修改：傳送手動模式狀態 ★★★
+                isManualMode: isAdminManualShip.value 
+            }) 
+        }); 
+        const json = await res.json(); 
 
-                        // 2. 判斷結果
-                        if (json.status === 'OK') {
-                            showToast('✅ 發貨指令已執行'); 
-                            
-                            // 關閉確認視窗
-                            hideModalSafe('adminShipConfirmModal'); 
-                            
-                            // 3. 處理備份文字 (延遲開啟，防止被舊視窗擋住)
-                            if (json.backupText) {
-                                setTimeout(() => {
-                                    const textArea = document.getElementById('backupTextArea');
-                                    const modalEl = document.getElementById('manualCopyBackupModal');
-                                    
-                                    if (textArea && modalEl) {
-                                        // 填入文字
-                                        textArea.value = json.backupText; 
-                                        
-                                        // ★ 強制拉高層級，確保它在最上面 ★
-                                        modalEl.style.zIndex = "9999"; 
-                                        
-                                        // 開啟視窗
-                                        openModalSafe('manualCopyBackupModal');
-                                        
-                                        // 嘗試自動複製
-                                        if (navigator.clipboard && navigator.clipboard.writeText) {
-                                            navigator.clipboard.writeText(json.backupText).catch(() => {});
-                                        }
-                                    } else {
-                                        alert("錯誤：找不到備份視窗元件 (manualCopyBackupModal)");
-                                    }
-                                }, 500); // 延遲 0.5 秒
-                            } else {
-                                // 如果成功但沒文字，可能是後端 GAS 沒更新
-                                console.warn("後端未回傳 backupText", json);
-                                // alert("注意：發貨成功但沒有回傳備份文字\n(請檢查 GAS 後端代碼是否已更新並部署)");
-                            }
-                            
-                            // 4. 刷新後台數據
-                            setTimeout(fetchAdminDashboard, 1000);
-                        } else {
-                            showToast('❌ 發貨失敗：' + (json.message || '未知錯誤'));
+        // 2. 判斷結果
+        if (json.status === 'OK') {
+            let msg = '✅ 發貨指令已執行';
+            if (isAdminManualShip.value) msg += ' (手動模式)';
+            showToast(msg); 
+            
+            // 關閉視窗
+            hideModalSafe('adminShipConfirmModal'); 
+            
+            // 3. 處理備份文字 (延遲開啟，防止被舊視窗擋住)
+            if (json.backupText) {
+                setTimeout(() => {
+                    const textArea = document.getElementById('backupTextArea');
+                    const modalEl = document.getElementById('manualCopyBackupModal');
+                    
+                    if (textArea && modalEl) {
+                        textArea.value = json.backupText; 
+                        modalEl.style.zIndex = "9999"; 
+                        openModalSafe('manualCopyBackupModal');
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(json.backupText).catch(() => {});
                         }
-                    } catch(e){ 
-                        console.error(e);
-                        showToast('連線失敗，請檢查網路'); 
-                    } finally { 
-                        isAdminShipping.value = false; 
                     }
-                };
+                }, 500); 
+            }
+            
+            // 4. 刷新後台數據
+            setTimeout(fetchAdminDashboard, 1000);
+        } else {
+            showToast('❌ 發貨失敗：' + (json.message || '未知錯誤'));
+        }
+    } catch(e){ 
+        console.error(e);
+        showToast('連線失敗，請檢查網路'); 
+    } finally { 
+        isAdminShipping.value = false; 
+    }
+};
                 const openAdminProductManager = async () => { openModalSafe('adminProductManagerModal'); try{ const r=await fetch(`${API_URL}?action=adminGetProductList`); const d=await r.json(); adminProducts.value=d.products||[]; } catch(e){} };
                 const adminEditProduct = (p) => { editingProduct.value={...p}; openModalSafe('adminProductEditModal'); };
                 const saveProduct = async () => { isSavingProduct.value=true; try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminSaveProduct',...editingProduct.value})}); showToast('已存'); hideModalSafe('adminProductEditModal'); setTimeout(openAdminProductManager,1000); setTimeout(initApp,2000); } catch(e){} finally{ isSavingProduct.value=false; } };
@@ -2663,7 +2669,7 @@ const fetchLowStock = async (rangeType = '0-5') => {
                     isRepaying, goToPayFromPending, getOrderItems, getOrderAmount,
                     groupedUnreportedOrders, isGroupSelected, toggleGroupSelection, relatedOrdersToCancel, 
                     showSortMenu, sortType, setSortType, walletUnread,
-                    confirmMergedWarning, isCartTestMode, isAdminTestMode, expiringTicketsList, 
+                    confirmMergedWarning, isCartTestMode, isAdminTestMode, isAdminManualShip ,expiringTicketsList, 
                     
                     // 注意：這裡原本是 openRedeemFromReminder，下面會做別名處理
                     openRedeemFromReminder, 
@@ -2731,6 +2737,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
