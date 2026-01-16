@@ -1230,8 +1230,60 @@
         <!-- New Admin Modals (v2.99) -->
         <div class="modal fade" id="adminBestSellersModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0"><h5 class="fw-bold"><i class="fas fa-fire text-danger me-2"></i>熱銷排行 (Top 15)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><div v-if="adminBestSellers.length > 0" class="list-group list-group-flush small"><div v-for="(item, index) in adminBestSellers" :key="index" class="list-group-item d-flex justify-content-between align-items-center"><div class="d-flex align-items-center" style="max-width: 80%;"><span class="badge bg-secondary rounded-pill me-2" style="font-size: 10px; width: 20px;">{{ index + 1 }}</span><span class="text-truncate">{{ item.name }}</span></div><span class="fw-bold text-dark">{{ item.qty }}</span></div></div><div v-else class="text-center text-muted py-3">暫無數據</div></div></div></div></div>
         <div class="modal fade" id="adminLowStockModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0"><h5 class="fw-bold"><i class="fas fa-exclamation-triangle text-warning me-2"></i>低庫存預警 (<5)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><div v-if="adminLowStockItems.length > 0" class="d-flex flex-wrap gap-2"><span v-for="item in adminLowStockItems" :key="item.name" class="badge bg-white text-dark border p-2">{{ item.name }} <span class="text-danger fw-bold fs-6 ms-1">({{ item.stock }})</span></span></div><div v-else class="text-center text-muted py-3">目前無低庫存商品</div></div></div></div></div>
-        <div class="modal fade" id="adminExpiringModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0 d-block"><div class="d-flex justify-content-between align-items-center mb-2"><h5 class="fw-bold"><i class="fas fa-calendar-times text-danger me-2"></i>即將到期</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="btn-group w-100"><button class="btn btn-sm btn-outline-secondary" @click="fetchExpiringItems(1)">1個月內</button><button class="btn btn-sm btn-outline-secondary" @click="fetchExpiringItems(2)">2個月內</button><button class="btn btn-sm btn-outline-secondary" @click="fetchExpiringItems(3)">3個月內</button></div></div><div class="modal-body p-3"><div v-if="adminExpiringItems.length > 0" style="max-height: 300px; overflow-y: auto;"><div v-for="item in adminExpiringItems" :key="item.name" class="d-flex justify-content-between align-items-center border-bottom py-2 small"><span class="text-truncate" style="max-width: 60%;">{{ item.name }}</span><div class="text-end"><span class="d-block text-muted" style="font-size:10px;">{{ item.expiry }}</span><span class="badge bg-danger rounded-pill">{{ item.stock }}</span></div></div></div><div v-else class="text-center text-muted py-3">無相關商品</div></div></div></div></div>
+      <div class="modal fade" id="adminExpiringModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header border-0 d-block pb-2">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-calendar-times text-danger me-2"></i>即將到期管理</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="btn-group w-100 shadow-sm">
+                    <button class="btn btn-sm btn-outline-secondary fw-bold" @click="fetchExpiringItems(1)">1個月內</button>
+                    <button class="btn btn-sm btn-outline-secondary fw-bold" @click="fetchExpiringItems(2)">2個月內</button>
+                    <button class="btn btn-sm btn-outline-secondary fw-bold" @click="fetchExpiringItems(3)">3個月內</button>
+                </div>
+            </div>
 
+            <div class="modal-body p-3">
+                <div v-if="adminExpiringItems.length > 0" style="max-height: 400px; overflow-y: auto;">
+                    <div v-for="item in adminExpiringItems" :key="item.name" class="d-flex justify-content-between align-items-center border-bottom py-3">
+                        
+                        <div style="max-width: 65%;">
+                            <a v-if="item.folder && item.folder.startsWith('http')" 
+                               :href="item.folder" 
+                               target="_blank" 
+                               class="text-decoration-none">
+                                <div class="fw-bold text-primary mb-1" style="font-size: 14px; cursor: pointer;">
+                                    {{ item.name }} <i class="fas fa-external-link-alt ms-1" style="font-size: 10px;"></i>
+                                </div>
+                            </a>
+                            <div v-else class="fw-bold text-dark mb-1" style="font-size: 14px;">{{ item.name }}</div>
+                            
+                            <div class="text-muted" style="font-size: 11px;">
+                                <i class="far fa-clock me-1"></i>效期：{{ item.expiry }}
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            <span class="badge bg-danger rounded-pill mb-2 px-2">剩 {{ item.stock }}</span>
+                            <div v-if="item.folder && item.folder.startsWith('http')">
+                                <a :href="item.folder" target="_blank" class="btn btn-primary btn-sm rounded-pill py-0 px-2 fw-bold shadow-sm" style="font-size: 10px;">
+                                    <i class="fas fa-folder-open"></i> 查看
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div v-else class="text-center text-muted py-5">
+                    <i class="fas fa-check-circle fa-3x mb-3 text-success opacity-25"></i>
+                    <br>目前沒有相關到期商品
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
         <!-- Admin Product Manager Modal (v2.99 Patch 2) -->
         <div class="modal fade" id="adminProductManagerModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
@@ -2588,6 +2640,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
