@@ -1229,8 +1229,63 @@
 
         <!-- New Admin Modals (v2.99) -->
         <div class="modal fade" id="adminBestSellersModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0"><h5 class="fw-bold"><i class="fas fa-fire text-danger me-2"></i>熱銷排行 (Top 15)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><div v-if="adminBestSellers.length > 0" class="list-group list-group-flush small"><div v-for="(item, index) in adminBestSellers" :key="index" class="list-group-item d-flex justify-content-between align-items-center"><div class="d-flex align-items-center" style="max-width: 80%;"><span class="badge bg-secondary rounded-pill me-2" style="font-size: 10px; width: 20px;">{{ index + 1 }}</span><span class="text-truncate">{{ item.name }}</span></div><span class="fw-bold text-dark">{{ item.qty }}</span></div></div><div v-else class="text-center text-muted py-3">暫無數據</div></div></div></div></div>
-        <div class="modal fade" id="adminLowStockModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0"><h5 class="fw-bold"><i class="fas fa-exclamation-triangle text-warning me-2"></i>低庫存預警 (<5)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><div v-if="adminLowStockItems.length > 0" class="d-flex flex-wrap gap-2"><span v-for="item in adminLowStockItems" :key="item.name" class="badge bg-white text-dark border p-2">{{ item.name }} <span class="text-danger fw-bold fs-6 ms-1">({{ item.stock }})</span></span></div><div v-else class="text-center text-muted py-3">目前無低庫存商品</div></div></div></div></div>
-      <div class="modal fade" id="adminExpiringModal" tabindex="-1">
+       <div class="modal fade" id="adminLowStockModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header border-0 d-block pb-2 bg-light">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-cubes text-warning me-2"></i>庫存管理</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="row g-2">
+                    <div class="col-4"><button class="btn btn-sm btn-outline-dark w-100 fw-bold" @click="fetchLowStock('0-5')">0-5</button></div>
+                    <div class="col-4"><button class="btn btn-sm btn-outline-dark w-100 fw-bold" @click="fetchLowStock('5-10')">5-10</button></div>
+                    <div class="col-4"><button class="btn btn-sm btn-outline-dark w-100 fw-bold" @click="fetchLowStock('11-20')">11-20</button></div>
+                    <div class="col-4"><button class="btn btn-sm btn-outline-dark w-100 fw-bold" @click="fetchLowStock('21-30')">21-30</button></div>
+                    <div class="col-4"><button class="btn btn-sm btn-outline-dark w-100 fw-bold" @click="fetchLowStock('31-50')">31-50</button></div>
+                    <div class="col-4"><button class="btn btn-sm btn-outline-dark w-100 fw-bold" @click="fetchLowStock('50+')">50+</button></div>
+                </div>
+            </div>
+
+            <div class="modal-body p-3">
+                <div v-if="adminLowStockItems.length > 0" style="max-height: 400px; overflow-y: auto;">
+                    <div v-for="item in adminLowStockItems" :key="item.name" class="d-flex justify-content-between align-items-center border-bottom py-3">
+                        
+                        <div style="max-width: 60%;">
+                            <a v-if="item.folder && item.folder.startsWith('http')" 
+                               :href="item.folder" 
+                               target="_blank" 
+                               class="text-decoration-none">
+                                <div class="fw-bold text-primary mb-1" style="font-size: 14px; cursor: pointer;">
+                                    {{ item.name }} <i class="fas fa-external-link-alt ms-1" style="font-size: 10px;"></i>
+                                </div>
+                            </a>
+                            <div v-else class="fw-bold text-dark mb-1" style="font-size: 14px;">{{ item.name }}</div>
+                        </div>
+
+                        <div class="text-end">
+                            <span class="badge rounded-pill mb-2 px-3" 
+                                  :class="item.stock <= 5 ? 'bg-danger' : (item.stock <= 20 ? 'bg-warning text-dark' : 'bg-success')">
+                                庫存: {{ item.stock }}
+                            </span>
+                            <div v-if="item.folder && item.folder.startsWith('http')">
+                                <a :href="item.folder" target="_blank" class="btn btn-primary btn-sm rounded-pill py-0 px-2 fw-bold shadow-sm" style="font-size: 10px;">
+                                    <i class="fas fa-folder-open"></i> 補貨
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div v-else class="text-center text-muted py-5">
+                    <i class="fas fa-box-open fa-3x mb-3 opacity-25"></i>
+                    <br>此區間內無商品
+                </div>
+            </div>
+        </div>
+    </div>
+</div>   
+        <div class="modal fade" id="adminExpiringModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 rounded-4 shadow-lg">
             <div class="modal-header border-0 d-block pb-2">
@@ -2438,7 +2493,43 @@ const fetchExpiringItems = async (months) => {
                 const triggerStockSync = async () => { isAdminSyncing.value=true; try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminSyncStock'})}); showToast('已同步'); setTimeout(initApp,3000); } catch(e){} finally{ isAdminSyncing.value=false; } };
                 const triggerTimeoutCheck = async () => { isAdminCleaning.value=true; try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminCheckTimeout'})}); showToast('已清理'); } catch(e){} finally{ isAdminCleaning.value=false; } };
                 const triggerPaymentCheck = async () => { isAdminChecking.value=true; try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminCheckPayments'})}); showToast('已查帳'); setTimeout(fetchAdminDashboard,2000); } catch(e){} finally{ isAdminChecking.value=false; } };
-                const fetchLowStock = async () => { isAdminFetchingStock.value=true; try{ const r=await fetch(`${API_URL}?action=getLowStockItems`); const d=await r.json(); adminLowStockItems.value=d.lowStockItems||[]; openModalSafe('adminLowStockModal'); } catch(e){} finally{ isAdminFetchingStock.value=false; } };
+                // --- 庫存讀取函式 (支援區間參數 v3.2) ---
+const fetchLowStock = async (rangeType = '0-5') => {
+    isAdminFetchingStock.value = true;
+    
+    // 1. 如果視窗還沒開，先打開 (方便從主選單呼叫)
+    openModalSafe('adminLowStockModal');
+    
+    // 2. 切換時先清空舊資料，避免混淆
+    adminLowStockItems.value = [];
+    showToast(`正在讀取庫存 (${rangeType})...`);
+
+    try {
+        // 3. 改用 POST 請求，並傳送 range 參數
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ 
+                action: 'getLowStockItems', 
+                range: rangeType 
+            })
+        });
+        const d = await res.json();
+        
+        if (d.status === 'OK') {
+            adminLowStockItems.value = d.lowStockItems || [];
+            if (adminLowStockItems.value.length === 0) {
+                showToast('此區間無商品');
+            }
+        } else {
+            showToast('讀取失敗');
+        }
+    } catch (e) {
+        console.error(e);
+        showToast('連線錯誤');
+    } finally {
+        isAdminFetchingStock.value = false;
+    }
+};
                 const onAdminShipClick = (o) => { adminShipTarget.value=o; hideModalSafe('adminPanelModal'); openModalSafe('adminShipConfirmModal'); };
                 // ★★★ 修正版：發貨後彈出備份視窗 ★★★
                 // ★★★ 終極修正版：解決視窗被擋住或沒彈出的問題 ★★★
@@ -2640,6 +2731,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
