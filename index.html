@@ -2354,6 +2354,35 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                 // 管理員功能
                 const verifyAdminPassword = async () => { if(!adminPasswordInput.value)return showToast('請輸入'); try{ const r=await fetch(`${API_URL}?action=verifyAdmin&p=${encodeURIComponent(adminPasswordInput.value)}`); const j=await r.json(); if(j.status==='OK'){ safeSetStorage('mm_admin_auth','true'); hideModalSafe('adminLoginModal'); fetchAdminDashboard(); openModalSafe('adminPanelModal'); showToast('成功'); adminPasswordInput.value=''; } else { showToast('錯誤'); } } catch(e){ showToast('失敗'); } };
                 const fetchAdminDashboard = async () => { try{ const r=await fetch(`${API_URL}?action=getAdminDashboardData`); const d=await r.json(); if(d.orders) adminPendingOrders.value=d.orders; if(d.stats) adminStats.value=d.stats; if(d.bestSellers) adminBestSellers.value=d.bestSellers; } catch(e){} };
+                // --- 補上：讀取即將到期商品的函式 ---
+const fetchExpiringItems = async (months) => {
+    // 顯示讀取狀態
+    showToast(`正在讀取 ${months} 個月內到期商品...`);
+    try {
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ 
+                action: 'getExpiringItems', 
+                months: months 
+            })
+        });
+        const d = await res.json();
+        
+        // 判斷回傳結果
+        if (d.status === 'OK' || d.expiringItems) {
+            adminExpiringItems.value = d.expiringItems || [];
+            if (adminExpiringItems.value.length === 0) {
+                showToast(`這 ${months} 個月內沒有即期品`);
+            }
+        } else {
+            showToast('讀取失敗：' + (d.message || '未知錯誤'));
+        }
+    } catch (e) {
+        console.error("到期管理錯誤:", e);
+        showToast('網路連線錯誤');
+    }
+};
+                
                 const triggerStockSync = async () => { isAdminSyncing.value=true; try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminSyncStock'})}); showToast('已同步'); setTimeout(initApp,3000); } catch(e){} finally{ isAdminSyncing.value=false; } };
                 const triggerTimeoutCheck = async () => { isAdminCleaning.value=true; try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminCheckTimeout'})}); showToast('已清理'); } catch(e){} finally{ isAdminCleaning.value=false; } };
                 const triggerPaymentCheck = async () => { isAdminChecking.value=true; try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminCheckPayments'})}); showToast('已查帳'); setTimeout(fetchAdminDashboard,2000); } catch(e){} finally{ isAdminChecking.value=false; } };
@@ -2546,6 +2575,9 @@ saveMarqueeSettings,
     deleteCoupon ,submitPayment, 
                     isSubmittingPayment,
                     handleAccountInput,
+                  adminExpiringItems,   // 存放資料的變數
+    fetchExpiringItems,   // ★ 務必確保這一行有加進去 ★
+    fetchAdminDashboard,
                     // [C] 名稱對應修復 (Alias)
                     // 舊版 HTML 可能呼叫 openWallet... 但程式裡是 openRedeem...
                     openWalletFromReminder: openRedeemFromReminder 
@@ -2556,6 +2588,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
