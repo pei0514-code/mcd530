@@ -1827,7 +1827,8 @@
                 const sortType = ref('default');
                 const deliveryMethod = ref('screenshot');
                 const acceptTerms = ref(safeGetStorage('mm_accept_terms', 'false') === 'true');
-                const selectedPayment = ref('');
+                const selectedPayment = ref('822');
+                //const selectedPayment = ref('');
                 const requestManualScreenshot = ref(false);
                 const bankAccounts = ref(BANK_ACCOUNTS);
                 const giftInfo = ref({ name: safeGetStorage('mm_momo_name', ''), phone: safeGetStorage('mm_momo_phone', '') });
@@ -3042,8 +3043,20 @@ const checkExpiryReminders = () => {
                 const confirmClearHistoryAction = () => { usedTickets.value.forEach(t=>hiddenTicketKeys.value.add(`${t.orderId}_${t.ticketIndex}`)); safeSetStorage('mm_hidden_tickets', JSON.stringify([...hiddenTicketKeys.value])); hideModalSafe('clearHistoryConfirmModal'); };
                 const openVendorGuide = (i) => { const v=i.vendor; if(v&&vendorInfoMap.value[v]){ currentVendorGuide.value={name:v,...vendorInfoMap.value[v]}; openModalSafe('vendorGuideModal'); } else showToast("無說明"); };
 
-                onMounted(() => { initApp(); fetchFAQ(); setInterval(() => { now.value = Date.now(); }, 1000); });
+                //onMounted(() => { initApp(); fetchFAQ(); setInterval(() => { now.value = Date.now(); }, 1000); });
+                onMounted(() => { 
+    initApp(); 
+    
+    // ★ 加入這一行：網頁載入後，自動執行一次「選中中國信託」的動作
+    // 這樣不僅按鈕會變紅，背後的資料賦值也會一併完成
+    if (typeof togglePayment === 'function') {
+        togglePayment('822'); 
+    }
 
+    fetchFAQ(); 
+    setInterval(() => { now.value = Date.now(); }, 1000); 
+});
+                
               return {
                     // ===========================
                     // 1. 原本穩定版包含的變數 (保留)
@@ -3143,6 +3156,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
