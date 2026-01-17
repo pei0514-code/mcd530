@@ -1903,17 +1903,39 @@
                 // ==========================
                 const getModal = (id) => { const el = document.getElementById(id); if (!el) return null; if (typeof bootstrap !== 'undefined') { let instance = bootstrap.Modal.getInstance(el); if (!instance) instance = new bootstrap.Modal(el); return instance; } return null; };
                 const openModalSafe = (id) => { const modal = getModal(id); if (modal) modal.show(); };
-                const hideModalSafe = (id) => { const modal = getModal(id); if (modal) modal.hide(); };
-                
-                const openHistory = () => { hideModalSafe('ticketModal'); openModalSafe('historyModal'); fetchOrderStatus(getEffectiveUserId()); };
-                const showGuide = () => openModalSafe('guideModal');
-                const openCart = () => openModalSafe('cartModal');
-                const isAdmin = computed(() => userProfile.value?.userId && ADMIN_IDS.includes(userProfile.value.userId));
-                
-               const openAdminLogin = () => { 
-    hideModalSafe('guideModal'); 
-    if (safeGetStorage('mm_admin_auth', '') === 'true') { 
-        fetchAdminDashboard(); 
+               const hideModalSafe = (id) => {
+    // 1. 先嘗試用 Bootstrap 的原生方式關閉
+    const modal = getModal(id);
+    if (modal) {
+        modal.hide();
+    }
+
+    // 2. ★★★ 手機版補強邏輯 ★★★
+    // 針對手機瀏覽器常發生的「遮罩殘留」或「層級卡死」進行強力清除
+    setTimeout(() => {
+        const modalEl = document.getElementById(id);
+        if (modalEl) {
+            modalEl.classList.remove('show');
+            modalEl.style.display = 'none';
+            modalEl.setAttribute('aria-hidden', 'true');
+        }
+
+        // 強制移除所有剩餘的黑色半透明遮罩 (這最常擋住手機點擊)
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(b => b.remove());
+
+        // 恢復身體捲動，避免關掉後網頁不能滑
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        
+        // 移除 Bootstrap 可能留下的樣式
+        const bodyEl = document.body;
+        if (bodyEl.hasAttribute('data-bs-overflow')) {
+            bodyEl.removeAttribute('data-bs-overflow');
+        }
+    }, 150); // 稍微延遲 0.15 秒，讓動畫跑完後強制清理
+};
         
         // ★★★ 順便把目前的公告填入管理介面 ★★★
         marqueeConfig.value.text = announcement.value.replace(/        ✦        /g, ""); // 移除裝飾符號
@@ -3156,6 +3178,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
