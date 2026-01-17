@@ -2086,7 +2086,58 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                     if (val.length > 0) checkExpiryReminders(); 
                 });
                 watch(acceptTerms, (val) => safeSetStorage('mm_accept_terms', val));
+                // ==========================================
+                // ★★★ 自動偵測銀行帳號 (v3.0 多單混合邏輯) ★★★
+                // ==========================================
+                watch(pendingSelection, (newVal) => {
+                    // 1. 如果沒有選任何訂單，重置為顯示全部
+                    if (!newVal || newVal.length === 0) {
+                        selectedPayment.value = '';
+                        return;
+                    }
 
+                    const detectedCodes = new Set(); // 用來收集偵測到的銀行代碼
+                    const banks = bankAccounts.value;
+
+                    // 2. 迴圈檢查「每一張」被選中的訂單
+                    newVal.forEach(oid => {
+                        const order = orderHistory.value.find(o => o.id === oid);
+                        if (order) {
+                            // 拼湊訂單資訊來檢查 (包含付款備註、商品名稱等)
+                            const orderInfo = (
+                                String(order.deliveryMethod || '') + 
+                                String(order.paymentNote || '') +
+                                String(order.items ? JSON.stringify(order.items) : '')
+                            ).toLowerCase();
+
+                            // 比對這張單屬於哪家銀行
+                            for (const key in banks) {
+                                const bank = banks[key];
+                                const code = String(bank.code).toLowerCase();
+                                const name = String(bank.name).toLowerCase();
+                                const bankName = String(bank.bankName).toLowerCase();
+
+                                // 如果找到特徵 (例如 "822" 或 "中國信託")，就加入集合
+                                if (orderInfo.includes(code) || orderInfo.includes(name) || orderInfo.includes(bankName)) {
+                                    detectedCodes.add(bank.code);
+                                }
+                            }
+                        }
+                    });
+
+                    // 3. 決策時刻
+                    if (detectedCodes.size === 1) {
+                        // 情境 A：所有訂單都指向「同一家銀行」 (例如全部都是截圖單)
+                        // -> 鎖定顯示那一家
+                        selectedPayment.value = Array.from(detectedCodes)[0];
+                    } else {
+                        // 情境 B：
+                        // 1. 沒偵測到任何特徵 (一般匯款)
+                        // 2. 偵測到多家銀行 (混合單，例如一筆中信、一筆街口)
+                        // -> 為了安全，顯示「全部銀行」，讓客人自己選
+                        selectedPayment.value = '';
+                    }
+                });
                 // ==========================
                 // E. API 與 初始化
                 // ==========================
@@ -2788,6 +2839,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
