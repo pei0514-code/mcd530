@@ -1954,20 +1954,33 @@
 
                 const categories = computed(() => [...new Set(products.value.map(p => p.category))]);
               // ==========================================
-// ★★★ 日期格式化小工具 (請一起複製) ★★★
+// ★★★ 萬能日期格式化工具 (增強版) ★★★
 // ==========================================
 const formatDateStr = (str) => {
     if (!str) return '';
-    const s = String(str).trim();
-    // 針對 "2026/5/2" 或 "2026-5-2" 做補 0 處理
-    const match = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+    let s = String(str).trim();
+
+    // 情況 A: 如果是純數字 8 碼 (例如 20260502)
+    if (/^\d{8}$/.test(s)) {
+        return `${s.substring(0, 4)}/${s.substring(4, 6)}/${s.substring(6, 8)}`;
+    }
+
+    // 情況 B: 處理分隔符號 (把 2026.5.2 或 2026-5-2 或 2026 5 2 全部換成斜線)
+    // 這裡把 [橫線] [點] [空白] 全部替換成 /
+    s = s.replace(/[\-\.\s]/g, '/');
+
+    // 情況 C: 標準化 (補 0)
+    // 針對 YYYY/M/D 格式進行補零
+    const match = s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/);
     if (match) {
         const y = match[1];
         const m = match[2].padStart(2, '0'); // 5 -> 05
         const d = match[3].padStart(2, '0'); // 2 -> 02
         return `${y}/${m}/${d}`;
     }
-    return s; // 如果是 "無期限" 或其他文字，就原樣回傳
+
+    // 如果都不是上面的格式，就回傳原本的 (例如 "無期限")
+    return s;
 };
 
 // ==========================================
@@ -3044,6 +3057,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
