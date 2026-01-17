@@ -80,30 +80,6 @@
     padding-right: 0; /* 不需要額外間距，因為我們在 JS 裡面加了空格 */
 }
 
-* --- 終極層級修復：解決暗影與複製問題 --- */
-.modal {
-    z-index: 9999 !important; /* 強制讓彈窗在最最前面 */
-}
-
-.modal-backdrop {
-    z-index: 9990 !important; /* 強制讓黑影在彈窗後面 */
-}
-
-/* 確保文字可以被選取 */
-.modal-content {
-    pointer-events: auto !important;
-    user-select: text !important;
-    -webkit-user-select: text !important;
-    background-color: #fff !important; /* 確保背景亮白 */
-}
-
-/* 讓發貨備份視窗的內容更清楚 */
-#backupModal .modal-body, 
-.modal-body {
-    position: relative;
-    z-index: 10000 !important;
-}
-        
 /* 因為我們複製了很多份，不需要只跑 50%，讓它一直往左跑即可 */
 /* 這個動畫會讓這一長串文字一直往左邊捲動 */
 @keyframes marquee-scroll {
@@ -3258,7 +3234,6 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
-
 
 
 
