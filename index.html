@@ -1759,6 +1759,21 @@
                 // ==========================
                 // A. 變數定義
                 // ==========================
+                const registerUserToSheet = (profile, email) => {
+        // 使用 fetch 發送資料給 Google Apps Script
+        fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'registerMember',
+                userId: profile.userId,
+                displayName: profile.displayName,
+                pictureUrl: profile.pictureUrl,
+                email: email 
+            })
+        }).then(res => res.json())
+          .then(data => console.log('會員系統回應:', data))
+          .catch(err => console.error('會員註冊失敗', err));
+    };
                 const selectedCouponItems = ref([]);
                 const adminCoupons = ref([]); // 優惠券列表
                 const isEditingCoupon = ref(false); // 是否正在編輯模式
@@ -2107,9 +2122,45 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                             const sc = JSON.parse(safeGetStorage('mm_cart_storage', '{}')); const vc = {}; Object.keys(sc).forEach(k=>{ const p=products.value.find(x=>x.id===k); if(p && Number(p.stock)>=Number(sc[k])) vc[k]=Number(sc[k]); }); cart.value = vc;
                         } catch(e) { safeSetStorage('mm_cart_storage', '{}'); }
                         
-                        if (settings.value.liffId) { 
-                            try { await liff.init({ liffId: settings.value.liffId }); if(liff.isLoggedIn()){ userProfile.value=await liff.getProfile(); const t=liff.getDecodedIDToken(); if(t&&t.email)userProfile.value.email=t.email; fetchOrderStatus(userProfile.value.userId); } else { fetchOrderStatus(guestUuid.value); checkGuestStatus(); } } catch(e){ fetchOrderStatus(guestUuid.value); checkGuestStatus(); } 
-                        }
+                       // --- ★★★ 2. 修改 LIFF 初始化邏輯 (替換原本那段) ★★★ ---
+if (settings.value.liffId) {
+    try {
+        await liff.init({ liffId: settings.value.liffId });
+
+        if (liff.isLoggedIn()) {
+            // A. 取得用戶基本資料
+            userProfile.value = await liff.getProfile();
+
+            // B. 取得 Email (如果有權限)
+            const t = liff.getDecodedIDToken();
+            let currentEmail = '未授權/無'; // 預設值
+
+            if (t && t.email) {
+                userProfile.value.email = t.email;
+                currentEmail = t.email;
+            }
+
+            // ==========================================
+            // ★★★ 關鍵修改：在這裡觸發會員註冊！ ★★★
+            // ==========================================
+            registerUserToSheet(userProfile.value, currentEmail);
+            // ==========================================
+
+            // C. 繼續原本的動作：讀取訂單
+            fetchOrderStatus(userProfile.value.userId);
+
+        } else {
+            // 未登入處理 (原本的邏輯)
+            fetchOrderStatus(guestUuid.value);
+            checkGuestStatus();
+        }
+    } catch (e) {
+        // 錯誤處理 (原本的邏輯)
+        console.error("LIFF Init Error:", e);
+        fetchOrderStatus(guestUuid.value);
+        checkGuestStatus();
+    }
+}
                     } catch (e) { errorMsg.value = e.message; } 
                     finally { 
                         isLoadingData.value = false; hideStaticLoader(); 
@@ -2737,6 +2788,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
