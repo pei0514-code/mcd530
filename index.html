@@ -1902,36 +1902,7 @@
                 // B. 視窗控制
                 // ==========================
                 const getModal = (id) => { const el = document.getElementById(id); if (!el) return null; if (typeof bootstrap !== 'undefined') { let instance = bootstrap.Modal.getInstance(el); if (!instance) instance = new bootstrap.Modal(el); return instance; } return null; };
-                const openModalSafe = (id) => { const modal = getModal(id); if (modal) modal.show(); };
-         const hideModalSafe = (id) => {
-    // 1. 先嘗試用 Bootstrap 的原生方式關閉
-    const modal = getModal(id);
-    if (modal) {
-        modal.hide();
-    }
-
-    // 2. ★★★ 手機版補強邏輯 ★★★
-    setTimeout(() => {
-        const modalEl = document.getElementById(id);
-        if (modalEl) {
-            modalEl.classList.remove('show');
-            modalEl.style.display = 'none';
-            modalEl.setAttribute('aria-hidden', 'true');
-        }
-
-        const backdrops = document.querySelectorAll('.modal-backdrop');
-        backdrops.forEach(b => b.remove());
-
-        document.body.classList.remove('modal-open');
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
-        
-        const bodyEl = document.body;
-        if (bodyEl.hasAttribute('data-bs-overflow')) {
-            bodyEl.removeAttribute('data-bs-overflow');
-        }
-    }, 150);
-};
+              const openModalSafe = (id) => { const modal = getModal(id); if (modal) modal.show(); };
 
 // ★★★ 關鍵修復：補回被誤刪的 openAdminLogin 開頭 ★★★
 const openAdminLogin = () => { 
@@ -3182,6 +3153,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
