@@ -1556,88 +1556,107 @@
         
          <div class="modal fade" id="vendorGuideModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0 bg-light"><h5 class="fw-bold"><i class="fas fa-info-circle me-2"></i>使用說明</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-0" v-if="currentVendorGuide"><div v-if="currentVendorGuide.image" class="w-100 bg-dark position-relative" style="min-height:200px; cursor: pointer;" onclick="window.open(this.querySelector('img').src, '_blank')"><img :src="currentVendorGuide.image" class="w-100 object-fit-contain" style="max-height: 40vh;"><div class="position-absolute bottom-0 end-0 m-2 badge bg-dark opacity-75"><i class="fas fa-search-plus me-1"></i>點擊放大</div></div><div class="p-4"><h5 class="fw-bold mb-3 text-danger">{{ currentVendorGuide.name }}</h5><div class="text-muted small" style="white-space: pre-wrap; line-height: 1.6;" v-html="linkifiedGuideInstruction"></div></div></div><div class="modal-footer border-0 p-3"><button class="btn btn-dark w-100 rounded-pill fw-bold" data-bs-dismiss="modal">我瞭解了</button></div></div></div></div>
        <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content text-center p-4 border-0 rounded-4 shadow-lg">
-                    
-                    <div v-if="!showPaymentForm">
-                        <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
-                        <h4 class="fw-bold">{{ isRepaying ? '待付款資訊' : '訂單已成功送出！' }}</h4>
-                        
-                        <div class="my-3 text-center p-2" style="background: #fdf2f2; border-radius: 12px; border: 1px dashed #f5c6cb;">
-                            <div class="text-muted small fw-bold text-uppercase">應付金額</div>
-                            <div class="text-danger fw-bold" style="font-size: 28px;">${{ reportingTotalAmount }}</div>
-                        </div>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center p-4 border-0 rounded-4 shadow-lg">
+            
+            <div v-if="!showPaymentForm">
+                <div class="mb-3 text-success"><i class="fas fa-check-circle fa-5x"></i></div>
+                <h4 class="fw-bold">{{ isRepaying ? '待付款資訊' : '訂單已成功送出！' }}</h4>
+                
+                <div class="my-3 text-center p-2" style="background: #fdf2f2; border-radius: 12px; border: 1px dashed #f5c6cb;">
+                    <div class="text-muted small fw-bold text-uppercase">應付金額</div>
+                    <div class="text-danger fw-bold" style="font-size: 28px;">${{ reportingTotalAmount }}</div>
+                </div>
 
-                        <div v-if="isRepaying" class="alert alert-secondary p-2 mb-3 text-start small">
-                            <div v-for="oid in lastOrderIds" :key="oid" class="mb-1 border-bottom pb-1">
-                                <strong>訂單編號 {{ oid }}</strong><br>
-                                <span v-for="item in getOrderItems(oid)" :key="item.name">{{ item.name }} x{{ item.quantity }}<br></span>
-                            </div>
-                        </div>
-
-                        <p class="small text-muted mb-2">請匯款至下方帳號：</p>
-                                               <div v-if="selectedPayment && bankAccounts[selectedPayment]" 
-                             class="bg-light rounded-3 p-3 text-start mb-4 border animate__animated animate__fadeIn">
-                            
-                            <div class="fw-bold text-dark border-bottom pb-2 mb-2">
-                                <i class="fas fa-university me-2"></i>{{ bankAccounts[selectedPayment].bankName }}
-                            </div>
-                            
-                            <div class="mb-2 d-flex justify-content-between align-items-center bg-white p-2 rounded border border-primary click-effect" 
-                                 style="cursor: pointer;" 
-                                 @click="copyText(bankAccounts[selectedPayment].account)">
-                                <div>
-                                    <div class="small text-muted">銀行帳號 (點擊複製)</div>
-                                    <div class="fw-bold text-danger fs-4 font-monospace">{{ bankAccounts[selectedPayment].account }}</div>
-                                    <div v-if="selectedPayment === '396'" class="text-muted" style="font-size: 11px;">
-                                        <i class="fas fa-info-circle me-1"></i>街口戶名：Sue
-                                    </div>
-                                </div>
-                                <i class="far fa-copy text-primary fs-5"></i>
-                            </div>
-                       
-                            
-                            <div class="text-end">
-                                <small class="text-muted" style="font-size: 11px;">轉帳後請點擊下方按鈕回報</small>
-                            </div>
-                        </div>
-                        <button class="btn btn-warning w-100 rounded-pill py-2 fw-bold mb-2 shadow-sm text-dark" @click="openPaymentForm">
-                            <i class="fas fa-money-bill-wave me-2"></i>我已付款 (回報後五碼)
-                        </button>
-                        <button class="btn btn-outline-dark w-100 rounded-pill py-2 fw-bold" data-bs-dismiss="modal" @click="resetCart">
-                            稍後回報 / 關閉視窗
-                        </button>
+                <div v-if="isRepaying" class="alert alert-secondary p-2 mb-3 text-start small">
+                    <div v-for="oid in lastOrderIds" :key="oid" class="mb-1 border-bottom pb-1">
+                        <strong>訂單編號 {{ oid }}</strong><br>
+                        <span v-for="item in getOrderItems(oid)" :key="item.name">{{ item.name }} x{{ item.quantity }}<br></span>
                     </div>
+                </div>
 
-                    <div v-else>
-                        <h5 class="fw-bold mb-3"><i class="fas fa-edit me-2"></i>回報付款資訊</h5>
-                        <div class="alert alert-primary fw-bold text-center fs-5 mb-3">本次回報總金額：<span class="text-danger">${{ reportingTotalAmount }}</span></div>
-                        <div class="text-start mb-3">
-                            <label class="form-label-small fw-bold">您匯入的帳戶：</label>
-                            <select v-model="paymentForm.bankCode" class="form-select rounded-pill mb-3" disabled>
-                                <option v-if="selectedPayment && bankAccounts[selectedPayment]" :value="bankAccounts[selectedPayment].code">
-                                    {{ bankAccounts[selectedPayment].name }}
-                                </option>
-                            </select>
-                            <label class="form-label-small fw-bold">{{ paymentFormLabel }}</label>
-                          <input type="text" 
-       v-model="paymentForm.accountInfo" 
-       class="form-control rounded-pill" 
-       :placeholder="paymentFormPlaceholder"
-       :maxlength="paymentForm.bankCode === '396' ? 20 : 5"
-       :inputmode="paymentForm.bankCode === '396' ? 'text' : 'numeric'"
-       @input="handleAccountInput">
+                <p class="small text-muted mb-2 text-start fw-bold">
+                    <i class="fas fa-info-circle me-1"></i>請匯款至下方帳號：
+                </p>
+                
+                <div v-if="selectedBankInfos && selectedBankInfos.length > 0">
+                    
+                    <div v-for="bank in selectedBankInfos" :key="bank.code" 
+                         class="bg-light rounded-3 p-3 text-start mb-3 border animate__animated animate__fadeIn">
+                        
+                        <div class="fw-bold text-dark border-bottom pb-2 mb-2 d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-university me-2"></i>{{ bank.bankName || bank.name }}</span>
+                            <span v-if="bank.note" class="badge bg-danger text-white rounded-pill" style="font-size: 10px;">
+                                {{ bank.note }}
+                            </span>
                         </div>
-                        <button class="btn btn-success w-100 rounded-pill py-2 fw-bold mb-2 shadow" @click="submitPayment" :disabled="isSubmittingPayment">
-                            <span v-if="isSubmittingPayment"><i class="fas fa-spinner fa-spin me-2"></i>傳送中...</span>
-                            <span v-else>送出回報</span>
-                        </button>
-                        <button class="btn btn-link text-muted small" @click="showPaymentForm = false">返回上一頁</button>
+                        
+                        <div class="mb-2 d-flex justify-content-between align-items-center bg-white p-2 rounded border border-primary click-effect" 
+                             style="cursor: pointer;" 
+                             @click="copyText(bank.account)">
+                            <div style="overflow: hidden;">
+                                <div class="small text-muted">銀行帳號 (點擊複製)</div>
+                                <div class="fw-bold text-danger fs-4 font-monospace text-truncate">{{ bank.account }}</div>
+                                
+                                <div v-if="bank.code === '396'" class="text-muted mt-1" style="font-size: 11px;">
+                                    <i class="fas fa-info-circle me-1"></i>街口戶名：{{ bank.name }}
+                                </div>
+                            </div>
+                            <div class="ps-2">
+                                <i class="far fa-copy text-primary fs-4"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="text-end">
+                            <small class="text-muted" style="font-size: 11px;">戶名：{{ bank.name }}</small>
+                        </div>
                     </div>
 
                 </div>
+
+                <div v-else class="alert alert-warning text-center small">
+                    <i class="fas fa-exclamation-triangle me-1"></i>暫時無法載入銀行資訊
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-warning w-100 rounded-pill py-2 fw-bold mb-2 shadow-sm text-dark" @click="openPaymentForm">
+                        <i class="fas fa-money-bill-wave me-2"></i>我已付款 (回報後五碼)
+                    </button>
+                    <button class="btn btn-outline-dark w-100 rounded-pill py-2 fw-bold" data-bs-dismiss="modal" @click="resetCart">
+                        稍後回報 / 關閉視窗
+                    </button>
+                </div>
             </div>
+
+            <div v-else>
+                <h5 class="fw-bold mb-3"><i class="fas fa-edit me-2"></i>回報付款資訊</h5>
+                <div class="alert alert-primary fw-bold text-center fs-5 mb-3">本次回報總金額：<span class="text-danger">${{ reportingTotalAmount }}</span></div>
+                <div class="text-start mb-3">
+                    <label class="form-label-small fw-bold">您匯入的帳戶：</label>
+                    <select v-model="paymentForm.bankCode" class="form-select rounded-pill mb-3" disabled>
+                        <option v-for="b in bankAccounts" :key="b.code" :value="b.code">
+                            {{ b.bankName || b.name }}
+                        </option>
+                    </select>
+                    
+                    <label class="form-label-small fw-bold">{{ paymentFormLabel }}</label>
+                    <input type="text" 
+                           v-model="paymentForm.accountInfo" 
+                           class="form-control rounded-pill" 
+                           :placeholder="paymentFormPlaceholder"
+                           :maxlength="paymentForm.bankCode === '396' ? 20 : 5"
+                           :inputmode="paymentForm.bankCode === '396' ? 'text' : 'numeric'"
+                           @input="handleAccountInput">
+                </div>
+                <button class="btn btn-success w-100 rounded-pill py-2 fw-bold mb-2 shadow" @click="submitPayment" :disabled="isSubmittingPayment">
+                    <span v-if="isSubmittingPayment"><i class="fas fa-spinner fa-spin me-2"></i>傳送中...</span>
+                    <span v-else>送出回報</span>
+                </button>
+                <button class="btn btn-link text-muted small" @click="showPaymentForm = false">返回上一頁</button>
+            </div>
+
         </div>
+    </div>
+</div>
         <div class="modal fade" id="unreportedModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 rounded-4 shadow-lg text-center p-4"><div class="mb-2 text-warning"><i class="fas fa-bell fa-4x"></i></div><h5 class="fw-bold mb-2">您有待回報的訂單</h5><p class="text-muted small mb-3">請勾選您已完成轉帳的訂單進行回報：</p><div class="bg-light rounded-3 p-3 mb-4 text-start border" style="max-height: 300px; overflow-y: auto;"><div v-for="group in groupedUnreportedOrders" :key="group.baseId" class="form-check mb-3 border-bottom pb-2"><input class="form-check-input mt-2" type="checkbox" :checked="isGroupSelected(group)" @change="toggleGroupSelection(group)" :id="'chk-group-'+group.baseId"><label class="form-check-label w-100" :for="'chk-group-'+group.baseId"><div class="d-flex justify-content-between align-items-center"><div class="fw-bold text-dark small">訂單編號 {{ group.baseId }} <span v-if="group.ids.length>1" class="text-muted">(合併)</span></div><div class="text-danger fw-bold">${{ group.totalAmount }}</div></div><div class="d-flex gap-2 mt-2 overflow-auto no-scrollbar"><div v-for="(item, idx) in group.items" :key="idx" class="position-relative flex-shrink-0" style="width: 40px; height: 40px;"><img :src="getProductImage(item.name)" class="w-100 h-100 rounded border object-fit-cover"><span class="position-absolute bottom-0 end-0 badge bg-dark rounded-pill" style="font-size:8px; padding: 2px 4px;">x{{ item.quantity }}</span></div></div></label></div><div v-if="groupedUnreportedOrders.length === 0" class="text-muted small text-center">暫無待回報訂單</div></div><div class="d-grid gap-2"><button class="btn btn-primary rounded-pill fw-bold" @click="goToPayFromPending" :disabled="pendingSelection.length === 0"><i class="fas fa-wallet me-2"></i>付款去 (查看匯款資訊)</button><button class="btn btn-warning rounded-pill fw-bold" @click="openReportForPending" :disabled="pendingSelection.length === 0"><i class="fas fa-edit me-2"></i>我已匯款 (直接回報)</button><button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">稍後再說</button><button class="btn btn-link text-muted small text-decoration-none mt-1" @click="dismissPendingAlertForever">不再提醒</button></div></div></div></div>
         <div class="modal fade" id="cancelConfirmModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden"><div class="modal-header border-0 bg-secondary text-white py-3"><h5 class="fw-bold fs-5 mb-0"><i class="fas fa-times-circle me-2"></i>取消訂單確認</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-4 text-center"><div class="mb-3 text-muted"><i class="far fa-sad-tear fa-4x"></i></div><h5 class="fw-bold mb-2">確定要取消這筆訂單嗎？</h5><p class="text-muted small mb-4">取消後庫存將會自動釋出，<br>若您已匯款請勿取消，請聯繫客服。</p><div v-if="relatedOrdersToCancel.length > 0" class="alert alert-warning text-start small mb-4"><i class="fas fa-exclamation-circle me-1"></i><strong>此為合併訂單</strong> ({{ relatedOrdersToCancel.length + 1 }} 筆)<br>您要一併取消其他相關訂單嗎？</div><div class="d-grid gap-2"><button v-if="relatedOrdersToCancel.length > 0" class="btn btn-danger rounded-pill fw-bold" @click="confirmCancel('all')"><i class="fas fa-trash-alt me-2"></i>全部取消 (推薦)</button><button class="btn rounded-pill fw-bold" :class="relatedOrdersToCancel.length > 0 ? 'btn-outline-danger' : 'btn-danger'" @click="confirmCancel('single')"><i class="fas fa-check me-2"></i>{{ relatedOrdersToCancel.length > 0 ? '僅取消此筆' : '確認取消' }}</button><button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">保留訂單</button></div></div></div></div></div>
         <div class="modal fade" id="alertModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;"><div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden"><div class="modal-body p-4"><div class="mb-3 text-warning"><i class="fas fa-exclamation-circle fa-3x"></i></div><h5 class="fw-bold mb-3">溫馨提醒</h5><div class="text-muted text-start bg-light p-3 rounded-3 small" style="line-height:1.6;"><div v-for="(msg, idx) in alertMessages" :key="idx" class="mb-1"><i class="fas fa-caret-right me-2 text-warning"></i>{{ msg }}</div></div><div class="mt-4"><button type="button" class="btn btn-dark w-100 rounded-pill fw-bold" data-bs-dismiss="modal">我知道了</button></div></div></div></div></div>
@@ -2319,7 +2338,63 @@ if (settings.value.liffId) {
                 
                 const openReportForPending = () => { hideModalSafe('unreportedModal'); lastOrderIds.value = pendingSelection.value; openPaymentForm(); openModalSafe('successModal'); };
                 const goToPayFromPending = () => { hideModalSafe('unreportedModal'); lastOrderIds.value = pendingSelection.value; isRepaying.value = true; showPaymentForm.value = false; selectedPayment.value = ''; openModalSafe('successModal'); };
-                const openReportForHistory = (h) => { hideModalSafe('historyModal'); const base = h.id.split('-')[0]; const sib = orderHistory.value.filter(o=>o.id.startsWith(base)&&getStatusBadge(o).canReport).map(o=>o.id); lastOrderIds.value = sib.length>0?sib:[h.id]; openPaymentForm(); openModalSafe('successModal'); };
+               // ==========================================
+// ★★★ 修改歷史回報函式 (修正版：指向 successModal) ★★★
+// ==========================================
+const openReportForHistory = (history) => {
+    console.log("開啟歷史回報:", history.id);
+
+    // 1. 設定變數：告訴共用視窗現在要處理哪張單
+    // ★ 關鍵：設定 lastOrderIds，這樣 reportingTotalAmount 金額才會自動計算正確
+    lastOrderIds.value = [history.id]; 
+    
+    // 2. 設定狀態：標記為「補回報/修改模式」
+    isRepaying.value = true;        
+    showPaymentForm.value = false;  // 先顯示銀行帳號列表，讓客人看
+    
+    // 3. 自動偵測銀行 (保留原本邏輯，確保選單正確)
+    if (history) {
+        const fullInfo = (
+            String(history.deliveryMethod || '') + 
+            String(history.paymentNote || '') + 
+            String(history.items ? JSON.stringify(history.items) : '')
+        ).toLowerCase();
+
+        let foundCode = '';
+        const banks = bankAccounts.value || {};
+
+        for (const key in banks) {
+            const bank = banks[key];
+            const code = String(bank.code);
+            const name = String(bank.name).toLowerCase();
+            const bankName = String(bank.bankName).toLowerCase();
+
+            if (fullInfo.includes(code) || fullInfo.includes(name) || fullInfo.includes(bankName)) {
+                foundCode = bank.code;
+                break;
+            }
+        }
+        
+        // 設定 selectedPayment (讓 HTML 知道要顯示哪家銀行)
+        selectedPayment.value = foundCode || '';
+        
+        // 如果有偵測到銀行，順便預填表單的銀行選項
+        if (foundCode) {
+            paymentForm.value.bankCode = foundCode;
+        }
+    }
+
+    // 4. ★★★ 關鍵修改：開啟正確的視窗 ID (successModal) ★★★
+    const modalEl = document.getElementById('successModal'); 
+    if (modalEl) {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    } else {
+        console.error("錯誤：找不到 successModal，請檢查 HTML");
+    }
+};
+                
+                //const openReportForHistory = (h) => { hideModalSafe('historyModal'); const base = h.id.split('-')[0]; const sib = orderHistory.value.filter(o=>o.id.startsWith(base)&&getStatusBadge(o).canReport).map(o=>o.id); lastOrderIds.value = sib.length>0?sib:[h.id]; openPaymentForm(); openModalSafe('successModal'); };
                 const linkifiedGuideInstruction = computed(() => currentVendorGuide.value ? (currentVendorGuide.value.instruction||'').replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="text-decoration:underline;">$1</a>') : '');
 
                 // ==========================
@@ -2850,6 +2925,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
