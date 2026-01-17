@@ -1902,7 +1902,7 @@
                 // B. 視窗控制
                 // ==========================
                 const getModal = (id) => { const el = document.getElementById(id); if (!el) return null; if (typeof bootstrap !== 'undefined') { let instance = bootstrap.Modal.getInstance(el); if (!instance) instance = new bootstrap.Modal(el); return instance; } return null; };
-              const openModalSafe = (id) => { const modal = getModal(id); if (modal) modal.show(); };
+                const openModalSafe = (id) => { const modal = getModal(id); if (modal) modal.show(); };
                 const hideModalSafe = (id) => { const modal = getModal(id); if (modal) modal.hide(); };
                 
                 const openHistory = () => { hideModalSafe('ticketModal'); openModalSafe('historyModal'); fetchOrderStatus(getEffectiveUserId()); };
@@ -1915,22 +1915,13 @@
     if (safeGetStorage('mm_admin_auth', '') === 'true') { 
         fetchAdminDashboard(); 
         
-
-// ★★★ 關鍵修復：補回被誤刪的 openAdminLogin 開頭 ★★★
-const openAdminLogin = () => { 
-    hideModalSafe('guideModal'); 
-
-    // 這裡原本被刪掉了，導致下方的 else 報錯
-    if (safeGetStorage('mm_admin_auth', '') === 'true') { 
-        fetchAdminDashboard(); 
-
-        // 順便把目前的公告填入管理介面
-        marqueeConfig.value.text = announcement.value.replace(/        ✦        /g, ""); 
+        // ★★★ 順便把目前的公告填入管理介面 ★★★
+        marqueeConfig.value.text = announcement.value.replace(/        ✦        /g, ""); // 移除裝飾符號
+        // 預設開啟，因為前端比較難從純文字判斷開關，管理員自己看得到有沒有字
         
         openModalSafe('adminPanelModal'); 
     } else { 
-        adminPasswordInput.value = ''; 
-        openModalSafe('adminLoginModal'); 
+        adminPasswordInput.value = ''; openModalSafe('adminLoginModal'); 
     } 
 };
                 // ==========================
@@ -3165,49 +3156,3 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
