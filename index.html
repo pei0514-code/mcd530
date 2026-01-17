@@ -1986,6 +1986,9 @@ const formatDateStr = (str) => {
 // ==========================================
 // ★★★ 修正版：所有票券資料處理 (v3.0 檔名優先) ★★★
 // ==========================================
+// ==========================================
+// ★★★ 修正版：所有票券資料處理 (支援 3碼日期補0) ★★★
+// ==========================================
 const allTickets = computed(() => {
     let t = [];
     const currentYear = new Date().getFullYear(); // 抓取今年年份 (例如 2026)
@@ -2006,21 +2009,28 @@ const allTickets = computed(() => {
                 const rawPurchaseDate = o.timestamp ? o.timestamp.split(' ')[0] : '';
                 
                 // ==============================================
-                // ★★★ 關鍵修改：優先讀取商品名稱的 [xxxx] ★★★
+                // ★★★ 關鍵修改：增強版檔名解析 ★★★
                 // ==============================================
                 let rawExpiryDate = '';
 
-                // 1. 第一順位：嘗試從名稱 n 裡面抓開頭的 [xxxx]
-                const match = n.match(/^\[(\d{4})\]/); 
+                // 修改 Regex：允許 3 到 4 位數字 (例如 [213] 或 [0213])
+                const match = n.match(/^\[(\d{3,4})\]/); 
                 
                 if (match) {
-                    // 如果有名稱效期，直接使用
-                    const mmdd = match[1]; // 抓到 "0228"
+                    let mmdd = match[1]; 
+                    
+                    // ★ 自動補 0：如果是 "213"，前面補 0 變成 "0213"
+                    if (mmdd.length === 3) {
+                        mmdd = '0' + mmdd;
+                    }
+
                     const m = mmdd.substring(0, 2); // "02"
-                    const d = mmdd.substring(2, 4); // "28"
+                    const d = mmdd.substring(2, 4); // "13"
+                    
+                    // 組合日期
                     rawExpiryDate = `${currentYear}/${m}/${d}`;
                 } else {
-                    // 2. 第二順位：如果名稱沒寫，才去讀後台設定
+                    // 如果檔名沒有 [xxxx]，才去讀後台
                     rawExpiryDate = (o.tickets && o.tickets[i]?.expiry) || '';
                 }
                 // ==============================================
@@ -2034,7 +2044,7 @@ const allTickets = computed(() => {
                     productImage: p ? p.image : 'https://placehold.co/150?text=NoImg',
                     isRedeemed: redeemed,
                     
-                    // 這裡會再次經過 formatDateStr 確保格式統一
+                    // 格式化顯示
                     expiryDate: formatDateStr(rawExpiryDate), 
                     purchaseDate: formatDateStr(rawPurchaseDate),
                     
@@ -2044,6 +2054,13 @@ const allTickets = computed(() => {
             });
         }
     });
+    
+    if (ticketSearchQuery.value) {
+        const q = ticketSearchQuery.value.toLowerCase();
+        return t.filter(x => x.name.toLowerCase().includes(q) || x.orderId.toLowerCase().includes(q));
+    }
+    return t;
+});
     
     if (ticketSearchQuery.value) {
         const q = ticketSearchQuery.value.toLowerCase();
@@ -3069,6 +3086,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
