@@ -2087,65 +2087,66 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                 });
                 watch(acceptTerms, (val) => safeSetStorage('mm_accept_terms', val));
                 // ==========================================
-// ★★★ 自動偵測銀行帳號 (v5.0 歷史回溯版) ★★★
+// ★★★ 自動偵測銀行帳號 (安全防護版) ★★★
 // ==========================================
+// 請確保這段代碼放在 setup() 的後段，所有變數都定義完之後
 watch(pendingSelection, (newVal) => {
-    // 1. 如果沒有選任何訂單，清空選擇 (這會導致顯示全部銀行，或不顯示，視HTML而定)
-    if (!newVal || newVal.length === 0) {
-        selectedPayment.value = '';
-        return;
-    }
+    try {
+        // 1. 安全檢查：確保變數都存在
+        if (!selectedPayment || !bankAccounts || !orderHistory) return;
 
-    // 2. 抓出第一張被選中的訂單 (通常待回報是一張一張點的)
-    const firstOrderId = newVal[0];
-    const order = orderHistory.value.find(o => o.id === firstOrderId);
+        // 2. 如果沒有選任何訂單，重置
+        if (!newVal || newVal.length === 0) {
+            selectedPayment.value = '';
+            return;
+        }
 
-    if (order) {
-        // 3. 把這張訂單的所有相關欄位拼起來變成一個大字串
-        // 包含：領取方式、付款備註、甚至商品名稱
-        const fullInfo = (
-            String(order.deliveryMethod || '') + 
-            String(order.paymentNote || '') + 
-            String(order.items ? JSON.stringify(order.items) : '')
-        ).toLowerCase();
+        // 3. 抓出第一張被選中的訂單
+        const firstOrderId = newVal[0];
+        // 確保 orderHistory.value 存在且是陣列
+        const history = orderHistory.value || []; 
+        const order = history.find(o => o.id === firstOrderId);
 
-        let foundCode = '';
+        if (order) {
+            // 拼湊資訊 (轉小寫)
+            const fullInfo = (
+                String(order.deliveryMethod || '') + 
+                String(order.paymentNote || '') + 
+                String(order.items ? JSON.stringify(order.items) : '')
+            ).toLowerCase();
 
-        // 4. 拿銀行列表裡的代碼去比對
-        const banks = bankAccounts.value;
-        for (const key in banks) {
-            const bank = banks[key];
-            const code = String(bank.code); // 例如 "822"
-            const name = String(bank.name).toLowerCase(); // 例如 "中國信託"
-            const bankName = String(bank.bankName).toLowerCase(); // 例如 "中國信託(822)"
+            let foundCode = '';
+            const banks = bankAccounts.value || {}; // 防呆
 
-            // ★ 核心邏輯：只要訂單文字裡包含 "822" 或是 "中國信託"
-            if (fullInfo.includes(code) || fullInfo.includes(name) || fullInfo.includes(bankName)) {
-                foundCode = bank.code;
-                break; // 找到了就鎖定，跳出迴圈
+            // 4. 比對
+            for (const key in banks) {
+                const bank = banks[key];
+                if (!bank) continue;
+                
+                const code = String(bank.code || '');
+                const name = String(bank.name || '').toLowerCase();
+                const bankName = String(bank.bankName || '').toLowerCase();
+
+                // 只要有字串符合
+                if ((code && fullInfo.includes(code)) || 
+                    (name && fullInfo.includes(name)) || 
+                    (bankName && fullInfo.includes(bankName))) {
+                    
+                    foundCode = bank.code;
+                    break;
+                }
+            }
+
+            // 5. 設定
+            if (foundCode) {
+                selectedPayment.value = foundCode;
+            } else {
+                selectedPayment.value = '';
             }
         }
-
-        // 5. 設定顯示結果
-        if (foundCode) {
-            console.log(`[系統偵測] 訂單 ${firstOrderId} 當初選擇的是: ${foundCode}`);
-            selectedPayment.value = foundCode; // 鎖定顯示這一家
-        } else {
-            console.log(`[系統偵測] 訂單 ${firstOrderId} 找不到明確銀行資訊，顯示全部`);
-            selectedPayment.value = ''; // 找不到特徵，顯示全部讓客人選
-        }
-    }
-});
-
-    // 4. 顯示邏輯
-    if (detectedCodes.size === 1) {
-        // 只有偵測到一種銀行 (例如全部都是 822) -> 鎖定顯示該銀行
-        selectedPayment.value = Array.from(detectedCodes)[0];
-    } else {
-        // 情況 A：偵測到多種 (混合單，例如一筆 822、一筆 396)
-        // 情況 B：什麼都沒偵測到 (可能是一般轉帳，沒留代碼)
-        // -> 顯示全部銀行，確保客人找得到帳號
-        selectedPayment.value = '';
+    } catch (e) {
+        // 萬一出錯，只印在 console，不讓商城崩潰
+        console.warn("自動偵測銀行失敗:", e);
     }
 });
                 // ==========================
@@ -2849,6 +2850,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
