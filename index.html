@@ -1903,6 +1903,18 @@
                 // ==========================
                 const getModal = (id) => { const el = document.getElementById(id); if (!el) return null; if (typeof bootstrap !== 'undefined') { let instance = bootstrap.Modal.getInstance(el); if (!instance) instance = new bootstrap.Modal(el); return instance; } return null; };
               const openModalSafe = (id) => { const modal = getModal(id); if (modal) modal.show(); };
+                const hideModalSafe = (id) => { const modal = getModal(id); if (modal) modal.hide(); };
+                
+                const openHistory = () => { hideModalSafe('ticketModal'); openModalSafe('historyModal'); fetchOrderStatus(getEffectiveUserId()); };
+                const showGuide = () => openModalSafe('guideModal');
+                const openCart = () => openModalSafe('cartModal');
+                const isAdmin = computed(() => userProfile.value?.userId && ADMIN_IDS.includes(userProfile.value.userId));
+                
+               const openAdminLogin = () => { 
+    hideModalSafe('guideModal'); 
+    if (safeGetStorage('mm_admin_auth', '') === 'true') { 
+        fetchAdminDashboard(); 
+        
 
 // ★★★ 關鍵修復：補回被誤刪的 openAdminLogin 開頭 ★★★
 const openAdminLogin = () => { 
@@ -3153,6 +3165,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
