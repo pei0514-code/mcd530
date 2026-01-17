@@ -1984,33 +1984,46 @@ const formatDateStr = (str) => {
 };
 
 // ==========================================
-// ★★★ 修正版：所有票券資料處理 ★★★
+// ★★★ 修正版：所有票券資料處理 (v3.0 檔名優先) ★★★
 // ==========================================
 const allTickets = computed(() => {
     let t = [];
+    const currentYear = new Date().getFullYear(); // 抓取今年年份 (例如 2026)
     
     orderHistory.value.forEach(o => {
-        // 判斷是否已發貨 (有 fulfillment 文字 或 tickets 陣列)
         if ((String(o.isShipped) === 'true') && (o.fulfillment || (o.tickets && o.tickets.length > 0))) {
             
-            // 取得票券內容列表
             const l = (o.tickets && o.tickets.length > 0) ? o.tickets.map(x => x.url) : o.fulfillment.split('\n').filter(x => x.trim());
             const log = o.redemptionLog || "";
             
-            // 處理每一張票券
             l.forEach((url, i) => {
                 const redeemed = log.includes(`[${i + 1}]已核銷`) || !!redeemedStatus.value[url];
                 
-                // 取得商品名稱
                 let n = (o.tickets && o.tickets[i]) ? o.tickets[i].name : (o.items && o.items[0] ? o.items[0].name : '商品');
                 const cn = n.replace(/\s*[\(（]\d+[組份張].*?[\)）]/g, '').trim();
                 const p = products.value.find(x => x.name === n) || products.value.find(x => x.name === cn);
                 
-                // ★★★ 關鍵修正 1：抓取購買日期 (取 timestamp 前半段) ★★★
                 const rawPurchaseDate = o.timestamp ? o.timestamp.split(' ')[0] : '';
                 
-                // ★★★ 關鍵修正 2：抓取效期 (如果沒有則留空) ★★★
-                const rawExpiryDate = (o.tickets && o.tickets[i]?.expiry) || '';
+                // ==============================================
+                // ★★★ 關鍵修改：優先讀取商品名稱的 [xxxx] ★★★
+                // ==============================================
+                let rawExpiryDate = '';
+
+                // 1. 第一順位：嘗試從名稱 n 裡面抓開頭的 [xxxx]
+                const match = n.match(/^\[(\d{4})\]/); 
+                
+                if (match) {
+                    // 如果有名稱效期，直接使用
+                    const mmdd = match[1]; // 抓到 "0228"
+                    const m = mmdd.substring(0, 2); // "02"
+                    const d = mmdd.substring(2, 4); // "28"
+                    rawExpiryDate = `${currentYear}/${m}/${d}`;
+                } else {
+                    // 2. 第二順位：如果名稱沒寫，才去讀後台設定
+                    rawExpiryDate = (o.tickets && o.tickets[i]?.expiry) || '';
+                }
+                // ==============================================
 
                 t.push({
                     url: url,
@@ -2021,9 +2034,9 @@ const allTickets = computed(() => {
                     productImage: p ? p.image : 'https://placehold.co/150?text=NoImg',
                     isRedeemed: redeemed,
                     
-                    // ★★★ 應用格式化工具 ★★★
+                    // 這裡會再次經過 formatDateStr 確保格式統一
                     expiryDate: formatDateStr(rawExpiryDate), 
-                    purchaseDate: formatDateStr(rawPurchaseDate), // 補上這個欄位，解決空白問題
+                    purchaseDate: formatDateStr(rawPurchaseDate),
                     
                     fullTimestamp: o.timestamp,
                     isMergedOrder: (o.tickets && o.tickets[i]?.isMerged) || false
@@ -2032,7 +2045,6 @@ const allTickets = computed(() => {
         }
     });
     
-    // 搜尋過濾邏輯
     if (ticketSearchQuery.value) {
         const q = ticketSearchQuery.value.toLowerCase();
         return t.filter(x => x.name.toLowerCase().includes(q) || x.orderId.toLowerCase().includes(q));
@@ -3057,6 +3069,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
