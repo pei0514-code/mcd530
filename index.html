@@ -2087,43 +2087,55 @@ const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠�
                 });
                 watch(acceptTerms, (val) => safeSetStorage('mm_accept_terms', val));
                 // ==========================================
-// ★★★ 自動偵測銀行帳號 (v4.0 忠實讀取版) ★★★
+// ★★★ 自動偵測銀行帳號 (v5.0 歷史回溯版) ★★★
 // ==========================================
 watch(pendingSelection, (newVal) => {
-    // 1. 如果沒有選任何訂單，重置為顯示全部
+    // 1. 如果沒有選任何訂單，清空選擇 (這會導致顯示全部銀行，或不顯示，視HTML而定)
     if (!newVal || newVal.length === 0) {
         selectedPayment.value = '';
         return;
     }
 
-    const detectedCodes = new Set(); 
-    const banks = bankAccounts.value;
+    // 2. 抓出第一張被選中的訂單 (通常待回報是一張一張點的)
+    const firstOrderId = newVal[0];
+    const order = orderHistory.value.find(o => o.id === firstOrderId);
 
-    // 2. 迴圈檢查每一張被選中的訂單
-    newVal.forEach(oid => {
-        const order = orderHistory.value.find(o => o.id === oid);
-        if (order) {
-            // 把訂單裡所有可能的欄位拼起來找 (轉小寫)
-            // 重點：我們找的是訂單紀錄裡有沒有出現 '822', '396' 這些代碼
-            const orderContent = (
-                String(order.deliveryMethod || '') + 
-                String(order.paymentNote || '') +
-                String(order.items ? JSON.stringify(order.items) : '')
-            ).toLowerCase();
+    if (order) {
+        // 3. 把這張訂單的所有相關欄位拼起來變成一個大字串
+        // 包含：領取方式、付款備註、甚至商品名稱
+        const fullInfo = (
+            String(order.deliveryMethod || '') + 
+            String(order.paymentNote || '') + 
+            String(order.items ? JSON.stringify(order.items) : '')
+        ).toLowerCase();
 
-            // 3. 比對銀行列表
-            for (const key in banks) {
-                const bank = banks[key];
-                const code = String(bank.code).toLowerCase();
-                
-                // ★ 關鍵修正：只認代碼 (Code) 或 銀行名稱
-                // 只要訂單內容裡包含 "822" 或 "中國信託"，就代表客人當初是選這個
-                if (orderContent.includes(code) || orderContent.includes(bank.bankName.toLowerCase())) {
-                    detectedCodes.add(bank.code);
-                }
+        let foundCode = '';
+
+        // 4. 拿銀行列表裡的代碼去比對
+        const banks = bankAccounts.value;
+        for (const key in banks) {
+            const bank = banks[key];
+            const code = String(bank.code); // 例如 "822"
+            const name = String(bank.name).toLowerCase(); // 例如 "中國信託"
+            const bankName = String(bank.bankName).toLowerCase(); // 例如 "中國信託(822)"
+
+            // ★ 核心邏輯：只要訂單文字裡包含 "822" 或是 "中國信託"
+            if (fullInfo.includes(code) || fullInfo.includes(name) || fullInfo.includes(bankName)) {
+                foundCode = bank.code;
+                break; // 找到了就鎖定，跳出迴圈
             }
         }
-    });
+
+        // 5. 設定顯示結果
+        if (foundCode) {
+            console.log(`[系統偵測] 訂單 ${firstOrderId} 當初選擇的是: ${foundCode}`);
+            selectedPayment.value = foundCode; // 鎖定顯示這一家
+        } else {
+            console.log(`[系統偵測] 訂單 ${firstOrderId} 找不到明確銀行資訊，顯示全部`);
+            selectedPayment.value = ''; // 找不到特徵，顯示全部讓客人選
+        }
+    }
+});
 
     // 4. 顯示邏輯
     if (detectedCodes.size === 1) {
@@ -2837,6 +2849,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
