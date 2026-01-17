@@ -2871,10 +2871,7 @@ const fetchLowStock = async (rangeType = '0-5') => {
     }
 };
                 const onAdminShipClick = (o) => { adminShipTarget.value=o; hideModalSafe('adminPanelModal'); openModalSafe('adminShipConfirmModal'); };
-                // ★★★ 修正版：發貨後彈出備份視窗 ★★★
-                // ★★★ 終極修正版：解決視窗被擋住或沒彈出的問題 ★★★
-                // --- 管理員執行發貨 (v3.5 支援手動參數) ---
-const executeAdminShip = async (push) => { 
+                const executeAdminShip = async (push) => { 
     isAdminShipping.value = true; 
     try { 
         // 1. 發送請求
@@ -2883,16 +2880,25 @@ const executeAdminShip = async (push) => {
             body: JSON.stringify({
                 action: 'adminShipOrder', 
                 orderId: adminShipTarget.value.orderId, 
+                
+                // ★★★ 新增：傳送 userId 與 orderDetail，後端 GAS 才能更新會員列表 ★★★
+                userId: adminShipTarget.value.userId,
+                orderDetail: {
+                    items: adminShipTarget.value.items,           // 商品清單
+                    bankCode: adminShipTarget.value.bankCode,     // 銀行代碼 (如 822)
+                    paymentMethod: adminShipTarget.value.paymentMethod, 
+                    deliveryMethod: adminShipTarget.value.deliveryMethod 
+                },
+                
                 isAutoPush: push, 
                 testMode: isAdminTestMode.value,
-                // ★★★ 關鍵修改：傳送手動模式狀態 ★★★
                 isManualMode: isAdminManualShip.value 
             }) 
         }); 
         const json = await res.json(); 
 
-        // 2. 判斷結果
-        if (json.status === 'OK') {
+        // 2. 判斷結果 (請注意：如果您的 GAS 回傳的是 OK，這裡就用 OK)
+        if (json.status === 'OK' || json.status === 'Success') {
             let msg = '✅ 發貨指令已執行';
             if (isAdminManualShip.value) msg += ' (手動模式)';
             showToast(msg); 
@@ -2900,7 +2906,7 @@ const executeAdminShip = async (push) => {
             // 關閉視窗
             hideModalSafe('adminShipConfirmModal'); 
             
-            // 3. 處理備份文字 (延遲開啟，防止被舊視窗擋住)
+            // 3. 處理備份文字
             if (json.backupText) {
                 setTimeout(() => {
                     const textArea = document.getElementById('backupTextArea');
@@ -3063,6 +3069,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
