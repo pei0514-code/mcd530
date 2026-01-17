@@ -1954,21 +1954,31 @@
 
                 const categories = computed(() => [...new Set(products.value.map(p => p.category))]);
 // ==========================================
-// ★★★ 1. 日期格式化小工具 (一定要放在 allTickets 上面) ★★★
+// 1. 日期格式化工具 (最新版：支援 3 碼日期)
 // ==========================================
 const formatDateStr = (str) => {
     if (!str) return '';
     let s = String(str).trim();
 
-    // 處理純數字 8 碼 (20260502)
+    // ★ 關鍵：如果看到 3~4 個純數字 (如 213)，自動補年份與 0
+    if (/^\d{3,4}$/.test(s)) {
+        let mmdd = s;
+        if (mmdd.length === 3) mmdd = '0' + mmdd; // 213 -> 0213
+        
+        const currentYear = new Date().getFullYear();
+        const m = mmdd.substring(0, 2);
+        const d = mmdd.substring(2, 4);
+        
+        return `${currentYear}/${m}/${d}`; // 回傳 2026/02/13
+    }
+
+    // 處理 8 碼 (20260213)
     if (/^\d{8}$/.test(s)) {
         return `${s.substring(0, 4)}/${s.substring(4, 6)}/${s.substring(6, 8)}`;
     }
 
-    // 統一分隔符
+    // 處理分隔符與標準化
     s = s.replace(/[\-\.\s]/g, '/');
-
-    // 標準化補零 (2026/5/2 -> 2026/05/02)
     const match = s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/);
     if (match) {
         const y = match[1];
@@ -1980,15 +1990,14 @@ const formatDateStr = (str) => {
 };
 
 // ==========================================
-// ★★★ 2. 所有票券資料處理 (修正版) ★★★
+// 2. 所有票券資料處理 (最新版：支援檔名解析)
 // ==========================================
 const allTickets = computed(() => {
     let t = [];
-    const currentYear = new Date().getFullYear(); // 抓取今年年份
+    const currentYear = new Date().getFullYear();
     
     orderHistory.value.forEach(o => {
         if ((String(o.isShipped) === 'true') && (o.fulfillment || (o.tickets && o.tickets.length > 0))) {
-            
             const l = (o.tickets && o.tickets.length > 0) ? o.tickets.map(x => x.url) : o.fulfillment.split('\n').filter(x => x.trim());
             const log = o.redemptionLog || "";
             
@@ -1998,27 +2007,17 @@ const allTickets = computed(() => {
                 let n = (o.tickets && o.tickets[i]) ? o.tickets[i].name : (o.items && o.items[0] ? o.items[0].name : '商品');
                 const cn = n.replace(/\s*[\(（]\d+[組份張].*?[\)）]/g, '').trim();
                 const p = products.value.find(x => x.name === n) || products.value.find(x => x.name === cn);
-                
                 const rawPurchaseDate = o.timestamp ? o.timestamp.split(' ')[0] : '';
                 
-                // --- 檔名效期解析邏輯 ---
+                // ★ 檔名解析：抓取 [213] 或 [0213]
                 let rawExpiryDate = '';
-                // 允許 3 到 4 位數字 (例如 [213] 或 [0213])
-                const match = n.match(/^\[(\d{3,4})\]/); 
+                const match = n.match(/[\[【（\(](\d{3,4})[\]】）\)]/); 
                 
                 if (match) {
-                    let mmdd = match[1]; 
-                    // 自動補 0：如果是 "213"，變成 "0213"
-                    if (mmdd.length === 3) mmdd = '0' + mmdd;
-
-                    const m = mmdd.substring(0, 2); 
-                    const d = mmdd.substring(2, 4); 
-                    rawExpiryDate = `${currentYear}/${m}/${d}`;
+                    rawExpiryDate = match[1]; // 這裡會抓到 "213"
                 } else {
-                    // 沒抓到檔名才讀後台
                     rawExpiryDate = (o.tickets && o.tickets[i]?.expiry) || '';
                 }
-                // -----------------------
 
                 t.push({
                     url: url,
@@ -2029,7 +2028,7 @@ const allTickets = computed(() => {
                     productImage: p ? p.image : 'https://placehold.co/150?text=NoImg',
                     isRedeemed: redeemed,
                     
-                    // 這裡呼叫上面的 formatDateStr，如果它沒定義就會報錯
+                    // ★ 這裡呼叫上面的工具，把 "213" 變成 "2026/02/13"
                     expiryDate: formatDateStr(rawExpiryDate), 
                     purchaseDate: formatDateStr(rawPurchaseDate),
                     
@@ -3064,6 +3063,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
