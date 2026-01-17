@@ -1941,10 +1941,47 @@
                 // B. 視窗控制
                 // ==========================
                 const getModal = (id) => { const el = document.getElementById(id); if (!el) return null; if (typeof bootstrap !== 'undefined') { let instance = bootstrap.Modal.getInstance(el); if (!instance) instance = new bootstrap.Modal(el); return instance; } return null; };
-                const openModalSafe = (id) => { const modal = getModal(id); if (modal) modal.show(); };
+                //const openModalSafe = (id) => { const modal = getModal(id); if (modal) modal.show(); };
+const openModalSafe = (id) => {
+    // ★ 關鍵：在開啟任何新視窗前，先把畫面上可能殘留的黑影（遮罩）通通清掉
+    // 這樣就能保證永遠只有「一層」遮罩，不會要按好幾次 X
+    const existingBackdrops = document.querySelectorAll('.modal-backdrop');
+    existingBackdrops.forEach(b => b.remove());
 
+    const modal = getModal(id);
+    if (modal) {
+        modal.show();
+    }
+};
                 
-                const hideModalSafe = (id) => { const modal = getModal(id); if (modal) modal.hide(); };
+               const hideModalSafe = (id) => {
+    // 1. 叫 Bootstrap 關掉指定的視窗
+    const modalEl = document.getElementById(id);
+    if (modalEl) {
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) modalInstance.hide();
+        
+        // 強制移除顯示類名，確保視窗本體消失
+        modalEl.classList.remove('show');
+        modalEl.style.display = 'none';
+        modalEl.setAttribute('aria-hidden', 'true');
+    }
+
+    // 2. ★★★ 核心修正：強力掃除「所有」遮罩 ★★★
+    // 不要等 150ms，直接先掃一次，setTimeout 再掃第二次做保險
+    const cleanup = () => {
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(b => b.remove()); // 每一層都拔掉
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    };
+
+    cleanup(); // 立即執行
+    setTimeout(cleanup, 200); // 0.2秒後再檢查一次，防止 Bootstrap 又自動長出來
+};
+                
+                //const hideModalSafe = (id) => { const modal = getModal(id); if (modal) modal.hide(); };
                 
                 const openHistory = () => { hideModalSafe('ticketModal'); openModalSafe('historyModal'); fetchOrderStatus(getEffectiveUserId()); };
                 const showGuide = () => openModalSafe('guideModal');
@@ -3197,11 +3234,3 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
