@@ -13,20 +13,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
     <style>
-     .modal {
-    z-index: 2050 !important;
+    .modal {
+    z-index: 2060 !important;
 }
 
-/* 確保文字可以被選取複製 */
-.modal-body, .copyable-text {
+/* 2. 確保文字是可以被選取的 */
+.modal-content {
+    pointer-events: auto !important;
     user-select: text !important;
     -webkit-user-select: text !important;
-    pointer-events: auto !important;
 }
 
-/* 修正「暗暗的」問題：確保遮罩在正確的層級 */
+/* 3. 確保遮罩乖乖待在最後面 */
 .modal-backdrop {
     z-index: 2040 !important;
+}
+
+/* 4. 如果是發貨備份視窗，讓它特別亮一點 */
+#backupModalID .modal-content { /* 請將 backupModalID 換成您備份視窗的 ID */
+    background-color: #fff !important;
+    position: relative;
+    z-index: 2070;
 }
  /* --- 跑馬燈樣式 (極速順暢版) --- */
 .marquee-container {
@@ -3227,6 +3234,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
