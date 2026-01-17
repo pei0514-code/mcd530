@@ -13,7 +13,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
     <style>
-     
+     .modal {
+    z-index: 2050 !important;
+}
+
+/* 確保文字可以被選取複製 */
+.modal-body, .copyable-text {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    pointer-events: auto !important;
+}
+
+/* 修正「暗暗的」問題：確保遮罩在正確的層級 */
+.modal-backdrop {
+    z-index: 2040 !important;
+}
  /* --- 跑馬燈樣式 (極速順暢版) --- */
 .marquee-container {
     background-color: #d32f2f;
@@ -3213,6 +3227,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
