@@ -2873,42 +2873,46 @@ const fetchLowStock = async (rangeType = '0-5') => {
     }
 };
                 const onAdminShipClick = (o) => { adminShipTarget.value=o; hideModalSafe('adminPanelModal'); openModalSafe('adminShipConfirmModal'); };
-                const executeAdminShip = async (push) => { 
+               const executeAdminShip = async (push) => { 
+    if (!adminShipTarget.value) return;
     isAdminShipping.value = true; 
+    
     try { 
-        // 1. 發送請求
+        // 1. 封裝傳送給後端的資料包 (這裡最容易短少代碼)
+        const payload = {
+            action: 'adminShipOrder', 
+            orderId: adminShipTarget.value.orderId, 
+            userId: adminShipTarget.value.userId,
+            
+            // ★★★ 關鍵短少修正：確保傳送總金額，後端才能更新累積消費 ★★★
+            orderDetail: {
+                items: adminShipTarget.value.items,
+                bankCode: adminShipTarget.value.bankCode,
+                paymentMethod: adminShipTarget.value.paymentMethod,
+                deliveryMethod: adminShipTarget.value.deliveryMethod, // 會抓到 MOMO轉贈
+                totalAmount: adminShipTarget.value.totalAmount || 0  // 這是更新 I 欄的關鍵
+            },
+            
+            isAutoPush: push, 
+            testMode: isAdminTestMode.value,
+            isManualMode: isAdminManualShip.value 
+        };
+
+        // 2. 執行發送
         const res = await fetch(API_URL, { 
             method: 'POST', 
-            body: JSON.stringify({
-                action: 'adminShipOrder', 
-                orderId: adminShipTarget.value.orderId, 
-                
-                // ★★★ 新增：傳送 userId 與 orderDetail，後端 GAS 才能更新會員列表 ★★★
-                userId: adminShipTarget.value.userId,
-                orderDetail: {
-                    items: adminShipTarget.value.items,           // 商品清單
-                    bankCode: adminShipTarget.value.bankCode,     // 銀行代碼 (如 822)
-                    paymentMethod: adminShipTarget.value.paymentMethod, 
-                    deliveryMethod: adminShipTarget.value.deliveryMethod 
-                },
-                
-                isAutoPush: push, 
-                testMode: isAdminTestMode.value,
-                isManualMode: isAdminManualShip.value 
-            }) 
+            body: JSON.stringify(payload) 
         }); 
         const json = await res.json(); 
 
-        // 2. 判斷結果 (請注意：如果您的 GAS 回傳的是 OK，這裡就用 OK)
+        // 3. 判斷結果 (兼容 Success 與 OK)
         if (json.status === 'OK' || json.status === 'Success') {
-            let msg = '✅ 發貨指令已執行';
-            if (isAdminManualShip.value) msg += ' (手動模式)';
-            showToast(msg); 
+            showToast('✅ 發貨指令已執行'); 
             
-            // 關閉視窗
+            // 關閉發貨確認視窗
             hideModalSafe('adminShipConfirmModal'); 
             
-            // 3. 處理備份文字
+            // --- 妳剛剛貼的「備份文字處理」代碼 (放在這裡) ---
             if (json.backupText) {
                 setTimeout(() => {
                     const textArea = document.getElementById('backupTextArea');
@@ -2924,17 +2928,21 @@ const fetchLowStock = async (rangeType = '0-5') => {
                     }
                 }, 500); 
             }
-            
+            // --- 備份處理結束 ---
+
             // 4. 刷新後台數據
             setTimeout(fetchAdminDashboard, 1000);
+
         } else {
             showToast('❌ 發貨失敗：' + (json.message || '未知錯誤'));
         }
-    } catch(e){ 
-        console.error(e);
+    } catch(e) { 
+        console.error("發貨 API 執行失敗:", e);
         showToast('連線失敗，請檢查網路'); 
     } finally { 
-        isAdminShipping.value = false; 
+        isAdminShipping.value = false;
+        // ★★★ 重要：重置手動模式狀態，才不會影響下次發貨 ★★★
+        isAdminManualShip.value = false; 
     }
 };
 
@@ -3091,6 +3099,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
