@@ -2990,8 +2990,52 @@ const handleManualShip = () => {
                 const toggleBatchMode = () => { isBatchMode.value=!isBatchMode.value; batchSelection.value.clear(); };
                 const toggleTicketSelection = (i) => { if(i.isRedeemed)return; const k=`${i.orderId}_${i.ticketIndex}`; if(batchSelection.value.has(k)) batchSelection.value.delete(k); else batchSelection.value.add(k); batchSelection.value=new Set(batchSelection.value); };
                 const selectAllTickets = () => { const all=currentDisplayTickets.value.filter(t=>!t.isRedeemed).map(t=>`${t.orderId}_${t.ticketIndex}`); if(all.every(k=>batchSelection.value.has(k))) batchSelection.value.clear(); else all.forEach(k=>batchSelection.value.add(k)); batchSelection.value=new Set(batchSelection.value); };
+                // 1. 在這段函式外面 (或是 setup 裡面的變數區) 宣告一個鎖
+const isExpiryCheckDone = ref(false); 
+
+const checkExpiryReminders = () => {
+    // ★★★ 第一道鎖：如果這次頁面載入已經檢查並執行過，就直接離開，不要再跑了
+    if (isExpiryCheckDone.value) return;
+
+    const t = new Date().toLocaleDateString('zh-TW');
+    if (safeGetStorage('mm_ignore_expiry_' + t, '') === 'true') return;
+
+    const l = [];
+    const now = Date.now();
+    
+    availableTickets.value.forEach(x => {
+        if (x.expiryDate && !x.isRedeemed) {
+            const p = x.expiryDate.split(/[\/\-]/);
+            if (p.length >= 3) {
+                const d = new Date(p[0], p[1] - 1, p[2], 23, 59, 59);
+                const days = Math.ceil((d.getTime() - now) / (86400000));
                 
-                const checkExpiryReminders = () => { const t=new Date().toLocaleDateString('zh-TW'); if(safeGetStorage('mm_ignore_expiry_'+t,'')==='true')return; const l=[]; const now=Date.now(); availableTickets.value.forEach(x=>{ if(x.expiryDate && !x.isRedeemed){ const p=x.expiryDate.split(/[\/\-]/); if(p.length>=3){ const d=new Date(p[0],p[1]-1,p[2],23,59,59); const days=Math.ceil((d.getTime()-now)/(86400000)); if(days<=7 && days>=0) l.push({...x, ticketId:`${x.orderId}_${x.ticketIndex}`, daysLeft:days===0?'今天':days}); } } }); if(l.length>0){ expiringTicketsList.value=l; setTimeout(()=>{ if(!document.querySelector('.modal.show')) openModalSafe('expiryReminderModal'); },2000); } };
+                if (days <= 7 && days >= 0) {
+                    l.push({
+                        ...x,
+                        ticketId: `${x.orderId}_${x.ticketIndex}`,
+                        daysLeft: days === 0 ? '今天' : days
+                    });
+                }
+            }
+        }
+    });
+
+    if (l.length > 0) {
+        // ★★★ 關鍵：只要確定有過期品要顯示，立刻上鎖！
+        // 這樣就算 0.1 秒後函式又被呼叫，第一行就會把它擋回去
+        isExpiryCheckDone.value = true; 
+
+        expiringTicketsList.value = l;
+        setTimeout(() => {
+            // 這裡原本的防呆保留著，雙重保障
+            if (!document.querySelector('.modal.show')) {
+                openModalSafe('expiryReminderModal');
+            }
+        }, 2000);
+    }
+};
+                //const checkExpiryReminders = () => { const t=new Date().toLocaleDateString('zh-TW'); if(safeGetStorage('mm_ignore_expiry_'+t,'')==='true')return; const l=[]; const now=Date.now(); availableTickets.value.forEach(x=>{ if(x.expiryDate && !x.isRedeemed){ const p=x.expiryDate.split(/[\/\-]/); if(p.length>=3){ const d=new Date(p[0],p[1]-1,p[2],23,59,59); const days=Math.ceil((d.getTime()-now)/(86400000)); if(days<=7 && days>=0) l.push({...x, ticketId:`${x.orderId}_${x.ticketIndex}`, daysLeft:days===0?'今天':days}); } } }); if(l.length>0){ expiringTicketsList.value=l; setTimeout(()=>{ if(!document.querySelector('.modal.show')) openModalSafe('expiryReminderModal'); },2000); } };
                 const openRedeemFromReminder = (i) => { hideModalSafe('expiryReminderModal'); showTicketImage(i); };
                 const dismissExpiryToday = () => { safeSetStorage('mm_ignore_expiry_'+new Date().toLocaleDateString('zh-TW'),'true'); hideModalSafe('expiryReminderModal'); };
                 const clearRedeemedHistory = () => openModalSafe('clearHistoryConfirmModal');
@@ -3099,6 +3143,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
