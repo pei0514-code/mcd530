@@ -13,6 +13,28 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
     <style>
+        /* 讓關閉按鈕變得超級好點 */
+.custom-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 50px !important;  /* 寬度加大到 50 像素 */
+    height: 50px !important; /* 高度加大到 50 像素 */
+    background-size: 20px;   /* 讓中間的 X 維持正常大小 */
+    background-position: center;
+    background-color: rgba(255, 255, 255, 0.8) !important; /* 加個淡淡背景色比較好找 */
+    border-radius: 50%;
+    z-index: 9999 !important;
+    opacity: 1 !important;
+    padding: 0 !important;
+    /* 關鍵：防止手機點擊穿透 */
+    pointer-events: auto !important; 
+}
+
+/* 確保彈窗頂部有足夠空間給這個大按鈕 */
+.modal-header {
+    padding-top: 20px !important;
+}
  /* --- 跑馬燈樣式 (極速順暢版) --- */
 .marquee-container {
     background-color: #d32f2f;
@@ -3209,6 +3231,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
