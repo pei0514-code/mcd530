@@ -2947,22 +2947,20 @@ const fetchLowStock = async (rangeType = '0-5') => {
 };
 
 
-                // --- 處理手動發貨 (僅文字/不發圖) ---
-const handleManualShip = () => {
-    isAdminManualShip.value = true; // 強制開啟手動模式
-    executeAdminShip(false);        // 呼叫發貨，傳入 false 代表不推播
-};
-
 // --- 處理 MOMO 轉贈 ---
 const handleMomoGift = () => {
-    // 1. 設定為手動模式 (因為不發圖，也不推播)
+    if (!adminShipTarget.value) return;
     isAdminManualShip.value = true;
-    
-    // 2. 暫時修改領取方式為「MOMO轉贈」，讓後端會員列表可以正確紀錄
-    if (adminShipTarget.value) {
-        adminShipTarget.value.deliveryMethod = 'MOMO轉贈';
-    }
-    
+    // ★ 在這裡直接標記，讓後端知道領取方式是 MOMO
+    adminShipTarget.value.deliveryMethod = 'MOMO轉贈';
+    executeAdminShip(false); // 不推播
+};
+
+                // --- 處理 手動發貨 ---
+const handleManualShip = () => {
+    if (!adminShipTarget.value) return;
+    isAdminManualShip.value = true;
+    adminShipTarget.value.deliveryMethod = '手動發貨';
     executeAdminShip(false); // 不推播
 };
                 const openAdminProductManager = async () => { openModalSafe('adminProductManagerModal'); try{ const r=await fetch(`${API_URL}?action=adminGetProductList`); const d=await r.json(); adminProducts.value=d.products||[]; } catch(e){} };
@@ -3099,6 +3097,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
