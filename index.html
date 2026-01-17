@@ -2337,7 +2337,70 @@ if (settings.value.liffId) {
                 const confirmCancel = async (mode='single') => { if(!orderToCancel.value) return; const t=[orderToCancel.value]; if(mode==='all') t.push(...relatedOrdersToCancel.value); hideModalSafe('cancelConfirmModal'); showToast('取消中...'); try{ await Promise.all(t.map(o=>fetch(API_URL,{ method:'POST', body:JSON.stringify({ action:'cancelOrder', orderId:o.id, userId:getEffectiveUserId() }) }))); orderHistory.value=orderHistory.value.map(h=>{ if(t.find(x=>x.id===h.id)) return {...h, paymentNote:'用戶自行取消'}; return h; }); safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value)); unreportedOrders.value=unreportedOrders.value.filter(id=>!t.find(x=>x.id===id)); safeSetStorage('mm_pending_payment_orders', JSON.stringify(unreportedOrders.value)); showToast('已取消'); setTimeout(initApp, 1000); } catch(e){ showToast('取消失敗'); } };
                 
                 const openReportForPending = () => { hideModalSafe('unreportedModal'); lastOrderIds.value = pendingSelection.value; openPaymentForm(); openModalSafe('successModal'); };
-                const goToPayFromPending = () => { hideModalSafe('unreportedModal'); lastOrderIds.value = pendingSelection.value; isRepaying.value = true; showPaymentForm.value = false; selectedPayment.value = ''; openModalSafe('successModal'); };
+                // ==========================================
+// ★★★ 修正版：待回報清單 -> 付款去 (加入自動偵測) ★★★
+// ==========================================
+const goToPayFromPending = () => {
+    // 1. 關閉目前的待回報視窗
+    hideModalSafe('unreportedModal');
+
+    // 2. 設定要處理的訂單 ID (來自使用者的勾選)
+    lastOrderIds.value = pendingSelection.value;
+
+    // 3. 設定狀態為「補付款/補回報」
+    isRepaying.value = true;
+    showPaymentForm.value = false; // 先顯示銀行帳號列表，而非直接輸入後五碼
+
+    // 4. ★★★ 自動偵測銀行邏輯 (新增部分) ★★★
+    let foundCode = '';
+    const banks = bankAccounts.value || {};
+    const detectedCodes = new Set(); // 用集合來收集偵測到的銀行
+
+    // 遍歷所有被勾選的訂單 ID
+    pendingSelection.value.forEach(oid => {
+        const order = orderHistory.value.find(o => o.id === oid);
+        if (order) {
+            // 拼湊訂單資訊來比對 (轉小寫)
+            const fullInfo = (
+                String(order.deliveryMethod || '') + 
+                String(order.paymentNote || '') + 
+                String(order.items ? JSON.stringify(order.items) : '')
+            ).toLowerCase();
+
+            // 比對銀行列表
+            for (const key in banks) {
+                const bank = banks[key];
+                const code = String(bank.code);
+                const name = String(bank.name).toLowerCase();
+                const bankName = String(bank.bankName).toLowerCase();
+
+                // 如果找到特徵 (例如 "822" 或 "中國信託")
+                if (fullInfo.includes(code) || fullInfo.includes(name) || fullInfo.includes(bankName)) {
+                    detectedCodes.add(bank.code);
+                }
+            }
+        }
+    });
+
+    // 5. 決策時刻
+    if (detectedCodes.size === 1) {
+        // 情境 A：勾選的訂單都指向「同一家銀行」 -> 鎖定顯示該銀行
+        foundCode = Array.from(detectedCodes)[0];
+    } else {
+        // 情境 B：
+        // 1. 勾選了混合銀行 (如一張中信 + 一張街口)
+        // 2. 找不到任何特徵 (一般匯款)
+        // -> 顯示全部銀行，以免客人轉錯
+        foundCode = '';
+    }
+
+    selectedPayment.value = foundCode;
+
+    // 6. 開啟付款資訊視窗 (successModal)
+    openModalSafe('successModal');
+};
+                
+                //const goToPayFromPending = () => { hideModalSafe('unreportedModal'); lastOrderIds.value = pendingSelection.value; isRepaying.value = true; showPaymentForm.value = false; selectedPayment.value = ''; openModalSafe('successModal'); };
                // ==========================================
 // ★★★ 修改歷史回報函式 (修正版：指向 successModal) ★★★
 // ==========================================
@@ -2925,6 +2988,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
