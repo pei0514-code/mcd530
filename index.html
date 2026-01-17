@@ -13,28 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
     <style>
-        /* 讓關閉按鈕變得超級好點 */
-.custom-close-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 50px !important;  /* 寬度加大到 50 像素 */
-    height: 50px !important; /* 高度加大到 50 像素 */
-    background-size: 20px;   /* 讓中間的 X 維持正常大小 */
-    background-position: center;
-    background-color: rgba(255, 255, 255, 0.8) !important; /* 加個淡淡背景色比較好找 */
-    border-radius: 50%;
-    z-index: 9999 !important;
-    opacity: 1 !important;
-    padding: 0 !important;
-    /* 關鍵：防止手機點擊穿透 */
-    pointer-events: auto !important; 
-}
-
-/* 確保彈窗頂部有足夠空間給這個大按鈕 */
-.modal-header {
-    padding-top: 20px !important;
-}
+     
  /* --- 跑馬燈樣式 (極速順暢版) --- */
 .marquee-container {
     background-color: #d32f2f;
@@ -1698,7 +1677,10 @@
         <div class="modal fade" id="unreportedModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 rounded-4 shadow-lg text-center p-4"><div class="mb-2 text-warning"><i class="fas fa-bell fa-4x"></i></div><h5 class="fw-bold mb-2">您有待回報的訂單</h5><p class="text-muted small mb-3">請勾選您已完成轉帳的訂單進行回報：</p><div class="bg-light rounded-3 p-3 mb-4 text-start border" style="max-height: 300px; overflow-y: auto;"><div v-for="group in groupedUnreportedOrders" :key="group.baseId" class="form-check mb-3 border-bottom pb-2"><input class="form-check-input mt-2" type="checkbox" :checked="isGroupSelected(group)" @change="toggleGroupSelection(group)" :id="'chk-group-'+group.baseId"><label class="form-check-label w-100" :for="'chk-group-'+group.baseId"><div class="d-flex justify-content-between align-items-center"><div class="fw-bold text-dark small">訂單編號 {{ group.baseId }} <span v-if="group.ids.length>1" class="text-muted">(合併)</span></div><div class="text-danger fw-bold">${{ group.totalAmount }}</div></div><div class="d-flex gap-2 mt-2 overflow-auto no-scrollbar"><div v-for="(item, idx) in group.items" :key="idx" class="position-relative flex-shrink-0" style="width: 40px; height: 40px;"><img :src="getProductImage(item.name)" class="w-100 h-100 rounded border object-fit-cover"><span class="position-absolute bottom-0 end-0 badge bg-dark rounded-pill" style="font-size:8px; padding: 2px 4px;">x{{ item.quantity }}</span></div></div></label></div><div v-if="groupedUnreportedOrders.length === 0" class="text-muted small text-center">暫無待回報訂單</div></div><div class="d-grid gap-2"><button class="btn btn-primary rounded-pill fw-bold" @click="goToPayFromPending" :disabled="pendingSelection.length === 0"><i class="fas fa-wallet me-2"></i>付款去 (查看匯款資訊)</button><button class="btn btn-warning rounded-pill fw-bold" @click="openReportForPending" :disabled="pendingSelection.length === 0"><i class="fas fa-edit me-2"></i>我已匯款 (直接回報)</button><button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">稍後再說</button><button class="btn btn-link text-muted small text-decoration-none mt-1" @click="dismissPendingAlertForever">不再提醒</button></div></div></div></div>
         <div class="modal fade" id="cancelConfirmModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden"><div class="modal-header border-0 bg-secondary text-white py-3"><h5 class="fw-bold fs-5 mb-0"><i class="fas fa-times-circle me-2"></i>取消訂單確認</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-4 text-center"><div class="mb-3 text-muted"><i class="far fa-sad-tear fa-4x"></i></div><h5 class="fw-bold mb-2">確定要取消這筆訂單嗎？</h5><p class="text-muted small mb-4">取消後庫存將會自動釋出，<br>若您已匯款請勿取消，請聯繫客服。</p><div v-if="relatedOrdersToCancel.length > 0" class="alert alert-warning text-start small mb-4"><i class="fas fa-exclamation-circle me-1"></i><strong>此為合併訂單</strong> ({{ relatedOrdersToCancel.length + 1 }} 筆)<br>您要一併取消其他相關訂單嗎？</div><div class="d-grid gap-2"><button v-if="relatedOrdersToCancel.length > 0" class="btn btn-danger rounded-pill fw-bold" @click="confirmCancel('all')"><i class="fas fa-trash-alt me-2"></i>全部取消 (推薦)</button><button class="btn rounded-pill fw-bold" :class="relatedOrdersToCancel.length > 0 ? 'btn-outline-danger' : 'btn-danger'" @click="confirmCancel('single')"><i class="fas fa-check me-2"></i>{{ relatedOrdersToCancel.length > 0 ? '僅取消此筆' : '確認取消' }}</button><button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">保留訂單</button></div></div></div></div></div>
         <div class="modal fade" id="alertModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;"><div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden"><div class="modal-body p-4"><div class="mb-3 text-warning"><i class="fas fa-exclamation-circle fa-3x"></i></div><h5 class="fw-bold mb-3">溫馨提醒</h5><div class="text-muted text-start bg-light p-3 rounded-3 small" style="line-height:1.6;"><div v-for="(msg, idx) in alertMessages" :key="idx" class="mb-1"><i class="fas fa-caret-right me-2 text-warning"></i>{{ msg }}</div></div><div class="mt-4"><button type="button" class="btn btn-dark w-100 rounded-pill fw-bold" data-bs-dismiss="modal">我知道了</button></div></div></div></div></div>
+        
         <div class="modal fade" id="productDetailModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden h-100" style="max-height: 85vh;"><div class="btn-close-floating" data-bs-dismiss="modal"></div><div class="modal-body p-0 d-flex flex-column" v-if="selectedProduct"><div class="position-relative bg-white" style="flex: 0 0 auto;"><img :src="selectedProduct.image" class="w-100" style="max-height: 350px; object-fit: contain;"></div><div class="p-4 flex-grow-1 overflow-auto bg-white"><div class="d-flex justify-content-between align-items-start mb-2"><div><span class="badge bg-dark mb-2">{{ selectedProduct.vendor }}</span><h5 class="fw-bold mb-1">{{ selectedProduct.name }}</h5></div><div class="text-end"><h4 class="text-danger fw-bold mb-0">${{ selectedProduct.price }}</h4><small class="text-decoration-line-through text-muted" v-if="selectedProduct.originalPrice > selectedProduct.price">${{ selectedProduct.originalPrice }}</small></div></div><div class="d-flex gap-2 mb-3"><span class="badge bg-light text-dark border"><i class="far fa-clock me-1"></i>效期: {{ selectedProduct.expiryDate }}</span><span class="badge bg-light text-dark border"><i class="fas fa-cubes me-1"></i>庫存: {{ selectedProduct.stock }}</span></div><div class="p-3 bg-light rounded-3 small text-secondary mb-3" style="line-height: 1.6; white-space: pre-wrap;">{{ selectedProduct.description || '暫無商品描述' }}</div></div><div class="p-3 border-top bg-white" style="flex: 0 0 auto;"><div v-if="cart[selectedProduct.id]" class="d-flex justify-content-between align-items-center bg-light rounded-pill p-1 border"><button class="btn btn-light rounded-circle shadow-sm" style="width: 40px; height: 40px;" @click="updateCart(selectedProduct, -1)"><i class="fas fa-minus"></i></button><span class="fw-bold fs-5">{{ cart[selectedProduct.id] }}</span><button class="btn btn-light rounded-circle shadow-sm" style="width: 40px; height: 40px;" @click="updateCart(selectedProduct, 1)" :disabled="cart[selectedProduct.id] >= Number(selectedProduct.stock)"><i class="fas fa-plus"></i></button></div><button v-else class="btn btn-dark w-100 rounded-pill py-3 fw-bold shadow" @click="updateCart(selectedProduct, 1)" :disabled="Number(selectedProduct.stock) <= 0">{{ Number(selectedProduct.stock) <= 0 ? '已售完' : '加入購物車' }}</button></div></div></div></div></div>
+      
+        
         <div class="modal fade" id="guestWarningModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;"><div class="modal-content border-0 rounded-4 shadow-lg text-center p-4"><div class="mb-2 text-danger"><i class="fas fa-user-secret fa-3x"></i></div><h5 class="fw-bold mb-2">訪客模式提醒</h5><p class="text-muted small mb-3">您目前未使用 LINE 登入，訂單將無法自動連結至您的帳號。</p><p class="text-muted small mb-4">建議您使用 LINE 開啟本商城，以享有完整服務與訂單查詢功能。</p><a href="https://lin.ee/ejXmXDl" target="_blank" class="btn btn-success w-100 rounded-pill fw-bold mb-2 shadow-sm" style="background-color:#06C755; border:none;"><i class="fab fa-line me-2"></i>點我加入麥麥小舖 LINE@</a><button class="btn btn-outline-success w-100 rounded-pill fw-bold mb-2" onclick="copyLineId()"><i class="far fa-copy me-1"></i>複製商城LINE去LINE加入</button><button class="btn btn-outline-danger w-100 rounded-pill fw-bold" onclick="copyGuestLink()"><i class="fas fa-link me-1"></i>複製商城連結去瀏覽器開啟</button></div></div></div>
       <div class="modal fade" id="expiryReminderModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 350px;">
@@ -3231,6 +3213,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
