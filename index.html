@@ -13,27 +13,33 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
     <style>
-    .modal {
-    z-index: 2060 !important;
+    /* 1. 確保彈窗本體永遠在最前面 */
+.modal {
+    z-index: 2050 !important;
 }
 
-/* 2. 確保文字是可以被選取的 */
+/* 2. 確保黑色黑影(backdrop)永遠被壓在下面 */
+.modal-backdrop {
+    z-index: 1040 !important;
+}
+
+/* 3. 修正「無法複製」：強制允許選取文字並確保點擊生效 */
 .modal-content {
     pointer-events: auto !important;
     user-select: text !important;
     -webkit-user-select: text !important;
-}
-
-/* 3. 確保遮罩乖乖待在最後面 */
-.modal-backdrop {
-    z-index: 2040 !important;
-}
-
-/* 4. 如果是發貨備份視窗，讓它特別亮一點 */
-#backupModalID .modal-content { /* 請將 backupModalID 換成您備份視窗的 ID */
     background-color: #fff !important;
-    position: relative;
-    z-index: 2070;
+}
+
+/* 4. 加大 X 按鈕的「隱形感應區」 */
+.btn-close-floating {
+    width: 50px !important;
+    height: 50px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    z-index: 2100 !important; /* X 按鈕要是全站最前面的東西 */
 }
  /* --- 跑馬燈樣式 (極速順暢版) --- */
 .marquee-container {
@@ -1942,30 +1948,26 @@
                 // ==========================
                 const getModal = (id) => { const el = document.getElementById(id); if (!el) return null; if (typeof bootstrap !== 'undefined') { let instance = bootstrap.Modal.getInstance(el); if (!instance) instance = new bootstrap.Modal(el); return instance; } return null; };
                 //const openModalSafe = (id) => { const modal = getModal(id); if (modal) modal.show(); };
+// 1. 開啟新視窗：先清空所有黑影(backdrop)，保證永遠只有一層
 const openModalSafe = (id) => {
-    // ★ 關鍵：在開啟任何新視窗前，先把畫面上可能殘留的黑影（遮罩）通通清掉
-    // 這樣就能保證永遠只有「一層」遮罩，不會要按好幾次 X
-    const existingBackdrops = document.querySelectorAll('.modal-backdrop');
-    existingBackdrops.forEach(b => b.remove());
-
+    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
     const modal = getModal(id);
     if (modal) {
         modal.show();
     }
 };
-                
-               const hideModalSafe = (id) => {
-    // 1. 叫 Bootstrap 關掉指定的視窗
-    const modalEl = document.getElementById(id);
-    if (modalEl) {
-        const modalInstance = bootstrap.Modal.getInstance(modalEl);
-        if (modalInstance) modalInstance.hide();
-        
-        // 強制移除顯示類名，確保視窗本體消失
-        modalEl.classList.remove('show');
-        modalEl.style.display = 'none';
-        modalEl.setAttribute('aria-hidden', 'true');
+
+// 2. 關閉視窗：立即隱藏並清理所有殘留黑影
+const hideModalSafe = (id) => {
+    const modal = getModal(id);
+    if (modal) {
+        modal.hide();
     }
+    // 強力掃除所有黑影，防止「暗暗的」點不到文字
+    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+};
 
     // 2. ★★★ 核心修正：強力掃除「所有」遮罩 ★★★
     // 不要等 150ms，直接先掃一次，setTimeout 再掃第二次做保險
@@ -3234,6 +3236,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
