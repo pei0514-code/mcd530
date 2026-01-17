@@ -27,7 +27,21 @@
     /* 強制硬體加速 */
     transform: translate3d(0, 0, 0); 
 }
+/* 讓手機版彈窗的關閉按鈕更好點 */
+.btn-close {
+    padding: 1.5rem !important; /* 增加點擊範圍 */
+    margin: -1rem -1rem -1rem auto !important; /* 抵銷位移 */
+    z-index: 9999 !important;
+}
 
+/* 確保彈窗本體是在最前面，不會被遮罩擋住 */
+.modal {
+    z-index: 2050 !important;
+}
+.modal-backdrop {
+    z-index: 2040 !important;
+}
+        
 .marquee-content {
     display: flex; /* 使用 Flex 排列，確保文字緊密相連 */
     white-space: nowrap;
@@ -1902,7 +1916,19 @@
                 // B. 視窗控制
                 // ==========================
                 const getModal = (id) => { const el = document.getElementById(id); if (!el) return null; if (typeof bootstrap !== 'undefined') { let instance = bootstrap.Modal.getInstance(el); if (!instance) instance = new bootstrap.Modal(el); return instance; } return null; };
-                const openModalSafe = (id) => { const modal = getModal(id); if (modal) modal.show(); };
+                //const openModalSafe = (id) => { const modal = getModal(id); if (modal) modal.show(); };
+const openModalSafe = (id) => {
+    // ★ 關鍵：在開啟任何新視窗前，先把畫面上可能殘留的黑影（遮罩）通通清掉
+    // 這樣就能保證永遠只有「一層」遮罩，不會要按好幾次 X
+    const existingBackdrops = document.querySelectorAll('.modal-backdrop');
+    existingBackdrops.forEach(b => b.remove());
+
+    const modal = getModal(id);
+    if (modal) {
+        modal.show();
+    }
+};
+                
                const hideModalSafe = (id) => {
     // 1. 叫 Bootstrap 關掉指定的視窗
     const modalEl = document.getElementById(id);
@@ -3183,6 +3209,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
