@@ -2560,58 +2560,7 @@ const goToPayFromPending = () => {
                // ==========================================
 // ★★★ 修改歷史回報函式 (修正版：指向 successModal) ★★★
 // ==========================================
-const openReportForHistory = (history) => {
-    console.log("開啟歷史回報:", history.id);
-
-    // 1. 設定變數：告訴共用視窗現在要處理哪張單
-    // ★ 關鍵：設定 lastOrderIds，這樣 reportingTotalAmount 金額才會自動計算正確
-    lastOrderIds.value = [history.id]; 
-    
-    // 2. 設定狀態：標記為「補回報/修改模式」
-    isRepaying.value = true;        
-    showPaymentForm.value = false;  // 先顯示銀行帳號列表，讓客人看
-    
-    // 3. 自動偵測銀行 (保留原本邏輯，確保選單正確)
-    if (history) {
-        const fullInfo = (
-            String(history.deliveryMethod || '') + 
-            String(history.paymentNote || '') + 
-            String(history.items ? JSON.stringify(history.items) : '')
-        ).toLowerCase();
-
-        let foundCode = '';
-        const banks = bankAccounts.value || {};
-
-        for (const key in banks) {
-            const bank = banks[key];
-            const code = String(bank.code);
-            const name = String(bank.name).toLowerCase();
-            const bankName = String(bank.bankName).toLowerCase();
-
-            if (fullInfo.includes(code) || fullInfo.includes(name) || fullInfo.includes(bankName)) {
-                foundCode = bank.code;
-                break;
-            }
-        }
-        
-        // 設定 selectedPayment (讓 HTML 知道要顯示哪家銀行)
-        selectedPayment.value = foundCode || '';
-        
-        // 如果有偵測到銀行，順便預填表單的銀行選項
-        if (foundCode) {
-            paymentForm.value.bankCode = foundCode;
-        }
-    }
-
-    // 4. ★★★ 關鍵修改：開啟正確的視窗 ID (successModal) ★★★
-    const modalEl = document.getElementById('successModal'); 
-    if (modalEl) {
-        const modal = new bootstrap.Modal(modalEl);
-        modal.show();
-    } else {
-        console.error("錯誤：找不到 successModal，請檢查 HTML");
-    }
-};
+const openReportForHistory=(h)=>{console.log("開啟歷史回報:",h.id);lastOrderIds.value=[h.id];isRepaying.value=true;showPaymentForm.value=false;if(h){const s=(String(h.paymentMethod||'')+String(h.deliveryMethod||'')+String(h.paymentNote||'')+String(h.items?JSON.stringify(h.items):'')).toLowerCase(),bks=bankAccounts.value||{};let fc='';for(let k in bks){const b=bks[k],c=String(b.code),n=String(b.name).toLowerCase();if(s.includes(c)||s.includes(n)||s.includes(String(b.bankName||n).toLowerCase())){fc=c;break;}}selectedPayment.value=fc||'';if(fc)paymentForm.value.bankCode=fc;}const m=document.getElementById('successModal');if(m)new bootstrap.Modal(m).show();else console.error("找不到 successModal");};
                 
                 //const openReportForHistory = (h) => { hideModalSafe('historyModal'); const base = h.id.split('-')[0]; const sib = orderHistory.value.filter(o=>o.id.startsWith(base)&&getStatusBadge(o).canReport).map(o=>o.id); lastOrderIds.value = sib.length>0?sib:[h.id]; openPaymentForm(); openModalSafe('successModal'); };
                 const linkifiedGuideInstruction = computed(() => currentVendorGuide.value ? (currentVendorGuide.value.instruction||'').replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="text-decoration:underline;">$1</a>') : '');
@@ -3235,6 +3184,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
