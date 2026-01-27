@@ -1542,10 +1542,13 @@
                         <i class="fas fa-paper-plane me-1"></i> 🟢 確認發貨 (自動推播)
                     </button>
 
+                     <hr class="my-2">
+                    
+                    <!--
                     <button class="btn btn-primary rounded-pill fw-bold py-2" @click="handleManualShip" :disabled="isAdminShipping">
                         <i class="fas fa-edit me-1"></i> 📝 手動發貨 (不推播)
                     </button>
-                    
+                    !-->
                     <button class="btn btn-outline-secondary rounded-pill fw-bold py-1 small" @click="executeAdminShip(false)" :disabled="isAdminShipping">
                         ⚪ 僅產出備份 (不推播)
                     </button>
@@ -3184,6 +3187,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
