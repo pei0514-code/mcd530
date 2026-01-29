@@ -762,7 +762,7 @@
                             </div>
 
 
-                            <div class="bg-white p-3 rounded border mb-3">
+                           <div class="bg-white p-3 rounded border mb-3" v-if="enableCoupons">
     <label class="form-label-small fw-bold"><i class="fas fa-ticket-alt me-1"></i>優惠券 / 折扣碼</label>
     <div class="input-group">
         <input type="text" class="form-control" placeholder="輸入代碼 (例如 VIP90)" v-model="couponCodeInput" :disabled="appliedCoupon">
@@ -1822,6 +1822,7 @@
                 // ==========================
                 // A. 變數定義
                 // ==========================
+                const enableCoupons = ref(false); // 預設為關閉，等後端通知開啟
                 const registerUserToSheet = (profile, email) => {
         // 使用 fetch 發送資料給 Google Apps Script
         fetch(API_URL, {
@@ -2357,6 +2358,7 @@ watch(pendingSelection, (newVal) => {
                         products.value = initData.products;
                         if(initData.vendors) vendorInfoMap.value = initData.vendors;
                         if(String(initData.hasCoupons) === 'true') hasActiveCoupons.value = true;
+                        enableCoupons.value = (String(initData.hasCoupons) === 'true');
                         settings.value = await fetchWithRetry(`${API_URL}?action=getSettings`);
                         try {
                             const sc = JSON.parse(safeGetStorage('mm_cart_storage', '{}')); const vc = {}; Object.keys(sc).forEach(k=>{ const p=products.value.find(x=>x.id===k); if(p && Number(p.stock)>=Number(sc[k])) vc[k]=Number(sc[k]); }); cart.value = vc;
@@ -3093,7 +3095,7 @@ const checkExpiryReminders = () => {
                     // 1. 原本穩定版包含的變數 (保留)
                     // ===========================
                     products, cart, currentCat, showFaq, categories, filteredProducts, hideModalSafe ,
-                    updateCart, totalQty, totalPrice, cartItems, handleCheckout, 
+                    updateCart, totalQty, totalPrice, cartItems, handleCheckout, enableCoupons ,
                     openCart, openHistory, showGuide, orderHistory, userProfile, 
                     guestName, userContact, resendHistory, reBuy, acceptTerms, 
                     resetCart, isLoadingData, deliveryMethod, giftInfo, 
@@ -3187,6 +3189,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
