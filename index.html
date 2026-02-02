@@ -527,7 +527,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.03</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.05</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -575,7 +575,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.03</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.05</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -2694,7 +2694,7 @@ const openReportForHistory=(h)=>{console.log("開啟歷史回報:",h.id);lastOrd
         finalMsg += `\n💰 應付總額：$${finalTotalPrice.value}\n`; 
         finalMsg += `🏦 匯款資訊：\n`; 
         selectedBankInfos.value.forEach(b => { finalMsg += `${b.name}: ${b.account}\n`; }); 
-        finalMsg += `⚠️ 請於匯款後告知客服匯款相關資訊`;
+        finalMsg += `⚠️ 請於30分鐘完成匯款，匯款後告知客服匯款相關資訊`;
         
         if (liff.isInClient()) { liff.sendMessages([{ type: 'text', text: finalMsg }]).catch(e => console.error(e)); }
         
@@ -3189,6 +3189,7 @@ saveMarqueeSettings,
     </script>
 </body>
 </html>
+
 
 
 
