@@ -527,7 +527,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.06</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.07</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -575,7 +575,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.06</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.07</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -2625,8 +2625,10 @@ const openReportForHistory=(h)=>{console.log("開啟歷史回報:",h.id);lastOrd
     const now = new Date(); 
     const pad = (n) => String(n).padStart(2, '0'); 
     const timeStr = `${now.getFullYear()}/${pad(now.getMonth() + 1)}/${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-    const baseOrderId = `M${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-    const orderPromises = []; 
+    // [修復 2] 加上 3 位隨機數，避免同秒鐘產生相同單號
+    const randomNum = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+    const baseOrderId = `M${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}${randomNum}`;
+    const orderPromises = [];
     const lineMessages = []; 
     const records = []; 
     const generatedOrderIds = [];
@@ -2652,23 +2654,34 @@ const openReportForHistory=(h)=>{console.log("開啟歷史回報:",h.id);lastOrd
         // 決定傳送給後端的物流方式
         const methodStr = (suffix === 2 || (deliveryMethod.value === 'gift' && !suffix)) ? 'momo 轉贈' : '截圖發送';
 
-        orderPromises.push(fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-                action: 'submitOrder',
-                ...record,
-                phone: userContact.value.phone,
-                email: userProfile.value.email,
-                testMode: isCartTestMode.value,
-                deliveryMethod: methodStr,
-                momoName: methodStr === 'momo 轉贈' ? giftInfo.value.name : '',
-                momoPhone: methodStr === 'momo 轉贈' ? giftInfo.value.phone : '',
-                userName: (userProfile.value && userProfile.value.displayName) || 'GUEST',
-                userId: getEffectiveUserId(),
-                initialPaymentDesc: initialPaymentDesc,
-                couponCode: appliedCoupon.value ? appliedCoupon.value.code : ''
+        // [修復 1-A] 確保 fetch 回傳後有檢查 status 是否為 OK，若失敗則強制擋下
+        orderPromises.push(
+            fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'submitOrder',
+                    ...record,
+                    phone: userContact.value.phone,
+                    email: userProfile.value.email,
+                    testMode: isCartTestMode.value,
+                    deliveryMethod: methodStr,
+                    momoName: methodStr === 'momo 轉贈' ? giftInfo.value.name : '',
+                    momoPhone: methodStr === 'momo 轉贈' ? giftInfo.value.phone : '',
+                    userName: (userProfile.value && userProfile.value.displayName) || 'GUEST',
+                    userId: getEffectiveUserId(),
+                    initialPaymentDesc: initialPaymentDesc,
+                    couponCode: appliedCoupon.value ? appliedCoupon.value.code : ''
+                })
             })
-        }));
+            .then(res => res.json())
+            .then(data => {
+                // 若後端回傳不是 OK，直接把錯誤丟出，阻斷後續的成功畫面
+                if (data.status !== 'OK') {
+                    throw new Error(data.message || data.status || '寫入試算表失敗');
+                }
+                return data;
+            })
+        );
 
         let msg = `🛒【麥麥小舖】\n🎫 單號：${oid}\n📦 方式：${methodStr === 'momo 轉贈' ? '🎁 momo 轉贈' : '📸 截圖發送'}\n🍱 內容：\n`;
         items.forEach((i, idx) => { msg += `${NUMBERS[idx] || (idx + 1)} ${i.name} x${i.quantity}\n`; });
@@ -2718,9 +2731,11 @@ const openReportForHistory=(h)=>{console.log("開啟歷史回報:",h.id);lastOrd
         openModalSafe('successModal'); 
         setTimeout(() => { fetchOrderStatus(getEffectiveUserId()); }, 1000);
     }).catch(e => { 
+        // [修復 1-B] 將真實錯誤提示給買家，並恢復按鈕狀態
         console.error(e); 
         isSubmitting.value = false; 
-        showToast('連線錯誤，請稍後再試'); 
+        let errorMsg = e.message.includes('Error:') ? e.message.replace('Error:', '') : '請稍後再試';
+        showToast('送出失敗：' + errorMsg); 
     });
 };
                 // ==========================
