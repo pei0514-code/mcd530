@@ -1526,7 +1526,7 @@
             <div class="modal-body p-4">
                 <div class="mb-3 text-primary"><i class="fas fa-shipping-fast fa-3x"></i></div>
                 <h5 class="fw-bold mb-1">確認發貨處理</h5>
-                <p class="text-muted small mb-3">單號：{{ adminShipTarget?.orderId }}</p>
+                <p class="text-muted small mb-3">單號：{{ adminShipTarget ? adminShipTarget.orderId : '' }}</p>
 
                 <div class="bg-light p-2 rounded mb-3 border">
                     <div class="form-check form-switch d-flex justify-content-center align-items-center">
@@ -2101,8 +2101,9 @@ const allTickets = computed(() => {
                 if (match) {
                     rawExpiryDate = match[1]; // 這裡會抓到 "213"
                 } else {
-                    rawExpiryDate = (o.tickets && o.tickets[i]?.expiry) || '';
-                }
+    rawExpiryDate = (o.tickets && o.tickets[i] && o.tickets[i].expiry) || '';
+}
+
 
                 t.push({
                     url: url,
@@ -2118,8 +2119,11 @@ const allTickets = computed(() => {
                     purchaseDate: formatDateStr(rawPurchaseDate),
                     
                     fullTimestamp: o.timestamp,
-                    isMergedOrder: (o.tickets && o.tickets[i]?.isMerged) || false
-                });
+                  
+                
+    // ... (中間保留您原本的) ...
+    isMergedOrder: (o.tickets && o.tickets[i] && o.tickets[i].isMerged) || false
+});
             });
         }
     });
@@ -2496,7 +2500,7 @@ if (settings.value.liffId) {
                     couponCodeInput.value = ''; // 順便清空輸入框
                     showToast('已移除優惠券');
                 };
-                const fetchFAQ = async () => { try { const r=await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getFAQ' }) }); const j=await r.json(); if(j.status==='success'){ faqList.value=j.data; if(j.announcements?.length){ let l=[]; for(let i=0;i<10;i++) l=l.concat(j.announcements); announcement.value=l.join("        ✦        "); } } } catch(e){ announcement.value="歡迎光臨"; } };
+                const fetchFAQ = async () => { try { const r=await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getFAQ' }) }); const j=await r.json(); if(j.status==='success'){ faqList.value=j.data; if(j.announcements && j.announcements.length){ let l=[]; for(let i=0;i<10;i++) l=l.concat(j.announcements); announcement.value=l.join("        ✦        "); } } } catch(e){ announcement.value="歡迎光臨"; } };
 
                 // ==========================
                 // G. 購物車與訂單互動
