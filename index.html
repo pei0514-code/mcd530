@@ -490,16 +490,7 @@
 
         [v-cloak] { display: none; }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
-  }
-}
-</script>
+
 <script>
         document.addEventListener('contextmenu', function (e) {
             e.preventDefault(); // 阻擋右鍵選單
@@ -521,7 +512,7 @@
         });
     </script>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js"></script>
+   
     
 </head>
 <body>
@@ -2350,7 +2341,7 @@ watch(pendingSelection, (newVal) => {
                         } 
                     } catch(e){}
                 };
-
+                
                 const initApp = async () => {
                     isLoadingData.value = true; errorMsg.value = '';
                     try {
@@ -3084,6 +3075,8 @@ const checkExpiryReminders = () => {
         }, 2000);
     }
 };
+
+
                 //const checkExpiryReminders = () => { const t=new Date().toLocaleDateString('zh-TW'); if(safeGetStorage('mm_ignore_expiry_'+t,'')==='true')return; const l=[]; const now=Date.now(); availableTickets.value.forEach(x=>{ if(x.expiryDate && !x.isRedeemed){ const p=x.expiryDate.split(/[\/\-]/); if(p.length>=3){ const d=new Date(p[0],p[1]-1,p[2],23,59,59); const days=Math.ceil((d.getTime()-now)/(86400000)); if(days<=7 && days>=0) l.push({...x, ticketId:`${x.orderId}_${x.ticketIndex}`, daysLeft:days===0?'今天':days}); } } }); if(l.length>0){ expiringTicketsList.value=l; setTimeout(()=>{ if(!document.querySelector('.modal.show')) openModalSafe('expiryReminderModal'); },2000); } };
                 const openRedeemFromReminder = (i) => { hideModalSafe('expiryReminderModal'); showTicketImage(i); };
                 const dismissExpiryToday = () => { safeSetStorage('mm_ignore_expiry_'+new Date().toLocaleDateString('zh-TW'),'true'); hideModalSafe('expiryReminderModal'); };
