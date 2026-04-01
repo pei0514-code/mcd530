@@ -1,7 +1,6 @@
 
 <!DOCTYPE html>
 <html lang="zh-TW">
- 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -522,7 +521,7 @@
         });
     </script>
     
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js"></script>
     
 </head>
 <body>
@@ -911,9 +910,9 @@
                         </div>
                         <div v-if="walletFilter === 'available'" class="alert alert-warning p-2 mb-0 mx-2" style="border-left: 5px solid #ffc107;">
                              <div class="text-danger fw-bold mb-1" style="font-size: 15px;">
-                                 <i class="fas fa-exclamation-circle me-1"></i>票券完成使用需手動自行點擊「核銷」功能。
+                                 <i class="fas fa-exclamation-circle me-1"></i>票券一經使用後非自動核銷，需手動自行點擊「核銷」功能。
                              </div>
-                             <div class="text-dark fw-bold" style="font-size: 12px;">一旦核銷將無法復原，不過可以到已核銷點擊查看票券！</div>
+                             <div class="text-dark fw-bold" style="font-size: 12px;">一旦核銷將無法復原，亦無法再次使用！</div>
                         </div>
                     </div>
                     <div class="modal-body p-3" style="padding-bottom: 80px;">
@@ -1527,7 +1526,7 @@
             <div class="modal-body p-4">
                 <div class="mb-3 text-primary"><i class="fas fa-shipping-fast fa-3x"></i></div>
                 <h5 class="fw-bold mb-1">確認發貨處理</h5>
-                <p class="text-muted small mb-3">單號：{{ adminShipTarget ? adminShipTarget.orderId : '' }}</p>
+                <p class="text-muted small mb-3">單號：{{ adminShipTarget?.orderId }}</p>
 
                 <div class="bg-light p-2 rounded mb-3 border">
                     <div class="form-check form-switch d-flex justify-content-center align-items-center">
@@ -2102,9 +2101,8 @@ const allTickets = computed(() => {
                 if (match) {
                     rawExpiryDate = match[1]; // 這裡會抓到 "213"
                 } else {
-    rawExpiryDate = (o.tickets && o.tickets[i] && o.tickets[i].expiry) || '';
-}
-
+                    rawExpiryDate = (o.tickets && o.tickets[i]?.expiry) || '';
+                }
 
                 t.push({
                     url: url,
@@ -2120,11 +2118,8 @@ const allTickets = computed(() => {
                     purchaseDate: formatDateStr(rawPurchaseDate),
                     
                     fullTimestamp: o.timestamp,
-                  
-                
-    // ... (中間保留您原本的) ...
-    isMergedOrder: (o.tickets && o.tickets[i] && o.tickets[i].isMerged) || false
-});
+                    isMergedOrder: (o.tickets && o.tickets[i]?.isMerged) || false
+                });
             });
         }
     });
@@ -2343,28 +2338,17 @@ watch(pendingSelection, (newVal) => {
                     try { 
                         const res = await fetch(`${API_URL}?action=getOrderStatus&userId=${uid}`); 
                         if(res.ok){ 
-                            const d = await res.json(); 
-                            console.log("【API回傳資料】", d); 
-                            
+                            const d=await res.json(); 
+                            console.log("【API回傳資料】", d); // ★★★ 加這一行 ★★★
                             if(d.orders){ 
-                                // ✅ 核心修正 1：直接把後端的資料「完全覆蓋」給前端，不要再用 map 過濾了！
-                                orderHistory.value = d.orders; 
+                                const map={}; d.orders.forEach(o=>map[o.id]=o); 
+                                orderHistory.value=orderHistory.value.map(h=>{ const s=map[h.id]; return s?{...h,...s}:h; }); 
                                 safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value)); 
-                                
-                                // ✅ 修正 2：清理待付款訂單邏輯 (保持原樣，僅作排版優化)
-                                const map = {}; 
-                                d.orders.forEach(o => map[o.id] = o); 
-                                const clean = unreportedOrders.value.filter(oid => { 
-                                    const s = map[oid]; 
-                                    return !s || !(String(s.isShipped) == 'true' || String(s.isPaid) == 'true' || (s.paymentNote && (s.paymentNote.includes('取消') || s.paymentNote.includes('失效')))); 
-                                }); 
-                                unreportedOrders.value = clean; 
-                                safeSetStorage('mm_pending_payment_orders', JSON.stringify(clean)); 
+                                const clean=unreportedOrders.value.filter(oid=>{ const s=map[oid]; return !s || !(String(s.isShipped)=='true'||String(s.isPaid)=='true'||(s.paymentNote&&(s.paymentNote.includes('取消')||s.paymentNote.includes('失效')))); }); 
+                                unreportedOrders.value=clean; safeSetStorage('mm_pending_payment_orders',JSON.stringify(clean)); 
                             } 
                         } 
-                    } catch(e) {
-                        console.error("抓取訂單狀態失敗", e);
-                    }
+                    } catch(e){}
                 };
 
                 const initApp = async () => {
@@ -2501,7 +2485,7 @@ if (settings.value.liffId) {
                     couponCodeInput.value = ''; // 順便清空輸入框
                     showToast('已移除優惠券');
                 };
-                const fetchFAQ = async () => { try { const r=await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getFAQ' }) }); const j=await r.json(); if(j.status==='success'){ faqList.value=j.data; if(j.announcements && j.announcements.length){ let l=[]; for(let i=0;i<10;i++) l=l.concat(j.announcements); announcement.value=l.join("        ✦        "); } } } catch(e){ announcement.value="歡迎光臨"; } };
+                const fetchFAQ = async () => { try { const r=await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getFAQ' }) }); const j=await r.json(); if(j.status==='success'){ faqList.value=j.data; if(j.announcements?.length){ let l=[]; for(let i=0;i<10;i++) l=l.concat(j.announcements); announcement.value=l.join("        ✦        "); } } } catch(e){ announcement.value="歡迎光臨"; } };
 
                 // ==========================
                 // G. 購物車與訂單互動
@@ -3217,6 +3201,15 @@ saveMarqueeSettings,
                 }; // 結束 return
             } // 結束 setup
         }).mount('#app'); // 結束 Vue
-
+    </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
