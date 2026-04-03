@@ -232,8 +232,8 @@
             </div>
             <div class="stock-tip-box">✅ <span class="text-danger">凡是可加入購物車</span><br>均表示有現貨，可放心轉帳！</div>
             <div id="force-load-btn" style="display:none; margin-top:20px; text-align:center;">
-                 <button onclick="window.location.reload()" class="btn btn-outline-danger btn-sm rounded-pill fw-bold px-4">
-                    <i class="fas fa-redo me-1"></i> 點此重新整理
+                 <button onclick="localStorage.clear(); sessionStorage.clear(); window.location.reload(true);" class="btn btn-outline-danger btn-sm rounded-pill fw-bold px-4">
+                    <i class="fas fa-trash-alt me-1"></i> 點此修復並重新載入
                  </button>
             </div>
         </div>
@@ -1199,19 +1199,16 @@
     </div>
 
     <script>
-        // --- 2. 全域錯誤攔截 (新增 console.log 來看看發生了什麼) ---
+        // --- 2. 全域錯誤攔截 ---
         window.onerror = function(msg, url, line, col, error) {
             if (msg.indexOf('fetch') > -1) return false;
-            
-            // ★ 將錯誤印到 console
             console.error("【全域錯誤攔截】", msg, "行數:", line, error);
 
             const loader = document.getElementById('static-loader');
             if(loader && loader.style.display !== 'none') {
                 const div = document.createElement('div');
                 div.style.color = 'red'; div.style.fontSize = '12px'; div.style.padding = '10px';
-                // ★ 把行數印在畫面上
-                div.innerHTML = '啟動錯誤: ' + msg + '<br>行數: ' + line + '<br>請嘗試重新整理';
+                div.innerHTML = '啟動錯誤: ' + msg + '<br>行數: ' + line + '<br>請點擊下方按鈕修復';
                 loader.appendChild(div);
                 const btn = document.getElementById('force-load-btn');
                 if(btn) btn.style.display = 'block';
@@ -1518,8 +1515,10 @@
                     }
                     return t;
                 });
-                const availableTickets = computed(() => allTickets.value.filter(t=>!t.isRedeemed).sort((a,b)=>b.fullTimestamp.localeCompare(a.fullTimestamp)));
-                const usedTickets = computed(() => allTickets.value.filter(t=>t.isRedeemed && !hiddenTicketKeys.value.has(`${t.orderId}_${t.ticketIndex}`)).sort((a,b)=>(b.redeemedAt||'').localeCompare(a.redeemedAt||'')));
+                
+                // 🛡️ 防禦時間屬性確實
+                const availableTickets = computed(() => allTickets.value.filter(t=>!t.isRedeemed).sort((a,b)=>String(b.fullTimestamp||'').localeCompare(String(a.fullTimestamp||''))));
+                const usedTickets = computed(() => allTickets.value.filter(t=>t.isRedeemed && !hiddenTicketKeys.value.has(`${t.orderId}_${t.ticketIndex}`)).sort((a,b)=>String(b.redeemedAt||'').localeCompare(String(a.redeemedAt||''))));
                 const currentDisplayTickets = computed(() => walletFilter.value==='available'?availableTickets.value:usedTickets.value);
      
                 const filteredProducts = computed(() => {
@@ -1548,32 +1547,47 @@
                 const canSelectGift = computed(() => cartItems.value.some(i => i.giftStock > 0));
                 const canSelectDrive = computed(() => cartItems.value.some(i => i.driveStock > 0));
 
-                const validUnreportedOrders = computed(() => unreportedOrders.value.filter(oid => { const order = orderHistory.value.find(o => o.id === oid); if (!order) return false; if (isOrderExpired(order)) return false; const badge = getStatusBadge(order); return badge.class === 'status-pending'; }));
+                const validUnreportedOrders = computed(() => unreportedOrders.value.filter(oid => { const order = orderHistory.value.find(o => o && o.id === oid); if (!order) return false; if (isOrderExpired(order)) return false; const badge = getStatusBadge(order); return badge.class === 'status-pending'; }));
+                
+                // 🛡️ 防禦舊版訂單無 ID
                 const groupedUnreportedOrders = computed(() => {
-                    const groups = {}; validUnreportedOrders.value.forEach(oid => { const order = orderHistory.value.find(o => o.id === oid); if (!order) return; const baseId = oid.split('-')[0]; if (!groups[baseId]) groups[baseId] = { baseId: baseId, ids: [], items: [], totalAmount: 0, timestamp: order.timestamp }; groups[baseId].ids.push(oid); groups[baseId].totalAmount += (Number(order.totalAmount) || 0); if (order.items) order.items.forEach(item => groups[baseId].items.push(item)); });
+                    const groups = {}; 
+                    validUnreportedOrders.value.forEach(oid => { 
+                        if (!oid) return; 
+                        const order = orderHistory.value.find(o => o && o.id === oid); 
+                        if (!order) return; 
+                        const baseId = String(oid).split('-')[0]; 
+                        if (!groups[baseId]) groups[baseId] = { baseId: baseId, ids: [], items: [], totalAmount: 0, timestamp: order.timestamp }; 
+                        groups[baseId].ids.push(oid); 
+                        groups[baseId].totalAmount += (Number(order.totalAmount) || 0); 
+                        if (order.items) order.items.forEach(item => groups[baseId].items.push(item)); 
+                    });
                     return Object.values(groups).sort((a,b) => safeParseDate(b.timestamp).getTime() - safeParseDate(a.timestamp).getTime());
                 });
 
+                // 🛡️ 防禦舊版訂單無 ID
                 const groupedHistory = computed(() => {
                     const map = {};
                     orderHistory.value.forEach(o => {
-                        const base = o.id.split('-')[0];
+                        if (!o || !o.id) return;
+                        const base = String(o.id).split('-')[0];
                         if(!map[base]) map[base] = { baseId: base, timestamp: o.timestamp, orders: [] };
                         map[base].orders.push(o);
                     });
                     return Object.values(map).sort((a, b) => safeParseDate(b.timestamp).getTime() - safeParseDate(a.timestamp).getTime());
                 });
                 
-                const reportingTotalAmount = computed(() => { if (lastOrderIds.value.length === 0) return 0; return orderHistory.value.filter(o => lastOrderIds.value.includes(o.id)).reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0); });
+                const reportingTotalAmount = computed(() => { if (lastOrderIds.value.length === 0) return 0; return orderHistory.value.filter(o => o && lastOrderIds.value.includes(o.id)).reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0); });
                 const isGroupSelected = (group) => group.ids.every(id => pendingSelection.value.includes(id));
                 const toggleGroupSelection = (group) => { const all = isGroupSelected(group); if (all) pendingSelection.value = pendingSelection.value.filter(id => !group.ids.includes(id)); else pendingSelection.value = [...pendingSelection.value, ...group.ids.filter(id => !pendingSelection.value.includes(id))]; };
                 const dismissPendingAlertForever = () => { isPendingAlertDismissed.value = true; hideModalSafe('unreportedModal'); };
-                const getHistoryItemName = (order, idx) => { if (!order.items) return ''; const expanded = []; order.items.forEach(it => { const qty = Number(it.quantity) || 1; for(let k=0; k<qty; k++) expanded.push(it.name); }); return expanded[idx] || '商品項'; };
-                const getOrderItems = (oid) => { const o = orderHistory.value.find(x => x.id === oid); return o ? o.items : []; };
-                const getOrderAmount = (oid) => { const o = orderHistory.value.find(x => x.id === oid); return o ? o.totalAmount : 0; };
+                const getHistoryItemName = (order, idx) => { if (!order || !order.items) return ''; const expanded = []; order.items.forEach(it => { const qty = Number(it.quantity) || 1; for(let k=0; k<qty; k++) expanded.push(it.name); }); return expanded[idx] || '商品項'; };
+                const getOrderItems = (oid) => { const o = orderHistory.value.find(x => x && x.id === oid); return o ? o.items : []; };
+                const getOrderAmount = (oid) => { const o = orderHistory.value.find(x => x && x.id === oid); return o ? o.totalAmount : 0; };
 
                 // D. 邏輯與監聽
                 const getStatusBadge = (h) => {
+                    if (!h) return { text: '⏳ 待核對', class: 'status-pending', canReport: true, canCancel: true };
                     if (String(h.isShipped) === 'true') return { text: '✅ 已發貨', class: 'status-shipped', canReport: false, canCancel: false };
                     const note = String(h.paymentNote || "").trim();
                     if (note.includes('取消') || note.includes('失效')) return { text: '❌ 已失效', class: 'status-invalid', canReport: false, canCancel: false };
@@ -1623,7 +1637,7 @@
                 };
                 const deleteCoupon = async (code) => { if(!confirm('確定要刪除這張優惠券嗎？')) return; try { const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCouponAction', subAction: 'delete', code: code }) }); const j = await res.json(); if(j.status === 'success') { showToast('已刪除'); openAdminCoupons(); } } catch(e) { showToast('刪除失敗'); } };
                 const safeParseDate = (dateStr) => { if (!dateStr) return new Date(); const s = String(dateStr); const m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})$/); return m ? new Date(m[1], m[2]-1, m[3], m[4], m[5], m[6]) : new Date(s); };
-                const isOrderExpired = (h) => { const b = getStatusBadge(h); if (b.text !== '💰 待付款') return false; const d = safeParseDate(h.timestamp); return !isNaN(d.getTime()) && (now.value - d.getTime()) >= 1800000; };
+                const isOrderExpired = (h) => { if (!h) return false; const b = getStatusBadge(h); if (b.text !== '💰 待付款') return false; const d = safeParseDate(h.timestamp); return !isNaN(d.getTime()) && (now.value - d.getTime()) >= 1800000; };
                 const getRemainingTime = (ts) => { const d = safeParseDate(ts); if (isNaN(d.getTime())) return "00:00"; const rem = d.getTime() + 1800000 - now.value; if (rem <= 0) return "00:00"; const sec = Math.floor(rem/1000); return `${String(Math.floor(sec/60)).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`; };
                 const getGroupTimer = (g) => g.orders.some(o => getStatusBadge(o).text === '💰 待付款' && !isOrderExpired(o)) ? getRemainingTime(g.timestamp) : null;
                 const isGroupExpired = (g) => { const p = g.orders.filter(o => getStatusBadge(o).class === 'status-pending'); return p.length > 0 && p.every(o => isOrderExpired(o)); };
@@ -1652,7 +1666,7 @@
                         }
                         const firstOrderId = newVal[0];
                         const history = orderHistory.value || []; 
-                        const order = history.find(o => o.id === firstOrderId);
+                        const order = history.find(o => o && o.id === firstOrderId);
 
                         if (order) {
                             const fullInfo = (
@@ -1707,7 +1721,7 @@
                                 safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value)); 
                                 
                                 const map = {}; 
-                                d.orders.forEach(o => map[o.id] = o); 
+                                d.orders.forEach(o => { if (o && o.id) map[o.id] = o; }); 
                                 const clean = unreportedOrders.value.filter(oid => { 
                                     const s = map[oid]; 
                                     return !s || !(String(s.isShipped) == 'true' || String(s.isPaid) == 'true' || (s.paymentNote && (s.paymentNote.includes('取消') || s.paymentNote.includes('失效')))); 
@@ -1845,7 +1859,7 @@
                 // G. 購物車與訂單互動
                 const updateCart = (p, d) => { if(d>0 && (cart.value[p.id]||0)>=Number(p.stock)){ showToast('庫存上限'); return; } const n=(cart.value[p.id]||0)+d; if(n<=0) delete cart.value[p.id]; else if(n<=Number(p.stock)) cart.value[p.id]=n; safeSetStorage('mm_cart_storage', JSON.stringify(cart.value)); };
                 const showProductDetail = (p) => { selectedProduct.value = p; openModalSafe('productDetailModal'); };
-                const openCancelModal = (h) => { hideModalSafe('historyModal'); orderToCancel.value = h; relatedOrdersToCancel.value = []; if(h.id.includes('-')){ const base=h.id.split('-')[0]; relatedOrdersToCancel.value=orderHistory.value.filter(o=>o.id.startsWith(base)&&o.id!==h.id&&getStatusBadge(o).canCancel); } openModalSafe('cancelConfirmModal'); };
+                const openCancelModal = (h) => { hideModalSafe('historyModal'); orderToCancel.value = h; relatedOrdersToCancel.value = []; if(h && h.id && h.id.includes('-')){ const base=h.id.split('-')[0]; relatedOrdersToCancel.value=orderHistory.value.filter(o=>o && o.id && o.id.startsWith(base)&&o.id!==h.id&&getStatusBadge(o).canCancel); } openModalSafe('cancelConfirmModal'); };
                 
                 const confirmCancel = async (mode='single') => { 
                     if(!orderToCancel.value) return; 
@@ -1876,7 +1890,7 @@
                     const detectedCodes = new Set(); 
 
                     pendingSelection.value.forEach(oid => {
-                        const order = orderHistory.value.find(o => o.id === oid);
+                        const order = orderHistory.value.find(o => o && o.id === oid);
                         if (order) {
                             const fullInfo = (
                                 String(order.deliveryMethod || '') + 
@@ -1907,7 +1921,7 @@
                     openModalSafe('successModal');
                 };
                 
-                const openReportForHistory=(h)=>{console.log("開啟歷史回報:",h.id);lastOrderIds.value=[h.id];isRepaying.value=true;showPaymentForm.value=false;if(h){const s=(String(h.paymentMethod||'')+String(h.deliveryMethod||'')+String(h.paymentNote||'')+String(h.items?JSON.stringify(h.items):'')).toLowerCase(),bks=bankAccounts.value||{};let fc='';for(let k in bks){const b=bks[k],c=String(b.code),n=String(b.name).toLowerCase();if(s.includes(c)||s.includes(n)||s.includes(String(b.bankName||n).toLowerCase())){fc=c;break;}}selectedPayment.value=fc||'';if(fc)paymentForm.value.bankCode=fc;}const m=document.getElementById('successModal');if(m)new bootstrap.Modal(m).show();else console.error("找不到 successModal");};
+                const openReportForHistory=(h)=>{if(!h)return; console.log("開啟歷史回報:",h.id);lastOrderIds.value=[h.id];isRepaying.value=true;showPaymentForm.value=false;if(h){const s=(String(h.paymentMethod||'')+String(h.deliveryMethod||'')+String(h.paymentNote||'')+String(h.items?JSON.stringify(h.items):'')).toLowerCase(),bks=bankAccounts.value||{};let fc='';for(let k in bks){const b=bks[k],c=String(b.code),n=String(b.name).toLowerCase();if(s.includes(c)||s.includes(n)||s.includes(String(b.bankName||n).toLowerCase())){fc=c;break;}}selectedPayment.value=fc||'';if(fc)paymentForm.value.bankCode=fc;}const m=document.getElementById('successModal');if(m)new bootstrap.Modal(m).show();else console.error("找不到 successModal");};
                 
                 const linkifiedGuideInstruction = computed(() => currentVendorGuide.value ? (currentVendorGuide.value.instruction||'').replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="text-decoration:underline;">$1</a>') : '');
 
@@ -2108,7 +2122,7 @@
                         }
 
                         orderHistory.value = orderHistory.value.map(o => {
-                            if (lastOrderIds.value.includes(o.id)) {
+                            if (o && lastOrderIds.value.includes(o.id)) {
                                 return { ...o, paymentNote: payDetailText };
                             }
                             return o;
@@ -2143,11 +2157,11 @@
                 
                 const finishPaymentFlow = () => {
                     const rem = unreportedOrders.value.filter(id=>!lastOrderIds.value.includes(id)); unreportedOrders.value=rem; safeSetStorage('mm_pending_payment_orders', JSON.stringify(rem));
-                    hideModalSafe('successModal'); resetCart(); orderHistory.value=orderHistory.value.map(h=>{ if(lastOrderIds.value.includes(h.id)) return {...h, paymentNote:'已回報'}; return h; }); safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
+                    hideModalSafe('successModal'); resetCart(); orderHistory.value=orderHistory.value.map(h=>{ if(h && lastOrderIds.value.includes(h.id)) return {...h, paymentNote:'已回報'}; return h; }); safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
                 };
                 const resetCart = () => { cart.value={}; safeSetStorage('mm_cart_storage', '{}'); deliveryMethod.value='screenshot'; selectedPayment.value=''; showPaymentForm.value=false; requestManualScreenshot.value=false; appliedCoupon.value=null; couponCodeInput.value=''; };
-                const reBuy=(h)=>{cart.value={};let w="",has=false;h.items.forEach(i=>{const p=products.value.find(x=>x.name===i.name);if(p){const q=Number(i.quantity||i.qty||0),s=Number(p.stock||0);if(s<=0)w+=`[${p.name}] 已售完，未加入購物車。\n`;else{cart.value[p.id]=(s<q?s:q);has=true;if(s<q)w+=`[${p.name}] 庫存僅剩 ${s}，已調整數量。\n`;}}else w+=`[${i.name}] 商品已下架。\n`;});safeSetStorage('mm_cart_storage',JSON.stringify(cart.value));hideModalSafe('historyModal');if(has)openModalSafe('cartModal');if(w)showToast(w,'warning');else if(!has)showToast('很抱歉，訂單內的商品目前皆已售完。','error');}; 
-                const resendHistory = (h) => { let m=`🛒 補傳 #${h.id}\n總額：$${h.totalAmount}`; if(liff.isInClient()) liff.sendMessages([{type:'text',text:m}]).then(()=>liff.closeWindow()); else window.open(`https://line.me/R/msg/text/?${encodeURIComponent(m)}`,'_blank'); };
+                const reBuy=(h)=>{if(!h)return;cart.value={};let w="",has=false;(h.items||[]).forEach(i=>{const p=products.value.find(x=>x.name===i.name);if(p){const q=Number(i.quantity||i.qty||0),s=Number(p.stock||0);if(s<=0)w+=`[${p.name}] 已售完，未加入購物車。\n`;else{cart.value[p.id]=(s<q?s:q);has=true;if(s<q)w+=`[${p.name}] 庫存僅剩 ${s}，已調整數量。\n`;}}else w+=`[${i.name}] 商品已下架。\n`;});safeSetStorage('mm_cart_storage',JSON.stringify(cart.value));hideModalSafe('historyModal');if(has)openModalSafe('cartModal');if(w)showToast(w,'warning');else if(!has)showToast('很抱歉，訂單內的商品目前皆已售完。','error');}; 
+                const resendHistory = (h) => { if(!h)return;let m=`🛒 補傳 #${h.id}\n總額：$${h.totalAmount}`; if(liff.isInClient()) liff.sendMessages([{type:'text',text:m}]).then(()=>liff.closeWindow()); else window.open(`https://line.me/R/msg/text/?${encodeURIComponent(m)}`,'_blank'); };
 
                 // 管理員功能
                 const verifyAdminPassword = async () => { if(!adminPasswordInput.value)return showToast('請輸入'); try{ const r=await fetch(`${API_URL}?action=verifyAdmin&p=${encodeURIComponent(adminPasswordInput.value)}`); const j=await r.json(); if(j.status==='OK'){ safeSetStorage('mm_admin_auth','true'); hideModalSafe('adminLoginModal'); fetchAdminDashboard(); openModalSafe('adminPanelModal'); showToast('成功'); adminPasswordInput.value=''; } else { showToast('錯誤'); } } catch(e){ showToast('失敗'); } };
