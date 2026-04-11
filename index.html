@@ -217,9 +217,15 @@
 </head>
 <body>
 
-    <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.08</div>
-        <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
+   <div id="static-loader">
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.07</div>
+        
+        <div class="w-100 px-4 mt-3 mb-2" style="max-width: 280px;">
+            <div class="progress" style="height: 12px; border-radius: 10px; background-color: #ffebeb; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
+                <div id="loading-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-danger" role="progressbar" style="width: 0%; transition: width 0.3s ease;"></div>
+            </div>
+            <div id="loading-progress-text" class="text-danger small fw-bold mt-2 text-center" style="font-size: 13px;">準備開啟中 0%...</div>
+        </div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
             <div class="timeline-container">
@@ -1253,6 +1259,33 @@
     </div>
 
     <script>
+        // 👇 新增：智慧型虛擬進度條邏輯 👇
+        let simProgress = 0;
+        let pInterval;
+        document.addEventListener("DOMContentLoaded", () => {
+            const pBar = document.getElementById('loading-progress-bar');
+            const pText = document.getElementById('loading-progress-text');
+            pInterval = setInterval(() => {
+                if (simProgress < 90) {
+                    // 前期跑得快，後期跑得慢，模擬真實載入感
+                    let inc = simProgress < 50 ? Math.floor(Math.random() * 15) + 5 : Math.floor(Math.random() * 5) + 1;
+                    simProgress += inc;
+                    if (simProgress > 90) simProgress = 90;
+                    if (pBar) pBar.style.width = simProgress + '%';
+                    if (pText) pText.innerText = '讀取最新商品中 ' + simProgress + '%...';
+                }
+            }, 300);
+        });
+
+        window.finishLoading = function() {
+            clearInterval(pInterval);
+            const pBar = document.getElementById('loading-progress-bar');
+            const pText = document.getElementById('loading-progress-text');
+            if (pBar) pBar.style.width = '100%';
+            if (pText) pText.innerText = '載入完成 100%';
+        };
+        // 👆 進度條邏輯結束 👆
+
         // --- 2. 全域錯誤攔截 ---
         window.onerror = function(msg, url, line, col, error) {
             if (msg.indexOf('fetch') > -1) return false;
@@ -1838,7 +1871,13 @@
                 const reloadApp = () => window.location.reload();
                 const getProductImage = (n) => { const p = products.value.find(x => x.name === n); return p ? p.image : 'https://placehold.co/48x48?text=No+Img'; };
                 const checkGuestStatus = () => { const ua = navigator.userAgent; if(!liff.isInClient() || ua.includes("FBAN") || ua.includes("FBAV")) setTimeout(() => openModalSafe('guestWarningModal'), 1000); };
-                const hideStaticLoader = () => { const l = document.getElementById('static-loader'); if(l){ l.style.opacity='0'; setTimeout(()=>l.style.display='none',300); } };
+                const hideStaticLoader = () => { 
+    if(window.finishLoading) window.finishLoading(); // 觸發進度條 100%
+    setTimeout(() => { 
+        const l = document.getElementById('static-loader'); 
+        if(l){ l.style.opacity='0'; setTimeout(()=>l.style.display='none',400); } 
+    }, 300); // 停頓 0.3 秒，讓客人看清楚 100% 再消失
+};
                 const showAlert = (m) => { alertMessages.value = Array.isArray(m) ? m : [m]; openModalSafe('alertModal'); };
                 const setViewMode = (m) => { viewMode.value = m; safeSetStorage('mm_view_mode', m); showLayoutMenu.value = false; };
                 const setSortType = (t) => { sortType.value = t; showSortMenu.value = false; };
@@ -2364,7 +2403,7 @@
 
                 // J. 票券夾
                 const openWallet = () => { ticketSearchQuery.value=''; walletUnread.value=false; safeSetStorage('mm_last_ticket_count',availableTickets.value.length); lastKnownTicketCount.value=availableTickets.value.length; hideModalSafe('historyModal'); openModalSafe('ticketModal'); fetchOrderStatus(getEffectiveUserId()); }; const useSwipeMode = ref(safeGetStorage('mm_use_swipe', 'true') === 'true'); watch(useSwipeMode, (val) => safeSetStorage('mm_use_swipe', val)); const currentCarouselIndex = ref(0); const openTicketCarousel = (index) => { currentCarouselIndex.value = index; setTimeout(() => { const carouselEl = document.getElementById('ticketSwipeCarousel'); if (carouselEl) { const bsCarousel = bootstrap.Carousel.getInstance(carouselEl) || new bootstrap.Carousel(carouselEl); bsCarousel.to(index); } }, 50); openModalSafe('ticketCarouselModal'); }; const closeTicketCarousel = () => { hideModalSafe('ticketCarouselModal'); setTimeout(() => { showAlert("👀 溫馨提醒：\n\n如果您剛才已經出示兌換完成，請記得在票夾中點擊黃色的「使用後請手動核銷」按鈕喔！\n(核銷後可避免下次不小心重複出示)"); }, 400); }; const showTicketImage = (i) => { if(i.isMergedOrder && !i.isRedeemed){ pendingTicketUrl.value=i.url; itemToRedeem.value=i; openModalSafe('mergedWarningModal'); } else { if (useSwipeMode.value) { const idx = currentDisplayTickets.value.findIndex(t => t.url === i.url && t.orderId === i.orderId); if (idx !== -1) openTicketCarousel(idx); else window.open(i.url,'_blank'); } else { window.open(i.url,'_blank'); if(!i.isRedeemed) setTimeout(()=>openRedeemConfirm(i), 800); } } }; const confirmMergedWarning = () => { hideModalSafe('mergedWarningModal'); if(itemToRedeem.value) { if (useSwipeMode.value) { const idx = currentDisplayTickets.value.findIndex(t => t.url === itemToRedeem.value.url && t.orderId === itemToRedeem.value.orderId); if (idx !== -1) setTimeout(() => openTicketCarousel(idx), 400); else window.open(pendingTicketUrl.value, '_blank'); } else { window.open(pendingTicketUrl.value, '_blank'); setTimeout(()=>openRedeemConfirm(itemToRedeem.value), 1000); } } }; 
-                const giftToFriend = async (item) => { const msgText = `🎁 哈囉！送你一份麥麥小舖的專屬票券！\n\n🍔 品名：${item.name}\n⏳ 效期：${item.expiryDate}\n\n👇 點擊下方連結直接出示條碼即可兌換喔：\n${item.url}`; if (liff.isInClient() && liff.isApiAvailable('shareTargetPicker')) { try { const res = await liff.shareTargetPicker([{ type: "text", text: msgText }]); if (res) { showToast('✅ 票券已成功傳送給好友！'); setTimeout(() => alert('💡 轉贈成功提醒：\n票券送出後，如果對方已經兌換使用，請您記得回來將這張票券點擊「手動核銷」，以免日後自己搞混喔！'), 500); } else showToast('已取消傳送'); return; } catch (error) { console.warn('ShareTargetPicker Error', error); } } window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msgText)}`, '_blank'); setTimeout(() => alert('💡 轉贈提醒：\n跳轉至 LINE 傳送給好友後，如果對方已經兌換使用，請您記得回來將這張票券點擊「手動核銷」喔！'), 1000); };
+                const giftToFriend = async (item) => { const msgText = `🎁 哈囉！送你一份麥麥小舖的專屬票券！\n\n🍔 品名：${item.name}\n⏳ 效期：${item.expiryDate}\n\n👇 點擊下方連結直接出示條碼即可兌換喔：\n${item.url}`; if (liff.isInClient() && liff.isApiAvailable('shareTargetPicker')) { try { const res = await liff.shareTargetPicker([{ type: "text", text: msgText }]); if (res) { showToast('✅ 票券已成功傳送給好友！'); setTimeout(() => showAlert(['票券成功送出後，若對方已兌換使用', '請務必回來將這張票券「手動核銷」', '以免日後自己不小心重複出示喔！']), 500); } else showToast('已取消傳送'); return; } catch (error) { console.warn('ShareTargetPicker Error', error); } } window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msgText)}`, '_blank'); setTimeout(() => showAlert(['跳轉至 LINE 傳送給好友後', '若對方已經兌換使用', '請務必回來將這張票券「手動核銷」喔！']), 1000); };
                 const openRedeemConfirm = (i) => { itemToRedeem.value=i; openModalSafe('redeemConfirmModal'); };
                 const confirmRedeemAction = async () => { if(!itemToRedeem.value)return; isRedeeming.value=true; const i=itemToRedeem.value; const ts=new Date().toLocaleString(); redeemedStatus.value[i.url]=ts; safeSetStorage('mm_redeemed_map',JSON.stringify(redeemedStatus.value)); try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'redeemTicket',orderId:i.orderId,ticketIndex:i.ticketIndex,timestamp:ts})}); showToast("已核銷"); fetchOrderStatus(getEffectiveUserId()); }catch(e){} finally{ isRedeeming.value=false; hideModalSafe('redeemConfirmModal'); itemToRedeem.value=null; } };
                 const executeBatchRedeem = () => { if(batchSelection.value.size>0) openModalSafe('batchRedeemConfirmModal'); };
