@@ -218,7 +218,7 @@
 <body>
 
     <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.07</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.08</div>
         <div class="mt-2 text-muted fw-bold" style="font-size: 16px;">正在為您開啟商城...</div>
         <div class="mt-4 p-4 bg-light rounded-4 shadow-sm text-start" style="width: 300px; border: 1px solid #eee;">
             <div class="fw-bold text-dark mb-3 text-center" style="font-size: 18px;">📖 快速購物流程</div>
@@ -245,7 +245,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.07</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.08</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -534,6 +534,31 @@
                              <div class="text-dark fw-bold" style="font-size: 12px;">一旦核銷將無法復原，亦無法再次使用！</div>
                         </div>
                     </div>
+                    <div class="p-2 bg-white border-bottom">
+                        <div class="d-flex justify-content-center mb-1">
+                            <div class="btn-group w-100 px-2" role="group">
+                                <input type="radio" class="btn-check" name="walletFilter" id="filterAvailable" autocomplete="off" :checked="walletFilter === 'available'" @change="walletFilter = 'available'">
+                                <label class="btn btn-outline-danger fw-bold rounded-start-pill" for="filterAvailable">電子票券 ({{ availableTickets.length }})</label>
+                                
+                                <input type="radio" class="btn-check" name="walletFilter" id="filterUsed" autocomplete="off" :checked="walletFilter === 'used'" @change="walletFilter = 'used'">
+                                <label class="btn btn-outline-secondary fw-bold rounded-end-pill" for="filterUsed">已手動核銷 ({{ usedTickets.length }})</label>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end mt-2 px-2" v-if="walletFilter === 'available'">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="viewModeSwitch" v-model="useSwipeMode">
+                                <label class="form-check-label small fw-bold text-muted" for="viewModeSwitch">
+                                    <i class="fas fa-layer-group me-1"></i>滑動切換模式
+                                </label>
+                            </div>
+                        </div>
+                        <div v-if="walletFilter === 'available'" class="alert alert-warning p-2 mb-0 mx-2 mt-2" style="border-left: 5px solid #ffc107;">
+                             <div class="text-danger fw-bold mb-1" style="font-size: 15px;">
+                                 <i class="fas fa-exclamation-circle me-1"></i>票券一經使用後非自動核銷，需手動自行點擊「核銷」功能。
+                             </div>
+                        </div>
+                    </div>
+                    
                     <div class="modal-body p-3" style="padding-bottom: 80px;">
                         <div v-if="currentDisplayTickets.length === 0" class="text-center py-5 text-muted">
                             <i class="fas fa-ticket-alt fa-3x mb-3 text-secondary"></i><br>目前沒有{{ walletFilter === 'available' ? '可用' : '已手動核銷' }}的票券
@@ -552,18 +577,20 @@
                                     <div class="fw-bold text-truncate" style="max-width: 65%;">{{ item.name || '商品票券' }}</div>
                                     <div class="d-flex flex-column align-items-end">
                                         <span class="badge bg-dark rounded-pill mb-1">{{ item.orderId }}</span>
-                                        <span class="text-muted" style="font-size: 10px;">購買: {{ item.purchaseDate }}</span>
                                         <span v-if="item.expiryDate" class="text-danger fw-bold" style="font-size: 10px;">效期: {{ item.expiryDate }}</span>
                                     </div>
                                 </div>
                                 <div v-if="!item.isRedeemed">
-                                    <button class="btn btn-danger w-100 rounded-pill fw-bold mb-2 py-2" @click.stop="isBatchMode ? toggleTicketSelection(item) : showTicketImage(item)" :disabled="isBatchMode">
-                                        <i class="fas fa-qrcode me-2"></i>點擊出示票券 (可放大)
-                                    </button>
-                                    <div class="d-flex gap-2">
-                                        <button class="btn btn-outline-secondary fw-bold rounded-pill" style="width: 35%; font-size: 12px; padding: 6px 0;" @click.stop="openVendorGuide(item)" :disabled="isBatchMode">
-                                            <i class="fas fa-book-open me-1"></i>說明
+                                    <div class="d-flex gap-2 mb-2">
+                                        <button class="btn btn-danger w-75 rounded-pill fw-bold py-2" @click.stop="isBatchMode ? toggleTicketSelection(item) : showTicketImage(item)" :disabled="isBatchMode">
+                                            <i class="fas fa-qrcode me-2"></i>出示票券
                                         </button>
+                                        <button class="btn btn-success w-25 rounded-pill fw-bold p-0 d-flex flex-column align-items-center justify-content-center" @click.stop="giftToFriend(item)" :disabled="isBatchMode" style="font-size: 10px; background-color: #06C755; border: none;">
+                                            <i class="fas fa-share-square fs-6 mb-1"></i>送朋友
+                                        </button>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-outline-secondary fw-bold rounded-pill" style="width: 35%; font-size: 12px; padding: 6px 0;" @click.stop="openVendorGuide(item)" :disabled="isBatchMode">說明</button>
                                         <button class="btn btn-warning fw-bold rounded-pill" style="width: 65%; font-size: 13px; padding: 6px 0;" @click.stop="isBatchMode ? toggleTicketSelection(item) : openRedeemConfirm(item)">
                                             <i class="fas fa-stamp me-1"></i>使用後請手動核銷
                                         </button>
@@ -593,6 +620,44 @@
                             <span v-if="isRedeeming"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</span>
                             <span v-else><i class="fas fa-check-circle me-2"></i>確認核銷 ({{ batchSelection.size }})</span>
                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="ticketCarouselModal" tabindex="-1" data-bs-backdrop="static" style="z-index: 2080;">
+            <div class="modal-dialog modal-fullscreen m-0">
+                <div class="modal-content bg-dark text-white border-0 rounded-0">
+                    <div class="modal-header border-0 pb-0 justify-content-end z-3 position-absolute w-100" style="top: 0; padding: 20px;">
+                        <button type="button" class="btn-close btn-close-white" @click="closeTicketCarousel" style="opacity: 0.9; padding: 15px;"></button>
+                    </div>
+                    <div class="modal-body p-0 d-flex align-items-center justify-content-center">
+                        <div id="ticketSwipeCarousel" class="carousel slide w-100 h-100" data-bs-touch="true" data-bs-interval="false">
+                            <div class="carousel-inner h-100">
+                                <div v-for="(ticket, index) in currentDisplayTickets" :key="index"
+                                     class="carousel-item h-100" :class="{ active: index === currentCarouselIndex }">
+                                    <div class="d-flex flex-column align-items-center justify-content-center h-100 px-3">
+                                        <img :src="ticket.url" class="img-fluid bg-white p-2" style="max-height: 65vh; object-fit: contain; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                                        <div class="mt-4 text-center">
+                                            <h4 class="fw-bold mb-2">{{ ticket.name }}</h4>
+                                            <div class="badge bg-secondary fs-6 mb-2">{{ ticket.orderId }}</div>
+                                            <div class="text-warning small fw-bold" v-if="ticket.expiryDate">效期: {{ ticket.expiryDate }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#ticketSwipeCarousel" data-bs-slide="prev" style="width: 15%;">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#ticketSwipeCarousel" data-bs-slide="next" style="width: 15%;">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Next</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 justify-content-center bg-transparent z-3 position-absolute bottom-0 w-100 pb-5">
+                        <div class="bg-black bg-opacity-50 rounded-pill px-4 py-2 text-white fw-bold fs-6 tracking-wide">
+                            {{ currentCarouselIndex + 1 }} / {{ currentDisplayTickets.length }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1280,7 +1345,7 @@
                 const originalCouponCode = ref('');
                 const products = ref([]);
                 const cart = ref({});
-                const settings = ref({ version: 'v3.07', liffId: '' });
+                const settings = ref({ version: 'v3.08', liffId: '' });
                 const faqList = ref([]);
                 const announcement = ref("🔥 正在載入最新公告...");
                 const currentCat = ref('ALL');
@@ -2307,9 +2372,7 @@
                 const fallbackCopyTextToClipboard = (text) => { const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); showToast('備份已複製'); } catch(e){} document.body.removeChild(ta); };
 
                 // J. 票券夾
-                const openWallet = () => { ticketSearchQuery.value=''; walletUnread.value=false; safeSetStorage('mm_last_ticket_count',availableTickets.value.length); lastKnownTicketCount.value=availableTickets.value.length; hideModalSafe('historyModal'); openModalSafe('ticketModal'); fetchOrderStatus(getEffectiveUserId()); };
-                const showTicketImage = (i) => { if(i.isMergedOrder && !i.isRedeemed){ pendingTicketUrl.value=i.url; itemToRedeem.value=i; openModalSafe('mergedWarningModal'); } else { window.open(i.url,'_blank'); if(!i.isRedeemed) setTimeout(()=>openRedeemConfirm(i),800); } };
-                const confirmMergedWarning = () => { hideModalSafe('mergedWarningModal'); if(pendingTicketUrl.value){ window.open(pendingTicketUrl.value,'_blank'); if(itemToRedeem.value) setTimeout(()=>openRedeemConfirm(itemToRedeem.value),1000); } };
+                const openWallet = () => { ticketSearchQuery.value=''; walletUnread.value=false; safeSetStorage('mm_last_ticket_count',availableTickets.value.length); lastKnownTicketCount.value=availableTickets.value.length; hideModalSafe('historyModal'); openModalSafe('ticketModal'); fetchOrderStatus(getEffectiveUserId()); }; const useSwipeMode = ref(safeGetStorage('mm_use_swipe', 'true') === 'true'); watch(useSwipeMode, (val) => safeSetStorage('mm_use_swipe', val)); const currentCarouselIndex = ref(0); const openTicketCarousel = (index) => { currentCarouselIndex.value = index; setTimeout(() => { const carouselEl = document.getElementById('ticketSwipeCarousel'); if (carouselEl) { const bsCarousel = bootstrap.Carousel.getInstance(carouselEl) || new bootstrap.Carousel(carouselEl); bsCarousel.to(index); } }, 50); openModalSafe('ticketCarouselModal'); }; const closeTicketCarousel = () => { hideModalSafe('ticketCarouselModal'); setTimeout(() => { showAlert("👀 溫馨提醒：\n\n如果您剛才已經出示兌換完成，請記得在票夾中點擊黃色的「使用後請手動核銷」按鈕喔！\n(核銷後可避免下次不小心重複出示)"); }, 400); }; const showTicketImage = (i) => { if(i.isMergedOrder && !i.isRedeemed){ pendingTicketUrl.value=i.url; itemToRedeem.value=i; openModalSafe('mergedWarningModal'); } else { if (useSwipeMode.value) { const idx = currentDisplayTickets.value.findIndex(t => t.url === i.url && t.orderId === i.orderId); if (idx !== -1) openTicketCarousel(idx); else window.open(i.url,'_blank'); } else { window.open(i.url,'_blank'); if(!i.isRedeemed) setTimeout(()=>openRedeemConfirm(i), 800); } } }; const confirmMergedWarning = () => { hideModalSafe('mergedWarningModal'); if(itemToRedeem.value) { if (useSwipeMode.value) { const idx = currentDisplayTickets.value.findIndex(t => t.url === itemToRedeem.value.url && t.orderId === itemToRedeem.value.orderId); if (idx !== -1) setTimeout(() => openTicketCarousel(idx), 400); else window.open(pendingTicketUrl.value, '_blank'); } else { window.open(pendingTicketUrl.value, '_blank'); setTimeout(()=>openRedeemConfirm(itemToRedeem.value), 1000); } } }; const giftToFriend = async (item) => { const msgText = `🎁 哈囉！送你一份麥麥小舖的專屬票券！\n\n🍔 品名：${item.name}\n⏳ 效期：${item.expiryDate}\n\n👇 點擊下方連結直接出示條碼即可兌換喔：\n${item.url}`; if (liff.isInClient() && liff.isApiAvailable('shareTargetPicker')) { try { const res = await liff.shareTargetPicker([{ type: "text", text: msgText }]); if (res) { showToast('✅ 票券已成功傳送給好友！'); setTimeout(() => alert('💡 轉贈成功提醒：\n票券送出後，如果對方已經兌換使用，請您記得回來將這張票券點擊「手動核銷」，以免日後自己搞混喔！'), 500); } else showToast('已取消傳送'); } catch (error) { copyText(msgText); showToast('傳送失敗，已為您複製連結，請手動貼上給好友！'); } } else { copyText(msgText); showToast('已複製票券內容，請貼上傳給好友！'); } };
                 const openRedeemConfirm = (i) => { itemToRedeem.value=i; openModalSafe('redeemConfirmModal'); };
                 const confirmRedeemAction = async () => { if(!itemToRedeem.value)return; isRedeeming.value=true; const i=itemToRedeem.value; const ts=new Date().toLocaleString(); redeemedStatus.value[i.url]=ts; safeSetStorage('mm_redeemed_map',JSON.stringify(redeemedStatus.value)); try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'redeemTicket',orderId:i.orderId,ticketIndex:i.ticketIndex,timestamp:ts})}); showToast("已核銷"); fetchOrderStatus(getEffectiveUserId()); }catch(e){} finally{ isRedeeming.value=false; hideModalSafe('redeemConfirmModal'); itemToRedeem.value=null; } };
                 const executeBatchRedeem = () => { if(batchSelection.value.size>0) openModalSafe('batchRedeemConfirmModal'); };
@@ -2371,9 +2434,18 @@
                     }
                     fetchFAQ(); 
                     setInterval(() => { now.value = Date.now(); }, 1000); 
+
+                    // 👇 新增的滑動監聽器 👇
+                    const myCarousel = document.getElementById('ticketSwipeCarousel');
+                    if (myCarousel) {
+                        myCarousel.addEventListener('slid.bs.carousel', function (e) {
+                            currentCarouselIndex.value = e.to;
+                        });
+                    }
                 });
                 
               return {
+                   useSwipeMode, currentCarouselIndex, openTicketCarousel, closeTicketCarousel, giftToFriend ,
                     products, cart, currentCat, showFaq, categories, filteredProducts, hideModalSafe ,
                     updateCart, totalQty, totalPrice, cartItems, handleCheckout, enableCoupons ,
                     openCart, openHistory, showGuide, orderHistory, userProfile, 
