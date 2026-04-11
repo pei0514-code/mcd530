@@ -2562,11 +2562,11 @@
     deleteCoupon ,submitPayment, 
                     isSubmittingPayment,
                     handleAccountInput,
-                  adminExpiringItems,   
-    fetchExpiringItems,   
-    fetchAdminDashboard,
-                    openWalletFromReminder: openRedeemFromReminder ,
-              getSafeImageUrl  
+                adminExpiringItems,   
+                fetchExpiringItems,   
+                fetchAdminDashboard,
+                openWalletFromReminder: openRedeemFromReminder, // 👈 這裡記得要補上一個逗號
+                getSafeImageUrl  // 👈 新增的變身器加在這裡！
               }; 
             } 
         }).mount('#app'); 
