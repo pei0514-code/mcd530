@@ -2052,7 +2052,10 @@
                         if (data.status === 'success') {
                             showToast('✅ 測試訊息已成功發出！請檢查手機');
                         } else {
-                            // 👇 換成美化版的 showAlert 👇
+                            // 👇 魔法指令：把黃色警告視窗強制拉到最上層 (z-index: 9999) 👇
+                            const alertEl = document.getElementById('alertModal');
+                            if(alertEl) alertEl.style.zIndex = '9999';
+                            
                             showAlert([
                                 '❌ 發送失敗，請確認以下兩點：',
                                 '1. 您的 TG ID 數字是否完全正確。',
