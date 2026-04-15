@@ -2627,17 +2627,19 @@
                 const giftToFriend = async (item) => { 
                     const msgText = `🎁 哈囉！送你一份麥麥小舖的專屬票券！\n\n🍔 品名：【${item.vendor || '商城'}】${item.name}\n⏳ 效期：${item.expiryDate}\n\n👇 點擊下方連結直接出示條碼即可兌換喔：\n${item.url}`; 
                     
+                    // 狀況 1：在 LINE App 裡面
                     if (liff.isInClient() && liff.isApiAvailable('shareTargetPicker')) { 
                         try { 
                             const res = await liff.shareTargetPicker([{ type: "text", text: msgText }]); 
-                            if (res) { 
-                                // 👇 魔法修改：這樣寫能強制畫面立刻更新變色 👇
+                            // 👇 嚴格把關：必須收到 status === 'success' 才會變色 👇
+                            if (res && res.status === 'success') { 
                                 giftedStatus.value = { ...giftedStatus.value, [item.url]: true };
                                 safeSetStorage('mm_gifted_map', JSON.stringify(giftedStatus.value));
 
                                 showToast('✅ 票券已成功傳送給好友！'); 
                                 setTimeout(() => showAlert(['票券成功送出後，若對方已兌換使用', '請務必回來將這張票券「手動核銷」', '以免日後自己不小心重複出示喔！']), 500); 
                             } else {
+                                // 取消傳送或關閉好友名單，什麼都不做 (維持綠色)
                                 showToast('已取消傳送'); 
                             }
                             return; 
@@ -2646,13 +2648,17 @@
                         } 
                     } 
                     
+                    // 狀況 2：在外部瀏覽器 (Safari/Chrome)
                     window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msgText)}`, '_blank'); 
                     
-                    // 👇 外部瀏覽器跳轉後，也一樣強制更新畫面 👇
-                    giftedStatus.value = { ...giftedStatus.value, [item.url]: true };
-                    safeSetStorage('mm_gifted_map', JSON.stringify(giftedStatus.value));
-
-                    setTimeout(() => showAlert(['跳轉至 LINE 傳送給好友後', '若對方已經兌換使用', '請務必回來將這張票券「手動核銷」喔！']), 1000); 
+                    // 👇 外部瀏覽器無法追蹤 LINE 的動作，改用「詢問」的方式 👇
+                    setTimeout(() => { 
+                        if (confirm("請問您是否已經成功將票券傳送給好友了？\n\n(點擊「確定」系統會將此按鈕標記為已贈送)")) {
+                            giftedStatus.value = { ...giftedStatus.value, [item.url]: true };
+                            safeSetStorage('mm_gifted_map', JSON.stringify(giftedStatus.value));
+                            showAlert(['跳轉至 LINE 傳送給好友後', '若對方已經兌換使用', '請務必回來將這張票券「手動核銷」喔！']);
+                        }
+                    }, 1500); 
                 };
                 const openRedeemConfirm = (i) => { itemToRedeem.value=i; openModalSafe('redeemConfirmModal'); };
                 const confirmRedeemAction = async () => { if(!itemToRedeem.value)return; isRedeeming.value=true; const i=itemToRedeem.value; const ts=new Date().toLocaleString(); redeemedStatus.value[i.url]=ts; safeSetStorage('mm_redeemed_map',JSON.stringify(redeemedStatus.value)); try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'redeemTicket',orderId:i.orderId,ticketIndex:i.ticketIndex,timestamp:ts})}); showToast("已核銷"); fetchOrderStatus(getEffectiveUserId()); }catch(e){} finally{ isRedeeming.value=false; hideModalSafe('redeemConfirmModal'); itemToRedeem.value=null; } };
