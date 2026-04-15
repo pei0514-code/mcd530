@@ -625,70 +625,60 @@
             </div>
         </div>
 
-       <div class="modal fade" id="ticketCarouselModal" tabindex="-1" data-bs-backdrop="static" style="z-index: 2080;">
-            <div class="modal-dialog modal-fullscreen m-0">
-                <div class="modal-content bg-dark text-white border-0 rounded-0">
-                    
-                    <div class="position-absolute w-100 p-3 z-3 d-flex justify-content-between align-items-start" style="top: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%); pointer-events: none;">
-                        <div style="max-width: 70%; pointer-events: auto;">
-                            <h5 class="fw-bold mb-0 text-truncate" style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">{{ currentDisplayTickets[currentCarouselIndex]?.name }}</h5>
-                        </div>
-                        <div class="text-end" style="pointer-events: auto;">
-                            <div class="badge bg-danger mb-1" v-if="currentDisplayTickets[currentCarouselIndex]?.expiryDate">效期：{{ currentDisplayTickets[currentCarouselIndex]?.expiryDate }}</div>
-                            <button type="button" class="btn-close btn-close-white ms-2" @click="closeTicketCarousel"></button>
-                        </div>
-                    </div>
-        
-                    <div class="modal-body p-0 d-flex align-items-center justify-content-center">
-                        <div id="ticketSwipeCarousel" class="carousel slide w-100 h-100" data-bs-touch="true" data-bs-interval="false">
-                            <div class="carousel-inner h-100">
-                                <div v-for="(ticket, index) in currentDisplayTickets" :key="index"
-                                     class="carousel-item h-100" :class="{ active: index === currentCarouselIndex }">
-                                    <div class="d-flex align-items-center justify-content-center h-100">
-                                        <div class="bg-white rounded-4 shadow-lg" style="width: 95%; height: 75vh; overflow: auto; display: flex; align-items: center; justify-content: center;">
-                                            <img :src="getSafeImageUrl(ticket.url)"
-                                                 :style="{ transform: 'scale(' + currentZoomLevel + ')', transformOrigin: 'center center', transition: 'transform 0.2s' }"
-                                                 class="img-fluid">
-                                        </div>
-                                    </div>
+        <div class="modal fade" id="ticketCarouselModal" tabindex="-1" data-bs-backdrop="static" style="z-index: 2080;">
+    <div class="modal-dialog modal-fullscreen m-0">
+        <div class="modal-content bg-dark text-white border-0 rounded-0">
+            
+            <div class="position-absolute w-100 p-3 z-3 d-flex justify-content-between align-items-start" style="top: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);">
+                <div style="max-width: 70%;">
+                    <h5 class="fw-bold mb-0 text-truncate" style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">{{ currentDisplayTickets[currentCarouselIndex]?.name }}</h5>
+                </div>
+                <div class="text-end">
+                    <div class="badge bg-danger mb-1" v-if="currentDisplayTickets[currentCarouselIndex]?.expiryDate">效期：{{ currentDisplayTickets[currentCarouselIndex]?.expiryDate }}</div>
+                    <button type="button" class="btn-close btn-close-white ms-2" @click="closeTicketCarousel"></button>
+                </div>
+            </div>
+
+            <div class="modal-body p-0 d-flex align-items-center justify-content-center">
+                <div id="ticketSwipeCarousel" class="carousel slide w-100 h-100" data-bs-touch="true" data-bs-interval="false">
+                    <div class="carousel-inner h-100">
+                        <div v-for="(ticket, index) in currentDisplayTickets" :key="index"
+                             class="carousel-item h-100" :class="{ active: index === currentCarouselIndex }">
+                            <div class="d-flex align-items-center justify-content-center h-100">
+                                <div class="bg-white rounded-4 shadow-lg" style="width: 95%; height: 75vh; overflow: auto; display: flex; align-items: center; justify-content: center;">
+                                    <img :src="getSafeImageUrl(ticket.url)"
+                                         :style="{ transform: 'scale(' + currentZoomLevel + ')', transformOrigin: 'center center', transition: 'transform 0.2s' }"
+                                         class="img-fluid">
                                 </div>
                             </div>
-        
-                            <button class="carousel-control-prev" type="button" data-bs-target="#ticketSwipeCarousel" data-bs-slide="prev" style="width: 12%; background: rgba(179, 153, 255, 0.4); border-radius: 0 30px 30px 0; border: 1px solid rgba(255,255,255,0.2); z-index: 5;">
-                                <span class="carousel-control-prev-icon" aria-hidden="true" style="width: 2rem; height: 2rem;"></span>
-                                <span class="visually-hidden">上一張</span>
-                            </button>
-                            <button class="carousel-control-next" type="button" data-bs-target="#ticketSwipeCarousel" data-bs-slide="next" style="width: 12%; background: rgba(179, 153, 255, 0.4); border-radius: 30px 0 0 30px; border: 1px solid rgba(255,255,255,0.2); z-index: 5;">
-                                <span class="carousel-control-next-icon" aria-hidden="true" style="width: 2rem; height: 2rem;"></span>
-                                <span class="visually-hidden">下一張</span>
-                            </button>
-                        </div>
-                    </div>
-        
-                    <div class="position-absolute bottom-0 w-100 p-4 z-3 d-flex flex-column align-items-center gap-3" style="background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%); pointer-events: none;">
-                        <div class="d-flex align-items-center gap-3 bg-black bg-opacity-50 px-4 py-2 rounded-pill shadow-lg" style="pointer-events: auto;">
-                            <button class="btn btn-sm btn-dark rounded-circle" @click="adjustZoom(-0.25)"><i class="fas fa-search-minus"></i></button>
-                            
-                            <select class="form-select form-select-sm bg-transparent border-0 text-white fw-bold text-center" 
-                                    style="width: 80px; cursor: pointer;" 
-                                    :value="currentZoomLevel" 
-                                    @change="e => { currentZoomLevel = Number(e.target.value); updateDefaultZoom(e.target.value); }">
-                                <option v-for="z in [1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0, 3.5, 4.0]" :key="z" :value="z" class="text-dark">
-                                    {{ Math.round(z * 100) }}%
-                                </option>
-                            </select>
-        
-                            <button class="btn btn-sm btn-dark rounded-circle" @click="adjustZoom(0.25)"><i class="fas fa-search-plus"></i></button>
-                        </div>
-                        
-                        <div class="bg-black bg-opacity-50 rounded-pill px-4 py-1 text-white fw-bold fs-6 shadow">
-                            {{ currentCarouselIndex + 1 }} / {{ currentDisplayTickets.length }}
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
+            <div class="position-absolute bottom-0 w-100 p-4 z-3 d-flex flex-column align-items-center gap-3" style="background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);">
+                <div class="d-flex align-items-center gap-3 bg-black bg-opacity-50 px-4 py-2 rounded-pill shadow-lg" style="pointer-events: auto;">
+                    <button class="btn btn-sm btn-dark rounded-circle" @click="adjustZoom(-0.25)"><i class="fas fa-search-minus"></i></button>
+                    
+                    <select class="form-select form-select-sm bg-transparent border-0 text-white fw-bold text-center" 
+                            style="width: 80px; cursor: pointer;" 
+                            :value="defaultZoomLevel" 
+                            @change="e => updateDefaultZoom(e.target.value)">
+                        <option v-for="z in [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]" :key="z" :value="z" class="text-dark">
+                            {{ Math.round(z * 100) }}%
+                        </option>
+                    </select>
+
+                    <button class="btn btn-sm btn-dark rounded-circle" @click="adjustZoom(0.25)"><i class="fas fa-search-plus"></i></button>
+                </div>
+                
+                <div class="bg-black bg-opacity-50 rounded-pill px-4 py-1 text-white fw-bold fs-6 shadow">
+                    {{ currentCarouselIndex + 1 }} / {{ currentDisplayTickets.length }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
         <div class="modal fade" id="guideModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -2628,22 +2618,13 @@
                 
                 const currentCarouselIndex = ref(0); 
                 
-                const defaultZoomLevel = ref(Number(safeGetStorage('mm_default_zoom', '2.0')));
-                // 👇 放大縮小與預設值記憶邏輯 👇
+                // 👇 新增：放大縮小邏輯 👇
+                // 👇 改成這樣 👇
                 const defaultZoomLevel = ref(Number(safeGetStorage('mm_default_zoom', '2.0')));
                 const currentZoomLevel = ref(2.0); 
-
-                const adjustZoom = (delta) => {
-                    // 算出新的縮放比例
-                    let newVal = Math.max(1.0, Math.min(currentZoomLevel.value + delta, 4.0));
-                    currentZoomLevel.value = newVal; 
-                    defaultZoomLevel.value = newVal; // 讓預設值跟著連動
-                    safeSetStorage('mm_default_zoom', newVal); // 順便幫客人記住最新的縮放喜好
-                };
-
+                
                 const updateDefaultZoom = (val) => {
                     defaultZoomLevel.value = Number(val);
-                    currentZoomLevel.value = Number(val); // 切換選單時，畫面立刻跟著變
                     safeSetStorage('mm_default_zoom', val);
                     showToast(`已設定預設縮放為 ${Math.round(val * 100)}%`);
                 };
