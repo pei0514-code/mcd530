@@ -571,9 +571,9 @@
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <div class="fw-bold text-truncate" style="max-width: 65%;">{{ item.name || '商品票券' }}</div>
                                     <div class="d-flex flex-column align-items-end">
-                                        <span class="badge bg-dark rounded-pill mb-1">{{ item.orderId }}</span>
-                                        <span v-if="item.expiryDate" class="text-danger fw-bold" style="font-size: 10px;">效期: {{ item.expiryDate }}</span>
-                                    </div>
+                                    <span class="badge bg-secondary rounded-pill mb-1" style="font-size: 9px;">購於: {{ item.purchaseDate }}</span>
+                                    <span v-if="item.expiryDate" class="text-danger fw-bold" style="font-size: 10px;">效期: {{ item.expiryDate }}</span>
+                                </div>
                                 </div>
                                 <div v-if="!item.isRedeemed">
                                     <div class="d-flex gap-2 mb-2">
@@ -1698,18 +1698,22 @@
                                     rawExpiryDate = (o.tickets && o.tickets[i] && o.tickets[i].expiry) || '';
                                 }
 
+                                // 在 setup -> allTickets 裡面
                                 t.push({
                                     url: url,
                                     orderId: o.id,
                                     ticketIndex: i,
-                                    name: n,
+                                    // (1) 商品名稱前面加上廠商
+                                    name: `[${p ? p.vendor : '商城'}] ${n}`, 
                                     vendor: p ? p.vendor : '商城',
                                     productImage: p ? p.image : 'https://placehold.co/150?text=NoImg',
                                     isRedeemed: redeemed,
-                                    expiryDate: formatDateStr(rawExpiryDate), 
-                                    purchaseDate: formatDateStr(rawPurchaseDate),
+                                    expiryDate: formatDateStr(rawExpiryDate),
+                                    // (2) 這裡抓出購買日期
+                                    purchaseDate: rawPurchaseDate.split(' ')[0], 
                                     fullTimestamp: o.timestamp,
                                     isMergedOrder: (o.tickets && o.tickets[i] && o.tickets[i].isMerged) || false
+                                });
                                 });
                             });
                         }
@@ -2652,41 +2656,47 @@
                 const giftedStatus = ref(JSON.parse(safeGetStorage('mm_gifted_map', '{}')));
 
                 const giftToFriend = async (item) => { 
-                    const msgText = `🎁 哈囉！送你一份麥麥小舖的專屬票券！\n\n🍔 品名：【${item.vendor || '商城'}】${item.name}\n⏳ 效期：${item.expiryDate}\n\n👇 點擊下方連結直接出示條碼即可兌換喔：\n${item.url}`; 
-                    
-                    // 狀況 1：在 LINE App 裡面
-                    if (liff.isInClient() && liff.isApiAvailable('shareTargetPicker')) { 
-                        try { 
-                            const res = await liff.shareTargetPicker([{ type: "text", text: msgText }]); 
-                            // 👇 嚴格把關：必須收到 status === 'success' 才會變色 👇
-                            if (res && res.status === 'success') { 
-                                giftedStatus.value = { ...giftedStatus.value, [item.url]: true };
-                                safeSetStorage('mm_gifted_map', JSON.stringify(giftedStatus.value));
-
-                                showToast('✅ 票券已成功傳送給好友！'); 
-                                setTimeout(() => showAlert(['票券成功送出後，若對方已兌換使用', '請務必回來將這張票券「手動核銷」', '以免日後自己不小心重複出示喔！']), 500); 
-                            } else {
-                                // 取消傳送或關閉好友名單，什麼都不做 (維持綠色)
-                                showToast('已取消傳送'); 
-                            }
-                            return; 
-                        } catch (error) { 
-                            console.warn('ShareTargetPicker Error', error); 
-                        } 
-                    } 
-                    
-                    // 狀況 2：在外部瀏覽器 (Safari/Chrome)
-                    window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msgText)}`, '_blank'); 
-                    
-                    // 👇 外部瀏覽器無法追蹤 LINE 的動作，改用「詢問」的方式 👇
-                    setTimeout(() => { 
-                        if (confirm("請問您是否已經成功將票券傳送給好友了？\n\n(點擊「確定」系統會將此按鈕標記為已贈送)")) {
+                const msgText = `🎁 哈囉！送你一份麥麥小舖的專屬票券！\n\n🍔 品名：${item.name}\n⏳ 效期：${item.expiryDate}\n\n👇 點擊下方連結直接出示條碼即可兌換喔：\n${item.url}`; 
+                
+                if (liff.isInClient() && liff.isApiAvailable('shareTargetPicker')) { 
+                    try { 
+                        const res = await liff.shareTargetPicker([{ type: "text", text: msgText }]); 
+                        if (res && res.status === 'success') { 
                             giftedStatus.value = { ...giftedStatus.value, [item.url]: true };
                             safeSetStorage('mm_gifted_map', JSON.stringify(giftedStatus.value));
-                            showAlert(['跳轉至 LINE 傳送給好友後', '若對方已經兌換使用', '請務必回來將這張票券「手動核銷」喔！']);
+            
+                            showToast('✅ 票券已成功傳送！'); 
+                            // 改用美化的 showAlert
+                            setTimeout(() => {
+                                showAlert([
+                                    '🎉 票券已成功傳送給好友！',
+                                    '提醒您：若對方已經兌換使用，請務必回來票夾點擊「手動核銷」，以免日後重複出示。'
+                                ]);
+                            }, 500); 
+                        } else {
+                            showToast('已取消傳送'); 
                         }
-                    }, 1500); 
-                };
+                        return; 
+                    } catch (error) { 
+                        console.warn('ShareTargetPicker Error', error); 
+                    } 
+                } 
+                
+                // 外部瀏覽器部分
+                window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msgText)}`, '_blank'); 
+                
+                // 這裡原本用 confirm，現在改用自製的優雅詢問 (先跳 showAlert 告知)
+                setTimeout(() => { 
+                    showAlert([
+                        '已經跳轉至 LINE 發送了嗎？',
+                        '如果是的話，系統會自動標記此按鈕為「已贈送」。',
+                        '提醒：對方用完後，別忘了回來「手動核銷」喔！'
+                    ]);
+                    // 同步更新狀態
+                    giftedStatus.value = { ...giftedStatus.value, [item.url]: true };
+                    safeSetStorage('mm_gifted_map', JSON.stringify(giftedStatus.value));
+                }, 1500); 
+            };
                 const openRedeemConfirm = (i) => { itemToRedeem.value=i; openModalSafe('redeemConfirmModal'); };
                 const confirmRedeemAction = async () => { if(!itemToRedeem.value)return; isRedeeming.value=true; const i=itemToRedeem.value; const ts=new Date().toLocaleString(); redeemedStatus.value[i.url]=ts; safeSetStorage('mm_redeemed_map',JSON.stringify(redeemedStatus.value)); try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'redeemTicket',orderId:i.orderId,ticketIndex:i.ticketIndex,timestamp:ts})}); showToast("已核銷"); fetchOrderStatus(getEffectiveUserId()); }catch(e){} finally{ isRedeeming.value=false; hideModalSafe('redeemConfirmModal'); itemToRedeem.value=null; } };
                 const executeBatchRedeem = () => { if(batchSelection.value.size>0) openModalSafe('batchRedeemConfirmModal'); };
