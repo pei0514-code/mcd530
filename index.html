@@ -126,7 +126,14 @@
         .mode-xsmall .p-info { display: none; }
         .mode-xsmall .p-price-box { margin-bottom: 1px; }
         .mode-xsmall .zoom-icon { display: none; }
-
+        /* 讓警告視窗永遠在最上層，蓋過所有其他 Modal */
+        #alertModal {
+            z-index: 9999 !important;
+        }
+        /* 同時也要把背景黑影拉高，不然按鈕點不到 */
+        #alertModal + .modal-backdrop, .modal-backdrop.show:last-of-type {
+            z-index: 9998 !important;
+        }
         .terms-box { background: #fff8f8; border: 1px solid #ffebeb; border-radius: 12px; padding: 12px; font-size: 13px; color: #444; line-height: 1.6; height: 120px; overflow-y: auto; margin-bottom: 15px; scrollbar-width: thin; }
         .terms-title { font-weight: 900; color: var(--brand-red); margin-bottom: 5px; font-size: 14px; position: sticky; top: 0; background: #fff8f8; }
         .cart-item-img { width: 40px; height: 40px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; flex-shrink: 0; }
@@ -218,7 +225,7 @@
 <body>
 
    <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.08</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.09</div>
         
         <div class="w-100 px-4 mt-3 mb-2" style="max-width: 280px;">
             <div class="progress" style="height: 12px; border-radius: 10px; background-color: #ffebeb; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
@@ -251,7 +258,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.08</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.09</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -1456,7 +1463,7 @@
                 const originalCouponCode = ref('');
                 const products = ref([]);
                 const cart = ref({});
-                const settings = ref({ version: 'v3.08', liffId: '' });
+                const settings = ref({ version: 'v3.09', liffId: '' });
                 const faqList = ref([]);
                 const announcement = ref("🔥 正在載入最新公告...");
                 const currentCat = ref('ALL');
