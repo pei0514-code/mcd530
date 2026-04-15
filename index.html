@@ -1699,18 +1699,21 @@
                                 }
 
                                 t.push({
-                                    url: url,
-                                    orderId: o.id,
-                                    ticketIndex: i,
-                                    name: n,
-                                    vendor: p ? p.vendor : '商城',
-                                    productImage: p ? p.image : 'https://placehold.co/150?text=NoImg',
-                                    isRedeemed: redeemed,
-                                    expiryDate: formatDateStr(rawExpiryDate), 
-                                    purchaseDate: formatDateStr(rawPurchaseDate),
-                                    fullTimestamp: o.timestamp,
-                                    isMergedOrder: (o.tickets && o.tickets[i] && o.tickets[i].isMerged) || false
-                                });
+                            t.push({
+    url: url,
+    orderId: o.id,
+    ticketIndex: i,
+    // (1) 商品名稱前面加上廠商
+    name: `[${p ? p.vendor : '商城'}] ${n}`, 
+    vendor: p ? p.vendor : '商城',
+    productImage: p ? p.image : 'https://placehold.co/150?text=NoImg',
+    isRedeemed: redeemed,
+    expiryDate: formatDateStr(rawExpiryDate),
+    // (2) 這裡抓出購買日期
+    purchaseDate: rawPurchaseDate.split(' ')[0], 
+    fullTimestamp: o.timestamp,
+    isMergedOrder: (o.tickets && o.tickets[i] && o.tickets[i].isMerged) || false
+});
                             });
                         }
                     });
@@ -1721,6 +1724,8 @@
                     }
                     return t;
                 });
+
+                
                 
                 // 🛡️ 防禦時間屬性確實
                 const availableTickets = computed(() => allTickets.value.filter(t=>!t.isRedeemed).sort((a,b)=>String(b.fullTimestamp||'').localeCompare(String(a.fullTimestamp||''))));
