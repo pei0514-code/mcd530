@@ -218,7 +218,7 @@
 <body>
 
    <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.08</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.09</div>
         
         <div class="w-100 px-4 mt-3 mb-2" style="max-width: 280px;">
             <div class="progress" style="height: 12px; border-radius: 10px; background-color: #ffebeb; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
@@ -251,7 +251,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.08</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.09</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -1456,7 +1456,7 @@
                 const originalCouponCode = ref('');
                 const products = ref([]);
                 const cart = ref({});
-                const settings = ref({ version: 'v3.08', liffId: '' });
+                const settings = ref({ version: 'v3.09', liffId: '' });
                 const faqList = ref([]);
                 const announcement = ref("🔥 正在載入最新公告...");
                 const currentCat = ref('ALL');
@@ -2034,9 +2034,13 @@
 
                 const openTgConfig = () => { openModalSafe('tgConfigModal'); };
 
+                // 新增一組排程
                 const addTgPoint = () => {
+                    // 防呆：確保 points 一定是個陣列，才不會因為舊資料出錯
+                    if (!tgConfig.value.points) tgConfig.value.points = []; 
+                    
                     if (tgConfig.value.points.length < 7) {
-                        tgConfig.value.points.push({ day: 3, time: "10:00" });
+                        tgConfig.value.points.push({ day: 1, time: "12:00" });
                     }
                 };
 
@@ -2614,24 +2618,25 @@
                         try { 
                             const res = await liff.shareTargetPicker([{ type: "text", text: msgText }]); 
                             if (res) { 
-                                // 👇 新增：成功送出後，把這張票的網址標記為「已贈送」並存檔 👇
-                                giftedStatus.value[item.url] = true;
+                                // 👇 魔法修改：這樣寫能強制畫面立刻更新變色 👇
+                                giftedStatus.value = { ...giftedStatus.value, [item.url]: true };
                                 safeSetStorage('mm_gifted_map', JSON.stringify(giftedStatus.value));
 
                                 showToast('✅ 票券已成功傳送給好友！'); 
                                 setTimeout(() => showAlert(['票券成功送出後，若對方已兌換使用', '請務必回來將這張票券「手動核銷」', '以免日後自己不小心重複出示喔！']), 500); 
-                            } else showToast('已取消傳送'); 
+                            } else {
+                                showToast('已取消傳送'); 
+                            }
                             return; 
                         } catch (error) { 
                             console.warn('ShareTargetPicker Error', error); 
                         } 
                     } 
                     
-                    // 如果是在外部瀏覽器 (Safari/Chrome) 打開，跳轉 LINE
                     window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msgText)}`, '_blank'); 
                     
-                    // 👇 外部瀏覽器跳轉後，也一併標記為「已贈送」 👇
-                    giftedStatus.value[item.url] = true;
+                    // 👇 外部瀏覽器跳轉後，也一樣強制更新畫面 👇
+                    giftedStatus.value = { ...giftedStatus.value, [item.url]: true };
                     safeSetStorage('mm_gifted_map', JSON.stringify(giftedStatus.value));
 
                     setTimeout(() => showAlert(['跳轉至 LINE 傳送給好友後', '若對方已經兌換使用', '請務必回來將這張票券「手動核銷」喔！']), 1000); 
@@ -2768,7 +2773,7 @@
                   adminCoupons, 
                   handleManualShip ,
                     handleMomoGift,  
-                  tgConfig, isTestingTg, openTgConfig, testTgMessage, saveTgConfig ,
+                  tgConfig, isTestingTg, openTgConfig, testTgMessage, saveTgConfig ,addTgPoint,
     isEditingCoupon, 
     editingCouponData, 
     openAdminCoupons, 
@@ -2779,6 +2784,7 @@
                     handleAccountInput,
                 adminExpiringItems,   
                 fetchExpiringItems,   
+                  
                 fetchAdminDashboard,
                 openWalletFromReminder: openRedeemFromReminder, // 👈 這裡記得要補上一個逗號
                 getSafeImageUrl ,
