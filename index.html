@@ -497,6 +497,7 @@
         <div class="modal fade" id="ticketModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 rounded-4 shadow-lg" style="background: #f8f9fa;">
+                    
                     <div class="modal-header border-0 bg-white shadow-sm pb-2">
                         <div class="w-100">
                              <div class="d-flex justify-content-between align-items-center mb-2">
@@ -520,13 +521,13 @@
                                     <option value="order">🔢 單號新</option>
                                     <option value="vendor">🏷️ 種類</option>
                                 </select>
-                                <button class="btn btn-outline-danger border-start-0 rounded-end-pill pe-3 fw-bold" @click="() => { fetchOrderStatus(userProfile.userId); showToast('已刷新票券狀態'); }">
+                                <button class="btn btn-outline-danger border-start-0 rounded-end-pill pe-3 fw-bold" @click="() => { fetchOrderStatus(getEffectiveUserId()); showToast('已刷新票券狀態'); }">
                                     刷新 <i class="fas fa-sync-alt ms-1"></i>
                                 </button>
                              </div>
                         </div>
                     </div>
-                   
+                    
                     <div class="p-2 bg-white border-bottom">
                         <div class="d-flex justify-content-center mb-1">
                             <div class="btn-group w-100 px-2" role="group">
@@ -549,7 +550,6 @@
                              <div class="text-danger fw-bold mb-1" style="font-size: 15px;">
                                  <i class="fas fa-exclamation-circle me-1"></i>票券一經使用後非自動核銷，需手動自行點擊「核銷」功能。
                              </div>
-                            
                              <div class="text-dark fw-bold" style="font-size: 12px;">一旦核銷將無法復原，仍可在已核銷中查看圖片！</div>
                         </div>
                     </div>
@@ -580,11 +580,8 @@
                                         <button class="btn btn-danger w-75 rounded-pill fw-bold py-2" @click.stop="isBatchMode ? toggleTicketSelection(item) : showTicketImage(item)" :disabled="isBatchMode">
                                             <i class="fas fa-qrcode me-2"></i>出示票券
                                         </button>
-                                        <button v-if="!giftedStatus[item.url]" class="btn btn-success w-25 rounded-pill fw-bold p-0 d-flex flex-column align-items-center justify-content-center" @click.stop="giftToFriend(item)" :disabled="isBatchMode" style="font-size: 10px; background-color: #06C755; border: none;">
+                                        <button class="btn btn-success w-25 rounded-pill fw-bold p-0 d-flex flex-column align-items-center justify-content-center" @click.stop="giftToFriend(item)" :disabled="isBatchMode" style="font-size: 10px; background-color: #06C755; border: none;">
                                             <i class="fas fa-share-square fs-6 mb-1"></i>送朋友
-                                        </button>
-                                        <button v-else class="btn btn-danger w-25 rounded-pill fw-bold p-0 d-flex flex-column align-items-center justify-content-center shadow-sm" disabled style="font-size: 10px; border: none;">
-                                            <i class="fas fa-gift fs-6 mb-1"></i>已贈送
                                         </button>
                                     </div>
                                     <div class="d-flex gap-2">
