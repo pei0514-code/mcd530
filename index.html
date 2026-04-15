@@ -218,7 +218,7 @@
 <body>
 
    <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.09</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.08</div>
         
         <div class="w-100 px-4 mt-3 mb-2" style="max-width: 280px;">
             <div class="progress" style="height: 12px; border-radius: 10px; background-color: #ffebeb; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
@@ -251,7 +251,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.09</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.08</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -1456,7 +1456,7 @@
                 const originalCouponCode = ref('');
                 const products = ref([]);
                 const cart = ref({});
-                const settings = ref({ version: 'v3.09', liffId: '' });
+                const settings = ref({ version: 'v3.08', liffId: '' });
                 const faqList = ref([]);
                 const announcement = ref("🔥 正在載入最新公告...");
                 const currentCat = ref('ALL');
@@ -2041,34 +2041,35 @@
                 };
 
                 const testTgMessage = async () => {
-                    if (!tgConfig.value.id) return showToast('請先輸入 TG ID');
-                    isTestingTg.value = true;
-                    try {
-                        const res = await fetch(API_URL, {
-                            method: 'POST',
-                            body: JSON.stringify({ action: 'testTg', tgId: tgConfig.value.id })
-                        });
-                        const data = await res.json();
-                        if (data.status === 'success') {
-                            showToast('✅ 測試訊息已成功發出！請檢查手機');
-                        } else {
-                            // 👇 魔法指令：把黃色警告視窗強制拉到最上層 (z-index: 9999) 👇
-                            const alertEl = document.getElementById('alertModal');
-                            if(alertEl) alertEl.style.zIndex = '9999';
-                            
+                if (!tgConfig.value.id) return showToast('請先輸入 TG ID');
+                isTestingTg.value = true;
+                try {
+                    const res = await fetch(API_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'testTg', tgId: tgConfig.value.id })
+                    });
+                    const data = await res.json();
+                    if (data.status === 'success') {
+                        showToast('✅ 測試訊息已成功發出！請檢查手機');
+                    } else {
+                        // 👇 關鍵修復：先關閉設定視窗，避免 Z-index 衝突
+                        hideModalSafe('tgConfigModal');
+                        
+                        // 等待 0.4 秒（動畫結束）再跳出警告
+                        setTimeout(() => {
                             showAlert([
                                 '❌ 發送失敗，請確認以下兩點：',
                                 '1. 您的 TG ID 數字是否完全正確。',
-                                '2. 最重要：務必先點擊上方機器人連結，進入對話框並傳送過任何文字給機器人，它才有權限主動密您！'
+                                '2. 務必先點擊機器人連結，進入對話框並按「開始」，它才有權限密您！'
                             ]);
-                        }
-                    } catch(e) {
-                        showToast('網路連線異常，請稍後再試');
-                    } finally {
-                        isTestingTg.value = false;
+                        }, 400);
                     }
-                };
-
+                } catch(e) {
+                    showToast('網路連線異常，請稍後再試');
+                } finally {
+                    isTestingTg.value = false;
+                }
+            };
                 const saveTgConfig = async () => {
                     if(!tgConfig.value.id) return showToast('請輸入 TG ID');
                     
