@@ -2600,7 +2600,41 @@
                 const confirmMergedWarning = () => { hideModalSafe('mergedWarningModal'); if(itemToRedeem.value) { if (useSwipeMode.value) { const idx = currentDisplayTickets.value.findIndex(t => t.url === itemToRedeem.value.url && t.orderId === itemToRedeem.value.orderId); if (idx !== -1) setTimeout(() => openTicketCarousel(idx), 400); else window.open(pendingTicketUrl.value, '_blank'); } else { window.open(pendingTicketUrl.value, '_blank'); setTimeout(()=>openRedeemConfirm(itemToRedeem.value), 1000); } } };
                 
                 const getSafeImageUrl = (url) => { if (!url) return ''; if (url.includes('drive.google.com')) { const match = url.match(/[?&]id=([^&]+)/); if (match && match[1]) { return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`; } } return url; };
-                const giftToFriend = async (item) => { const msgText = `🎁 哈囉！送你一份麥麥小舖的專屬票券！\n\n🍔 品名：【${item.vendor || '商城'}】${item.name}\n⏳ 效期：${item.expiryDate}\n\n👇 點擊下方連結直接出示條碼即可兌換喔：\n${item.url}`; if (liff.isInClient() && liff.isApiAvailable('shareTargetPicker')) { try { const res = await liff.shareTargetPicker([{ type: "text", text: msgText }]); if (res) { showToast('✅ 票券已成功傳送給好友！'); setTimeout(() => showAlert(['票券成功送出後，若對方已兌換使用', '請務必回來將這張票券「手動核銷」', '以免日後自己不小心重複出示喔！']), 500); } else showToast('已取消傳送'); return; } catch (error) { console.warn('ShareTargetPicker Error', error); } } window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msgText)}`, '_blank'); setTimeout(() => showAlert(['跳轉至 LINE 傳送給好友後', '若對方已經兌換使用', '請務必回來將這張票券「手動核銷」喔！']), 1000); };
+               // ==========================================
+                // 🎁 送給朋友 (升級版：加入已贈送狀態記憶功能)
+                // ==========================================
+                // 1. 先定義用來記憶「已贈送」狀態的變數 (從手機儲存空間讀取)
+                const giftedStatus = ref(JSON.parse(safeGetStorage('mm_gifted_map', '{}')));
+
+                const giftToFriend = async (item) => { 
+                    const msgText = `🎁 哈囉！送你一份麥麥小舖的專屬票券！\n\n🍔 品名：【${item.vendor || '商城'}】${item.name}\n⏳ 效期：${item.expiryDate}\n\n👇 點擊下方連結直接出示條碼即可兌換喔：\n${item.url}`; 
+                    
+                    if (liff.isInClient() && liff.isApiAvailable('shareTargetPicker')) { 
+                        try { 
+                            const res = await liff.shareTargetPicker([{ type: "text", text: msgText }]); 
+                            if (res) { 
+                                // 👇 新增：成功送出後，把這張票的網址標記為「已贈送」並存檔 👇
+                                giftedStatus.value[item.url] = true;
+                                safeSetStorage('mm_gifted_map', JSON.stringify(giftedStatus.value));
+
+                                showToast('✅ 票券已成功傳送給好友！'); 
+                                setTimeout(() => showAlert(['票券成功送出後，若對方已兌換使用', '請務必回來將這張票券「手動核銷」', '以免日後自己不小心重複出示喔！']), 500); 
+                            } else showToast('已取消傳送'); 
+                            return; 
+                        } catch (error) { 
+                            console.warn('ShareTargetPicker Error', error); 
+                        } 
+                    } 
+                    
+                    // 如果是在外部瀏覽器 (Safari/Chrome) 打開，跳轉 LINE
+                    window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msgText)}`, '_blank'); 
+                    
+                    // 👇 外部瀏覽器跳轉後，也一併標記為「已贈送」 👇
+                    giftedStatus.value[item.url] = true;
+                    safeSetStorage('mm_gifted_map', JSON.stringify(giftedStatus.value));
+
+                    setTimeout(() => showAlert(['跳轉至 LINE 傳送給好友後', '若對方已經兌換使用', '請務必回來將這張票券「手動核銷」喔！']), 1000); 
+                };
                 const openRedeemConfirm = (i) => { itemToRedeem.value=i; openModalSafe('redeemConfirmModal'); };
                 const confirmRedeemAction = async () => { if(!itemToRedeem.value)return; isRedeeming.value=true; const i=itemToRedeem.value; const ts=new Date().toLocaleString(); redeemedStatus.value[i.url]=ts; safeSetStorage('mm_redeemed_map',JSON.stringify(redeemedStatus.value)); try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'redeemTicket',orderId:i.orderId,ticketIndex:i.ticketIndex,timestamp:ts})}); showToast("已核銷"); fetchOrderStatus(getEffectiveUserId()); }catch(e){} finally{ isRedeeming.value=false; hideModalSafe('redeemConfirmModal'); itemToRedeem.value=null; } };
                 const executeBatchRedeem = () => { if(batchSelection.value.size>0) openModalSafe('batchRedeemConfirmModal'); };
@@ -2672,7 +2706,7 @@
                 });
                 
               return {
-                   useSwipeMode, currentCarouselIndex, openTicketCarousel, closeTicketCarousel, giftToFriend ,
+                   useSwipeMode, currentCarouselIndex, openTicketCarousel, closeTicketCarousel, giftToFriend ,giftedStatus,
                     products, cart, currentCat, showFaq, categories, filteredProducts, hideModalSafe ,
                     updateCart, totalQty, totalPrice, cartItems, handleCheckout, enableCoupons ,
                     openCart, openHistory, showGuide, orderHistory, userProfile, 
