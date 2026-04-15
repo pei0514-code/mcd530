@@ -747,9 +747,10 @@
                                  <button class="btn btn-sm btn-outline-warning text-dark rounded-pill fw-bold shadow-sm w-100" @click="openModalSafe('adminLowStockModal'); fetchLowStock();"><i class="fas fa-exclamation-triangle me-1"></i>庫存管理</button>
                                  <button class="btn btn-sm btn-outline-secondary rounded-pill fw-bold shadow-sm w-100" @click="openModalSafe('adminExpiringModal'); fetchExpiringItems(1);"><i class="fas fa-calendar-times me-1"></i>即期票券</button>
                              </div>
-                            <div class="row g-2 mt-2">
+                             <div class="row g-2 mt-2">
                                 <div class="col-6"><button class="btn btn-warning w-100 h-100" @click="openModalSafe('marqueeModal')">📢 跑馬燈設定</button></div>
                                 <div class="col-6"><button class="btn btn-danger w-100 h-100" @click="openAdminCoupons">🎟️ 優惠券管理</button></div>
+                                <div class="col-12 mt-2"><button class="btn w-100 h-100 fw-bold text-white shadow-sm" style="background-color: #0088cc;" @click="sendTgBroadcast"><i class="fab fa-telegram-plane me-2"></i>免費群發 TG 廣告推播</button></div>
                             </div>
                              <div class="d-flex gap-2 mt-2">
                                  <button class="btn btn-sm btn-dark rounded-pill fw-bold shadow-sm w-100" @click="openAdminProductManager"><i class="fas fa-boxes me-1"></i>商品管理</button>
@@ -1555,7 +1556,33 @@
                 const isAdminManualShip = ref(false);
                 const marqueeConfig = ref({ enabled: true, text: '' });
                 const isSavingMarquee = ref(false);
+                // ==========================================
+                // 📢 管理員 TG 廣告推播功能
+                // ==========================================
+                const sendTgBroadcast = async () => {
+                    const msg = prompt('📢 【TG 免費廣告推播】\n\n請輸入您想發送給「所有已綁定TG用戶」的內容：\n(支援換行，系統會自動在結尾附上商城連結)');
+                    
+                    if (!msg) return; // 按取消或沒輸入就退出
+                    
+                    if (!confirm(`⚠️ 確定要發送以下廣告給所有人嗎？\n\n${msg}`)) return;
 
+                    showToast('🚀 廣告發送中，請勿關閉視窗...');
+                    try {
+                        const res = await fetch(API_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({ action: 'adminBroadcastTg', message: msg })
+                        });
+                        const data = await res.json();
+                        
+                        if (data.status === 'success') {
+                            showAlert(['✅ 推播大成功！', `本次廣告共免費發送給了 ${data.count} 位用戶！`, '幫您省下了一筆 LINE 推播費！']);
+                        } else {
+                            showAlert(['❌ 發送失敗', data.message]);
+                        }
+                    } catch(e) {
+                        showToast('網路連線異常，請稍後再試');
+                    }
+                };
                 // B. 視窗控制
                 const getModal = (id) => { const el = document.getElementById(id); if (!el) return null; if (typeof bootstrap !== 'undefined') { let instance = bootstrap.Modal.getInstance(el); if (!instance) instance = new bootstrap.Modal(el); return instance; } return null; };
                 const openModalSafe = (id) => {
@@ -2803,7 +2830,7 @@
                     handleAccountInput,
                 adminExpiringItems,   
                 fetchExpiringItems,   
-                  
+                  sendTgBroadcast ,
                 fetchAdminDashboard,
                 openWalletFromReminder: openRedeemFromReminder, // 👈 這裡記得要補上一個逗號
                 getSafeImageUrl ,
