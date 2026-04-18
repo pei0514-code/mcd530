@@ -2930,7 +2930,10 @@
                   defaultZoomLevel,   // 👈 加入這行
                     updateDefaultZoom,  // 👈 加入這行
                   adjustZoom,          // 👈 補上這行
-                  adminTgSet, saveAdminTgSettings, sendSalesToMyTg,
+                sendTgBroadcast,     // 👈 1. 確保有推播功能
+                adminTgSet,          // 👈 2. 確保有設定變數
+                saveAdminTgSettings, // 👈 3. 確保有儲存功能
+                sendSalesToMyTg,     // 👈 4. 確保有傳送報表功能
                     saveMarqueeSettings,
                   adminCoupons, 
                   handleManualShip ,
@@ -2945,8 +2948,7 @@
                     isSubmittingPayment,
                     handleAccountInput,
                 adminExpiringItems,   
-                fetchExpiringItems,   
-                  sendTgBroadcast ,
+                fetchExpiringItems,  
                 fetchAdminDashboard,
                 openWalletFromReminder: openRedeemFromReminder, // 👈 這裡記得要補上一個逗號
                 getSafeImageUrl ,
