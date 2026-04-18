@@ -746,44 +746,7 @@
                 </div>
             </div>
         </div>
-        <div class="modal fade" id="adminTgFunctionModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 rounded-4 shadow-lg">
-                    <div class="modal-header border-0 bg-info text-white">
-                        <h5 class="fw-bold mb-0"><i class="fab fa-telegram-plane me-2"></i>管理員 TG 功能箱</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body p-3">
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-outline-primary fw-bold p-3 text-start" @click="sendTgBroadcast">
-                                📣 1. TG 群發廣告推播
-                            </button>
-                            
-                            <div class="bg-light p-3 rounded-3 border">
-                                <label class="small fw-bold text-muted mb-2">🚨 2. TG 庫存/到期設定</label>
-                                <div class="input-group input-group-sm mb-2">
-                                    <span class="input-group-text">庫存低於</span>
-                                    <input type="number" class="form-control text-center fw-bold" v-model="adminTgSet.lowStock">
-                                    <span class="input-group-text">時通知</span>
-                                </div>
-                                <div class="input-group input-group-sm mb-2">
-                                    <span class="input-group-text">效期低於</span>
-                                    <input type="number" class="form-control text-center fw-bold" v-model="adminTgSet.expiringDays">
-                                    <span class="input-group-text">天通知</span>
-                                </div>
-                                <button class="btn btn-dark btn-sm w-100 fw-bold mt-1" @click="saveAdminTgSettings">
-                                    <i class="fas fa-save me-1"></i> 儲存設定
-                                </button>
-                            </div>
-                            
-                            <button class="btn btn-outline-success fw-bold p-3 text-start" @click="sendSalesToMyTg">
-                                📊 3. 傳送今日銷售報表到我手機
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+       
         <div class="modal fade" id="adminPanelModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 rounded-4 shadow-lg">
@@ -810,8 +773,7 @@
                              <div class="row g-2 mt-2">
                                 <div class="col-6"><button class="btn btn-warning w-100 h-100" @click="openModalSafe('marqueeModal')">📢 跑馬燈設定</button></div>
                                 <div class="col-6"><button class="btn btn-danger w-100 h-100" @click="openAdminCoupons">🎟️ 優惠券管理</button></div>
-<div class="col-12 mt-2"><button class="btn w-100 h-100 fw-bold text-white shadow-sm" style="background-color: #0088cc;" @click="hideModalSafe('adminPanelModal'); setTimeout(() => openModalSafe('adminTgFunctionModal'), 400);"><i class="fab fa-telegram-plane me-2"></i>TG 功能集錦</button></div>                             </div>
-                             <div class="d-flex gap-2 mt-2">
+                                <div class="col-12 mt-2"><button class="btn w-100 h-100 fw-bold text-white shadow-sm" style="background-color: #0088cc;" data-bs-dismiss="modal" data-bs-target="#adminTgFunctionModal" data-bs-toggle="modal"><i class="fab fa-telegram-plane me-2"></i>TG 功能集錦</button></div>                             <div class="d-flex gap-2 mt-2">
                                  <button class="btn btn-sm btn-dark rounded-pill fw-bold shadow-sm w-100" @click="openAdminProductManager"><i class="fas fa-boxes me-1"></i>商品管理</button>
                                  <button class="btn btn-sm btn-primary rounded-pill fw-bold shadow-sm w-100" @click="openAdminOrderManager"><i class="fas fa-clipboard-list me-1"></i>訂單管理</button>
                                  <button class="btn btn-sm btn-outline-dark rounded-pill fw-bold shadow-sm w-100" @click="triggerStockSync" :disabled="isAdminSyncing"><i class="fas fa-sync me-1"></i>{{ isAdminSyncing ? '同步中' : '強制同步庫存' }}</button>
@@ -853,7 +815,44 @@
                 </div>
             </div>
         </div>
-
+         <div class="modal fade" id="adminTgFunctionModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 rounded-4 shadow-lg">
+                    <div class="modal-header border-0 bg-info text-white">
+                        <h5 class="fw-bold mb-0"><i class="fab fa-telegram-plane me-2"></i>管理員 TG 功能箱</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-3">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary fw-bold p-3 text-start" @click="sendTgBroadcast">
+                                📣 1. TG 群發廣告推播
+                            </button>
+                            
+                            <div class="bg-light p-3 rounded-3 border">
+                                <label class="small fw-bold text-muted mb-2">🚨 2. TG 庫存/到期設定</label>
+                                <div class="input-group input-group-sm mb-2">
+                                    <span class="input-group-text">庫存低於</span>
+                                    <input type="number" class="form-control text-center fw-bold" v-model="adminTgSet.lowStock">
+                                    <span class="input-group-text">時通知</span>
+                                </div>
+                                <div class="input-group input-group-sm mb-2">
+                                    <span class="input-group-text">效期低於</span>
+                                    <input type="number" class="form-control text-center fw-bold" v-model="adminTgSet.expiringDays">
+                                    <span class="input-group-text">天通知</span>
+                                </div>
+                                <button class="btn btn-dark btn-sm w-100 fw-bold mt-1" @click="saveAdminTgSettings">
+                                    <i class="fas fa-save me-1"></i> 儲存設定
+                                </button>
+                            </div>
+                            
+                            <button class="btn btn-outline-success fw-bold p-3 text-start" @click="sendSalesToMyTg">
+                                📊 3. 傳送今日銷售報表到我手機
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="modal fade" id="marqueeModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
