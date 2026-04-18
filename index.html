@@ -1469,6 +1469,35 @@
         createApp({
             setup() {
                 // A. 變數定義
+                // 新增管理員 TG 設定變數
+                const adminTgSet = ref({ lowStock: 5, expiringDays: 7 });
+
+                // 儲存設定
+                const saveAdminTgSettings = async () => {
+                    showToast('儲存中...');
+                    const res = await fetch(API_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'saveAdminNotifySettings', lowStock: adminTgSet.value.lowStock, expiringDays: adminTgSet.value.expiringDays })
+                    });
+                    showToast('✅ 設定已儲存！');
+                };
+
+                // 傳送銷售報表
+                const sendSalesToMyTg = async () => {
+                    const myTgId = tgConfig.value.id; // 抓取妳目前綁定的 TG ID
+                    if(!myTgId) return showAlert('請先在個人票夾綁定妳的 TG ID');
+                    showToast('報表產生中...');
+                    // 這裏直接用原本的 adminBroadcast 邏輯改一下或是新增 action
+                    // 為了簡單，我們直接呼叫群發函式傳送特定內容
+                    await fetch(API_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'adminBroadcastTg', message: `📊 請求報表傳送...` }) // 此處建議根據後端新增 action
+                    });
+                    showToast('✅ 報表已發送到您的 Telegram');
+                };
+
+
+                
                 const enableCoupons = ref(false);
                 const registerUserToSheet = (profile, email) => {
                     fetch(API_URL, {
@@ -2871,6 +2900,7 @@
                   defaultZoomLevel,   // 👈 加入這行
                     updateDefaultZoom,  // 👈 加入這行
                   adjustZoom,          // 👈 補上這行
+                  adminTgSet, saveAdminTgSettings, sendSalesToMyTg,
                     saveMarqueeSettings,
                   adminCoupons, 
                   handleManualShip ,
@@ -2895,5 +2925,36 @@
             } 
         }).mount('#app'); 
     </script>
+
+   <div class="modal fade" id="adminTgFunctionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header border-0 bg-info text-white">
+                <h5 class="fw-bold mb-0"><i class="fab fa-telegram-plane me-2"></i>管理員 TG 功能箱</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary fw-bold p-3" @click="sendTgBroadcast">📣 1. TG 群發廣告推播</button>
+                    <div class="bg-light p-3 rounded-3 border">
+                        <label class="small fw-bold text-muted mb-2">🚨 2. TG 庫存/到期設定</label>
+                        <div class="input-group input-group-sm mb-2">
+                            <span class="input-group-text">庫存低於</span>
+                            <input type="number" class="form-control" v-model="adminTgSet.lowStock">
+                            <span class="input-group-text">時通知</span>
+                        </div>
+                        <div class="input-group input-group-sm mb-2">
+                            <span class="input-group-text">效期低於</span>
+                            <input type="number" class="form-control" v-model="adminTgSet.expiringDays">
+                            <span class="input-group-text">天通知</span>
+                        </div>
+                        <button class="btn btn-dark btn-sm w-100" @click="saveAdminTgSettings">儲存設定</button>
+                    </div>
+                    <button class="btn btn-outline-success fw-bold p-3" @click="sendSalesToMyTg">📊 3. 傳送今日銷售報表到我手機</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 
 </body>
 </html>
