@@ -2374,8 +2374,13 @@
                     const now = new Date(); 
                     const pad = (n) => String(n).padStart(2, '0'); 
                     const timeStr = `${now.getFullYear()}/${pad(now.getMonth() + 1)}/${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-                    const randomNum = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-                    const baseOrderId = `M${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}${randomNum}`;
+                   // === 👇 替換為：單號記憶機制 👇 ===
+                    if (!window.currentCheckoutId) {
+                        const randomNum = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+                        window.currentCheckoutId = `M${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}${randomNum}`;
+                    }
+                    const baseOrderId = window.currentCheckoutId;
+                    // === 👆 替換結束 👆 ===
                     const orderPromises = [];
                     const lineMessages = []; 
                     const records = []; 
@@ -2563,7 +2568,17 @@
                     const rem = unreportedOrders.value.filter(id=>!lastOrderIds.value.includes(id)); unreportedOrders.value=rem; safeSetStorage('mm_pending_payment_orders', JSON.stringify(rem));
                     hideModalSafe('successModal'); resetCart(); orderHistory.value=orderHistory.value.map(h=>{ if(h && lastOrderIds.value.includes(h.id)) return {...h, paymentNote:'已回報'}; return h; }); safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
                 };
-                const resetCart = () => { cart.value={}; safeSetStorage('mm_cart_storage', '{}'); deliveryMethod.value='screenshot'; selectedPayment.value=''; showPaymentForm.value=false; requestManualScreenshot.value=false; appliedCoupon.value=null; couponCodeInput.value=''; };
+                const resetCart = () => { 
+                    cart.value={}; 
+                    safeSetStorage('mm_cart_storage', '{}'); 
+                    deliveryMethod.value='screenshot'; 
+                    selectedPayment.value=''; 
+                    showPaymentForm.value=false; 
+                    requestManualScreenshot.value=false; 
+                    appliedCoupon.value=null; 
+                    couponCodeInput.value=''; 
+                    window.currentCheckoutId = null; // 👈 新增這行：結帳成功後清除記憶的單號
+                };
                 const reBuy=(h)=>{if(!h)return;cart.value={};let w="",has=false;(h.items||[]).forEach(i=>{const p=products.value.find(x=>x.name===i.name);if(p){const q=Number(i.quantity||i.qty||0),s=Number(p.stock||0);if(s<=0)w+=`[${p.name}] 已售完，未加入購物車。\n`;else{cart.value[p.id]=(s<q?s:q);has=true;if(s<q)w+=`[${p.name}] 庫存僅剩 ${s}，已調整數量。\n`;}}else w+=`[${i.name}] 商品已下架。\n`;});safeSetStorage('mm_cart_storage',JSON.stringify(cart.value));hideModalSafe('historyModal');if(has)openModalSafe('cartModal');if(w)showToast(w,'warning');else if(!has)showToast('很抱歉，訂單內的商品目前皆已售完。','error');}; 
                 const resendHistory = (h) => { if(!h)return;let m=`🛒 補傳 #${h.id}\n總額：$${h.totalAmount}`; if(liff.isInClient()) liff.sendMessages([{type:'text',text:m}]).then(()=>liff.closeWindow()); else window.open(`https://line.me/R/msg/text/?${encodeURIComponent(m)}`,'_blank'); };
 
