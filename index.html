@@ -2261,7 +2261,18 @@
                 };
 
                 // G. 購物車與訂單互動
-                const updateCart = (p, d) => { if(d>0 && (cart.value[p.id]||0)>=Number(p.stock)){ showToast('庫存上限'); return; } const n=(cart.value[p.id]||0)+d; if(n<=0) delete cart.value[p.id]; else if(n<=Number(p.stock)) cart.value[p.id]=n; safeSetStorage('mm_cart_storage', JSON.stringify(cart.value)); };
+                //const updateCart = (p, d) => { if(d>0 && (cart.value[p.id]||0)>=Number(p.stock)){ showToast('庫存上限'); return; } const n=(cart.value[p.id]||0)+d; if(n<=0) delete cart.value[p.id]; else if(n<=Number(p.stock)) cart.value[p.id]=n; safeSetStorage('mm_cart_storage', JSON.stringify(cart.value)); };
+                
+                const updateCart = (p, d) => { 
+                    if(d>0 && (cart.value[p.id]||0)>=Number(p.stock)){ showToast('庫存上限'); return; } 
+                    const n=(cart.value[p.id]||0)+d; 
+                    if(n<=0) delete cart.value[p.id]; 
+                    else if(n<=Number(p.stock)) cart.value[p.id]=n; 
+                    safeSetStorage('mm_cart_storage', JSON.stringify(cart.value)); 
+                    
+                    // 💡 關鍵修正：只要客人加減商品，就把暫存的防重複單號清掉，讓他產生新的！
+                    window.currentCheckoutId = null; 
+                };
                 const showProductDetail = (p) => { selectedProduct.value = p; openModalSafe('productDetailModal'); };
                 const openCancelModal = (h) => { hideModalSafe('historyModal'); orderToCancel.value = h; relatedOrdersToCancel.value = []; if(h && h.id && h.id.includes('-')){ const base=h.id.split('-')[0]; relatedOrdersToCancel.value=orderHistory.value.filter(o=>o && o.id && o.id.startsWith(base)&&o.id!==h.id&&getStatusBadge(o).canCancel); } openModalSafe('cancelConfirmModal'); };
                 
