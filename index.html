@@ -746,7 +746,100 @@
                 </div>
             </div>
         </div>
-       
+
+        <div class="modal fade" id="adminLotteryModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 rounded-4 shadow-lg">
+                    <div class="modal-header bg-danger text-white border-0">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-gift me-2"></i>滿額抽獎管理系統</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="alert alert-light border border-danger mb-3 small fw-bold">
+                            <i class="fas fa-info-circle text-danger me-1"></i> 系統會自動篩選「已付款/已發貨」的訂單，並自動過濾管理員帳號。
+                        </div>
+                        
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label-small">計算起始日</label>
+                                <input type="date" class="form-control" v-model="lotteryConfig.startDate">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label-small">計算結束日</label>
+                                <input type="date" class="form-control" v-model="lotteryConfig.endDate">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label-small">抽獎門檻 (每滿多少元獲1張券)</label>
+                                <input type="number" class="form-control fw-bold text-danger" v-model="lotteryConfig.threshold">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label-small">抽出人數</label>
+                                <input type="number" class="form-control fw-bold text-primary" v-model="lotteryConfig.winnerCount">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label-small">選擇贈送獎品 (請確保有庫存)</label>
+                                <select class="form-select fw-bold" v-model="lotteryConfig.prizeName">
+                                    <option value="" disabled>請選擇商品...</option>
+                                    <option v-for="p in products" :key="p.id" :value="p.name">[{{p.vendor}}] {{ p.name }} (庫存:{{p.stock}})</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-dark w-100 rounded-pill fw-bold mb-3 shadow-sm" @click="calculateLottery" :disabled="isCalculatingLottery">
+                            <span v-if="isCalculatingLottery"><i class="fas fa-spinner fa-spin me-2"></i>結算中...</span>
+                            <span v-else><i class="fas fa-calculator me-2"></i>1. 計算符合資格的抽獎名單</span>
+                        </button>
+
+                        <div v-if="lotteryResult" class="bg-light p-3 rounded-3 border mb-3 text-center">
+                            <div class="row">
+                                <div class="col-6 border-end">
+                                    <div class="text-muted small fw-bold">達標人數</div>
+                                    <div class="fs-3 fw-bold text-dark">{{ lotteryResult.qualifiedUsers }} <span class="fs-6 text-muted">人</span></div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-muted small fw-bold">總產出抽獎券</div>
+                                    <div class="fs-3 fw-bold text-danger">{{ lotteryResult.totalTickets }} <span class="fs-6 text-muted">張</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button v-if="lotteryResult && lotteryResult.totalTickets > 0" class="btn btn-danger w-100 rounded-pill fw-bold py-2 shadow" @click="executeLottery" :disabled="isExecutingLottery">
+                            <span v-if="isExecutingLottery"><i class="fas fa-spinner fa-spin me-2"></i>抽獎與推播中...</span>
+                            <span v-else><i class="fas fa-trophy me-2"></i>2. 正式開獎並發送 LINE 通知</span>
+                        </button>
+
+                        <div v-if="lotteryWinners.length > 0" class="mt-3">
+                            <h6 class="fw-bold text-success mb-2"><i class="fas fa-check-circle me-1"></i>中獎名單 (已發送通知)</h6>
+                            <div class="list-group small">
+                                <div v-for="(w, idx) in lotteryWinners" :key="idx" class="list-group-item py-1 px-2 text-truncate">
+                                    <span class="badge bg-warning text-dark me-2">幸運兒</span> {{ w.userName }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="claimPrizeModal" tabindex="-1" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;">
+                <div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden">
+                    <div class="modal-header border-0 pb-0 justify-content-end">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body px-4 pb-4 pt-0">
+                        <div class="mb-3 text-danger fa-beat-custom"><i class="fas fa-gift fa-5x"></i></div>
+                        <h4 class="fw-bold text-danger mb-2">🎉 恭喜中獎！</h4>
+                        <p class="text-muted small mb-4 fw-bold">系統偵測到您有一份尚未領取的抽獎贈品！<br>點擊下方按鈕，獎品將直接發送至您的票券夾。</p>
+                        <button class="btn btn-danger w-100 rounded-pill fw-bold py-2 shadow" @click="claimMyPrize" :disabled="isClaimingPrize">
+                            <span v-if="isClaimingPrize"><i class="fas fa-spinner fa-spin me-2"></i>獎品製作與發送中...</span>
+                            <span v-else><i class="fas fa-hand-holding-heart me-2"></i>立即領取獎品</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div class="modal fade" id="adminPanelModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content border-0 rounded-4 shadow-lg">
@@ -774,6 +867,7 @@
                                 <div class="col-6"><button class="btn btn-warning w-100 h-100" @click="openModalSafe('marqueeModal')">📢 跑馬燈設定</button></div>
                                 <div class="col-6"><button class="btn btn-danger w-100 h-100" @click="openAdminCoupons">🎟️ 優惠券管理</button></div>
                                 <div class="col-12 mt-2"><button class="btn w-100 h-100 fw-bold text-white shadow-sm" style="background-color: #0088cc;" data-bs-dismiss="modal" data-bs-target="#adminTgFunctionModal" data-bs-toggle="modal"><i class="fab fa-telegram-plane me-2"></i>TG 功能集錦</button></div> 
+                                <div class="col-12 mt-2"><button class="btn btn-danger w-100 h-100 fw-bold shadow-sm" @click="openAdminLottery" data-bs-dismiss="modal"><i class="fas fa-gift me-2"></i>滿額抽獎管理</button></div>
                              </div> <div class="d-flex gap-2 mt-2">
                                  <button class="btn btn-sm btn-dark rounded-pill fw-bold shadow-sm w-100" @click="openAdminProductManager"><i class="fas fa-boxes me-1"></i>商品管理</button>
                                  <button class="btn btn-sm btn-primary rounded-pill fw-bold shadow-sm w-100" @click="openAdminOrderManager"><i class="fas fa-clipboard-list me-1"></i>訂單管理</button>
@@ -1664,6 +1758,80 @@
                 const isAdminChecking = ref(false);
                 const isAdminFetchingStock = ref(false);
                 const adminProducts = ref([]);
+                const lotteryConfig = ref({ startDate: '', endDate: '', threshold: 1000, winnerCount: 1, prizeName: '' });
+                const lotteryResult = ref(null);
+                const lotteryWinners = ref([]);
+                const isCalculatingLottery = ref(false);
+                const isExecutingLottery = ref(false);
+                const isClaimingPrize = ref(false);
+
+                const openAdminLottery = () => {
+                    const today = new Date();
+                    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1); // 預設當月1號
+                    lotteryConfig.value.startDate = firstDay.toISOString().split('T')[0];
+                    lotteryConfig.value.endDate = today.toISOString().split('T')[0];
+                    lotteryResult.value = null;
+                    lotteryWinners.value = [];
+                    openModalSafe('adminLotteryModal');
+                };
+
+                const calculateLottery = async () => {
+                    if (!lotteryConfig.value.startDate || !lotteryConfig.value.endDate || !lotteryConfig.value.prizeName) {
+                        return showToast('請填寫完整條件，並選擇獎品');
+                    }
+                    isCalculatingLottery.value = true;
+                    try {
+                        const res = await fetch(API_URL, { 
+                            method: 'POST', 
+                            body: JSON.stringify({ action: 'adminCalculateLottery', ...lotteryConfig.value }) 
+                        });
+                        const json = await res.json();
+                        if (json.status === 'success') {
+                            lotteryResult.value = json;
+                            showToast('計算完成！');
+                        } else showToast('計算失敗: ' + json.message);
+                    } catch(e) { showToast('網路連線異常'); }
+                    finally { isCalculatingLottery.value = false; }
+                };
+
+                const executeLottery = async () => {
+                    if (!lotteryResult.value || lotteryResult.value.pool.length === 0) return showToast('沒有符合資格的名單');
+                    if (!confirm(`確定要從 ${lotteryResult.value.totalTickets} 張籤中，抽出 ${lotteryConfig.value.winnerCount} 名幸運兒，並發送 LINE 領獎通知嗎？`)) return;
+                    
+                    isExecutingLottery.value = true;
+                    try {
+                        const res = await fetch(API_URL, { 
+                            method: 'POST', 
+                            body: JSON.stringify({ action: 'adminExecuteLottery', ...lotteryConfig.value, pool: lotteryResult.value.pool }) 
+                        });
+                        const json = await res.json();
+                        if (json.status === 'success') {
+                            lotteryWinners.value = json.winners;
+                            showAlert(['✅ 抽獎大成功！', '中獎通知已透過 LINE 發送給幸運兒囉！']);
+                        } else showToast('抽獎失敗: ' + json.message);
+                    } catch(e) { showToast('網路連線異常'); }
+                    finally { isExecutingLottery.value = false; }
+                };
+
+                const claimMyPrize = async () => {
+                    isClaimingPrize.value = true;
+                    try {
+                        const res = await fetch(API_URL, { 
+                            method: 'POST', 
+                            body: JSON.stringify({ action: 'claimLotteryPrize', userId: getEffectiveUserId() }) 
+                        });
+                        const json = await res.json();
+                        if (json.status === 'success') {
+                            hideModalSafe('claimPrizeModal');
+                            showAlert(['🎉 獎品領取成功！', '系統已為您生成免費訂單並發貨。', '請前往「我的票券」查看您的專屬獎品！']);
+                            setTimeout(() => { fetchOrderStatus(getEffectiveUserId()); openWallet(); }, 2000);
+                        } else {
+                            hideModalSafe('claimPrizeModal');
+                            showAlert(['❌ 領取失敗', json.message]);
+                        }
+                    } catch(e) { showToast('連線異常，請稍後再試'); }
+                    finally { isClaimingPrize.value = false; }
+                };
                 const editingProduct = ref({});
                 const isSavingProduct = ref(false);
                 const adminAllOrders = ref([]);
@@ -2890,6 +3058,10 @@
 
                 onMounted(() => { 
                     initApp(); 
+                    // 偵測網址是否有帶領獎參數
+                    if (window.location.href.includes('action=claimPrize')) {
+                        setTimeout(() => { openModalSafe('claimPrizeModal'); }, 1500); // 等待商城載入後彈出
+                    }
                     if (typeof togglePayment === 'function') {
                         togglePayment('822'); 
                     }
@@ -2912,6 +3084,8 @@
                     openCart, openHistory, showGuide, orderHistory, userProfile, 
                     guestName, userContact, resendHistory, reBuy, acceptTerms, 
                     resetCart, isLoadingData, deliveryMethod, giftInfo, 
+                    lotteryConfig, lotteryResult, lotteryWinners, isCalculatingLottery, isExecutingLottery, isClaimingPrize,
+                    openAdminLottery, calculateLottery, executeLottery, claimMyPrize,
                     viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, 
                     alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayment,
                     togglePayment, isSubmitting, selectedBankInfos, copyText, retryCount, 
