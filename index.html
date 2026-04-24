@@ -1853,6 +1853,26 @@
                 const isCalculatingLottery = ref(false);
                 const isExecutingLottery = ref(false);
                 const isClaimingPrize = ref(false);
+                const lotteryHistory = ref([]);
+                const isLoadingLotteryHistory = ref(false);
+
+                const fetchLotteryHistory = async () => {
+                    isLoadingLotteryHistory.value = true;
+                    try {
+                        const res = await fetch(API_URL, { 
+                            method: 'POST', 
+                            body: JSON.stringify({ action: 'adminGetLotteryHistory' }) 
+                        });
+                        const json = await res.json();
+                        if (json.status === 'success') {
+                            lotteryHistory.value = json.history;
+                        }
+                    } catch(e) { 
+                        showToast('紀錄讀取失敗，請檢查網路'); 
+                    } finally { 
+                        isLoadingLotteryHistory.value = false; 
+                    }
+                };
 
                 const openAdminLottery = () => {
                     const today = new Date();
@@ -3186,7 +3206,7 @@
                     openCart, openHistory, showGuide, orderHistory, userProfile, 
                     guestName, userContact, resendHistory, reBuy, acceptTerms, 
                     resetCart, isLoadingData, deliveryMethod, giftInfo, 
-                    lotteryConfig, lotteryResult, lotteryWinners, isCalculatingLottery, isExecutingLottery, isClaimingPrize,
+                    lotteryConfig, lotteryResult, lotteryWinners, isCalculatingLottery, isExecutingLottery, isClaimingPrize, lotteryHistory, isLoadingLotteryHistory, fetchLotteryHistory,
                     openAdminLottery, prepareExecuteLottery ,calculateLottery, executeLottery, claimMyPrize,
                     viewMode, setViewMode, showLayoutMenu, gridModeClass, gridRowClass, gridColClass, 
                     alertMessages, getProductImage, reloadApp, bankAccounts, selectedPayment,
@@ -3194,6 +3214,7 @@
                     hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, canSelectDrive, 
                     showPaymentForm, openPaymentForm, paymentForm, paymentFormLabel, paymentFormPlaceholder, 
                     submitPayment, isSubmittingPayment, 
+                  
                     openReportForHistory, getStatusBadge, openReportForPending, 
                     unreportedOrders, pendingSelection, 
                     openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, 
