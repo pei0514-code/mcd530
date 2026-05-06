@@ -8,9 +8,11 @@
     
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js" crossorigin="anonymous"></script>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -2035,11 +2037,16 @@
                 const openCart = () => { generateCrossSell(); openModalSafe('cartModal'); };
 
                 // 👇 新增：首頁美編多商品彈窗
+                // 👇 新增：首頁美編多商品彈窗
                 const checkPromoPopup = () => {
-                    if (typeof Swal === 'undefined') return;
+                    if (typeof Swal === 'undefined') return; // 如果套件沒載入就跳過，不報錯
+                    
                     google.script.run.withSuccessHandler(function(config) {
-                        if (config.active && config.productIds && config.productIds.length > 0) {
+                        // 防呆：確保 config 存在，且 active 為真，且有商品 ID
+                        if (config && config.active && Array.isArray(config.productIds) && config.productIds.length > 0) {
+                            
                             let promoHtml = '<div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:15px; max-height: 50vh; overflow-y: auto; padding-bottom:10px;" class="no-scrollbar">';
+                            
                             config.productIds.forEach(id => {
                                 let prod = products.value.find(p => String(p.id) === String(id));
                                 if (prod && Number(prod.stock) > 0) {
@@ -2056,9 +2063,11 @@
                                 }
                             });
                             promoHtml += '</div>';
+                            
+                            // 確保裡面有畫出至少一個按鈕(商品)，才彈出視窗
                             if (promoHtml.includes('button')) {
                                 Swal.fire({
-                                    title: `<span style="color:#333; font-weight:bold;">${config.title}</span>`,
+                                    title: `<span style="color:#333; font-weight:bold;">${config.title || '優惠推薦'}</span>`,
                                     html: promoHtml,
                                     showConfirmButton: false,
                                     showCloseButton: true,
@@ -2441,10 +2450,19 @@
                     } catch (e) { errorMsg.value = e.message; } 
                     finally { 
                         isLoadingData.value = false; hideStaticLoader(); 
-                        if (!safeGetStorage('mm_guided_v172', '')) { setTimeout(() => { openModalSafe('guideModal'); safeSetStorage('mm_guided_v172', 'true'); }, 600); } 
-                        if (validUnreportedOrders.value.length > 0) { pendingSelection.value = [...validUnreportedOrders.value]; setTimeout(() => openModalSafe('unreportedModal'), 1500); } 
-                        // 👉 新增這行：觸發商品推薦彈窗
-                        setTimeout(checkPromoPopup, 1200); 
+                        // 如果有未回報訂單，優先度最高
+                        if (validUnreportedOrders.value.length > 0) { 
+                            pendingSelection.value = [...validUnreportedOrders.value]; 
+                            setTimeout(() => openModalSafe('unreportedModal'), 1000); 
+                        } 
+                        // 如果是第一次來，跳操作說明
+                        else if (!safeGetStorage('mm_guided_v172', '')) { 
+                            setTimeout(() => { openModalSafe('guideModal'); safeSetStorage('mm_guided_v172', 'true'); }, 600); 
+                        } 
+                        // 兩者都沒有，才跳出行銷特惠彈窗
+                        else {
+                            setTimeout(checkPromoPopup, 800); 
+                        }
                     }
                 };
 
