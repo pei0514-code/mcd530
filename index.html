@@ -2036,14 +2036,25 @@
                 // 修改原本的打開購物車：打開時自動計算一次加購商品
                 const openCart = () => { generateCrossSell(); openModalSafe('cartModal'); };
 
+              
                 // 👇 新增：首頁美編多商品彈窗
-                // 👇 新增：首頁美編多商品彈窗
+                // 👇 首頁美編多商品彈窗 (自動除錯版)
                 const checkPromoPopup = () => {
-                    if (typeof Swal === 'undefined') return; // 如果套件沒載入就跳過，不報錯
+                    // 1. 檢查套件有沒有載入
+                    if (typeof Swal === 'undefined') {
+                        showToast('❌ 錯誤：找不到 Swal 彈窗套件，請檢查 <head> 區塊');
+                        return; 
+                    }
                     
-                    google.script.run.withSuccessHandler(function(config) {
-                        // 防呆：確保 config 存在，且 active 為真，且有商品 ID
-                        if (config && config.active && Array.isArray(config.productIds) && config.productIds.length > 0) {
+                    google.script.run
+                        .withSuccessHandler(function(config) {
+                            // 2. 檢查後台回傳
+                            if (!config) return showToast('❌ 後台未回傳彈窗設定');
+                            if (!config.active) return; // 沒開啟就不理它，也不報錯
+                            
+                            if (!config.productIds || config.productIds.length === 0) {
+                                return showToast('⚠️ 彈窗已開，但「系統設定 B8」沒有填寫商品 ID');
+                            }
                             
                             let promoHtml = '<div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:15px; max-height: 50vh; overflow-y: auto; padding-bottom:10px;" class="no-scrollbar">';
                             
@@ -2064,7 +2075,7 @@
                             });
                             promoHtml += '</div>';
                             
-                            // 確保裡面有畫出至少一個按鈕(商品)，才彈出視窗
+                            // 3. 檢查有沒有畫出商品
                             if (promoHtml.includes('button')) {
                                 Swal.fire({
                                     title: `<span style="color:#333; font-weight:bold;">${config.title || '優惠推薦'}</span>`,
@@ -2075,9 +2086,15 @@
                                     width: '90%',
                                     padding: '20px'
                                 });
+                            } else {
+                                showToast('⚠️ B8 設定的商品不存在，或已無庫存！');
                             }
-                        }
-                    }).getPromoConfig();
+                        })
+                        .withFailureHandler(function(error) {
+                            // 4. 捕捉連線錯誤 (最常發生在忘記發布新版本時)
+                            showToast('❌ 讀取後台失敗 (請確認有發布新版): ' + error.message);
+                        })
+                        .getPromoConfig();
                 };
                 
                 const isAdmin = computed(() => userProfile.value && userProfile.value.userId && ADMIN_IDS.includes(userProfile.value.userId));
