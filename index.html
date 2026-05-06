@@ -8,6 +8,7 @@
     
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js" crossorigin="anonymous"></script>
 
@@ -444,16 +445,31 @@
                                 <button class="btn btn-sm btn-outline-success border-0" @click="removeCoupon">✕</button>
                             </div>                      
                            <div class="d-flex justify-content-between align-items-center fw-bold fs-5 mt-2 px-2">
+                                        <div class="d-flex justify-content-between align-items-center fw-bold fs-5 mt-2 px-2">
                                         <span>應付金額</span>
                                         <div class="text-end">
                                             <span v-if="totalSavings > 0" class="savings-tag">已省下 ${{ totalSavings }}</span>
                                             <span class="text-danger ms-1">${{ finalTotalPrice }}</span>
                                         </div>
                                     </div>
-                                </div> <!-- 這是包住購物清單的 bg-light 結尾 -->
-
-                                <!-- 👉 加上這行：智慧加購專區，放在這裡最完美！ -->
-                                <div id="cross-sell-container"></div>
+                                </div>
+                                
+                                <!-- 👉 新增：智慧加購專區 -->
+                                <div v-if="crossSellItems.length > 0" class="mb-3 px-2">
+                                    <hr style="border-top:1px dashed #ddd; margin:15px 0;">
+                                    <div style="font-size: 13px; color: #666; margin-bottom: 10px; font-weight:bold;">💡 這些也很搭喔：</div>
+                                    <div style="display:flex; overflow-x:auto; gap:10px; padding-bottom:5px;" class="no-scrollbar">
+                                        <div v-for="prod in crossSellItems" :key="prod.id" style="min-width: 105px; border: 1px solid #f0f0f0; border-radius: 8px; padding: 8px; background: #fafafa; text-align: center;">
+                                            <img :src="prod.image" style="width:100%; height:60px; object-fit:cover; border-radius:6px;">
+                                            <div style="font-size:12px; font-weight:bold; margin:6px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#333;">{{ prod.name }}</div>
+                                            <div style="color:#ff4d4f; font-weight:bold; margin-bottom:6px; font-size:13px;">${{ prod.price }}</div>
+                                            <button @click="updateCart(prod, 1); generateCrossSell();"
+                                                    style="width:100%; padding:4px; font-size:12px; background:#fff; color:#ff4d4f; border:1px solid #ff4d4f; border-radius:15px; cursor:pointer;">
+                                                ➕ 加購
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <div v-if="isAdmin" class="bg-warning bg-opacity-10 p-2 rounded border border-warning mb-3">
                                     <div class="form-check form-switch">
@@ -1999,7 +2015,62 @@
                 
                 const openHistory = () => { hideModalSafe('ticketModal'); openModalSafe('historyModal'); fetchOrderStatus(getEffectiveUserId()); };
                 const showGuide = () => openModalSafe('guideModal');
-                const openCart = () => openModalSafe('cartModal');
+                
+                // 👇 新增：智慧加購運算邏輯
+                const crossSellItems = ref([]);
+                const generateCrossSell = () => {
+                    if (!products.value || products.value.length === 0) return;
+                    let vendorsInCart = [...new Set(cartItems.value.map(item => item.vendor))];
+                    let recommendations = products.value.filter(p => 
+                        Number(p.stock) > 0 && !cartItems.value.some(c => String(c.id) === String(p.id))
+                    );
+                    if (vendorsInCart.length > 0) {
+                        let related = recommendations.filter(p => vendorsInCart.includes(p.vendor));
+                        if (related.length > 0) recommendations = related;
+                    }
+                    crossSellItems.value = recommendations.sort(() => 0.5 - Math.random()).slice(0, 3);
+                };
+                
+                // 修改原本的打開購物車：打開時自動計算一次加購商品
+                const openCart = () => { generateCrossSell(); openModalSafe('cartModal'); };
+
+                // 👇 新增：首頁美編多商品彈窗
+                const checkPromoPopup = () => {
+                    if (typeof Swal === 'undefined') return;
+                    google.script.run.withSuccessHandler(function(config) {
+                        if (config.active && config.productIds && config.productIds.length > 0) {
+                            let promoHtml = '<div style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:15px; max-height: 50vh; overflow-y: auto; padding-bottom:10px;" class="no-scrollbar">';
+                            config.productIds.forEach(id => {
+                                let prod = products.value.find(p => String(p.id) === String(id));
+                                if (prod && Number(prod.stock) > 0) {
+                                    promoHtml += `
+                                    <div style="width: 120px; border: 1px solid #e8e8e8; border-radius: 12px; padding: 10px; background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                                        <img src="${prod.image}" style="width:100%; height:80px; object-fit:cover; border-radius:8px;">
+                                        <div style="font-size:13px; font-weight:bold; margin:8px 0; height:36px; overflow:hidden; color:#333;">${prod.name}</div>
+                                        <div style="color:#ff4d4f; font-weight:bold; margin-bottom:8px;">$${prod.price}</div>
+                                        <button onclick="document.dispatchEvent(new CustomEvent('add-promo-cart', {detail: '${prod.id}'}))"
+                                                style="width:100%; padding:6px; background:#ff4d4f; color:#fff; border:none; border-radius:20px; font-size:12px; cursor:pointer;">
+                                            ➕ 加入
+                                        </button>
+                                    </div>`;
+                                }
+                            });
+                            promoHtml += '</div>';
+                            if (promoHtml.includes('button')) {
+                                Swal.fire({
+                                    title: `<span style="color:#333; font-weight:bold;">${config.title}</span>`,
+                                    html: promoHtml,
+                                    showConfirmButton: false,
+                                    showCloseButton: true,
+                                    background: 'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)', 
+                                    width: '90%',
+                                    padding: '20px'
+                                });
+                            }
+                        }
+                    }).getPromoConfig();
+                };
+                
                 const isAdmin = computed(() => userProfile.value && userProfile.value.userId && ADMIN_IDS.includes(userProfile.value.userId));
                 
                 const openAdminLogin = () => { 
@@ -2372,6 +2443,8 @@
                         isLoadingData.value = false; hideStaticLoader(); 
                         if (!safeGetStorage('mm_guided_v172', '')) { setTimeout(() => { openModalSafe('guideModal'); safeSetStorage('mm_guided_v172', 'true'); }, 600); } 
                         if (validUnreportedOrders.value.length > 0) { pendingSelection.value = [...validUnreportedOrders.value]; setTimeout(() => openModalSafe('unreportedModal'), 1500); } 
+                        // 👉 新增這行：觸發商品推薦彈窗
+                        setTimeout(checkPromoPopup, 1200); 
                     }
                 };
 
@@ -3183,7 +3256,16 @@
                 const openVendorGuide = (i) => { const v=i.vendor; if(v&&vendorInfoMap.value[v]){ currentVendorGuide.value={name:v,...vendorInfoMap.value[v]}; openModalSafe('vendorGuideModal'); } else showToast("無說明"); };
 
                 onMounted(() => { 
-                    initApp(); 
+                    // 👉 接收首頁彈窗加購事件
+                    document.addEventListener('add-promo-cart', (e) => {
+                        const prod = products.value.find(p => String(p.id) === e.detail);
+                        if (prod) {
+                            updateCart(prod, 1);
+                            if (typeof Swal !== 'undefined') Swal.close();
+                            showToast('✅ 已加入購物車！');
+                        }
+                    });
+                    initApp();
                     // 偵測網址是否有帶領獎參數
                     if (window.location.href.includes('action=claimPrize')) {
                         setTimeout(() => { openModalSafe('claimPrizeModal'); }, 1500); // 等待商城載入後彈出
@@ -3273,7 +3355,7 @@ function renderCrossSellArea() {
                     hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, canSelectDrive, 
                     showPaymentForm, openPaymentForm, paymentForm, paymentFormLabel, paymentFormPlaceholder, 
                     submitPayment, isSubmittingPayment, 
-                  
+                    crossSellItems , generateCrossSell,
                     openReportForHistory, getStatusBadge, openReportForPending, 
                     unreportedOrders, pendingSelection, 
                     openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, 
