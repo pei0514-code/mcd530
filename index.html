@@ -298,7 +298,11 @@
                 <span class="marquee-text">📢 {{ announcement }}</span>
             </div>
         </div>
-
+        <div v-if="promoConfig.active" class="mx-3 mt-3 p-3 rounded-4 shadow-sm position-relative animate__animated animate__fadeInDown" style="background: #fff8f8; border: 1px solid #ffebeb;">
+            <button type="button" class="btn-close position-absolute top-0 end-0 m-2" @click="promoConfig.active = false" style="font-size: 10px;"></button>
+            <div class="fw-bold text-danger mb-1" style="font-size: 14px;"><i class="fas fa-bullhorn me-2"></i>{{ promoConfig.title }}</div>
+            <div class="text-muted fw-bold" style="font-size: 12px;">{{ promoConfig.text }}</div>
+        </div>
         <div class="container-fluid px-2 py-3" :class="gridModeClass">
             <div v-if="isLoadingData" class="text-center py-5">
                 <div class="spinner-border text-danger mb-3" role="status"></div>
@@ -451,6 +455,21 @@
                                 </div>
                             </div>
                         </div>
+                        <div v-if="crossSellItems.length > 0" class="mb-3 px-2">
+                                    <hr style="border-top:1px dashed #ddd; margin:15px 0;">
+                                    <div style="font-size: 13px; color: #666; margin-bottom: 10px; font-weight:bold;">💡 這些也很搭喔：</div>
+                                    <div style="display:flex; overflow-x:auto; gap:10px; padding-bottom:5px;" class="no-scrollbar">
+                                        <div v-for="prod in crossSellItems" :key="prod.id" style="min-width: 105px; border: 1px solid #f0f0f0; border-radius: 8px; padding: 8px; background: #fafafa; text-align: center;">
+                                            <img :src="prod.image" style="width:100%; height:60px; object-fit:cover; border-radius:6px;">
+                                            <div style="font-size:12px; font-weight:bold; margin:6px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#333;">{{ prod.name }}</div>
+                                            <div style="color:#ff4d4f; font-weight:bold; margin-bottom:6px; font-size:13px;">${{ prod.price }}</div>
+                                            <button @click="updateCart(prod, 1); generateCrossSell();"
+                                                    style="width:100%; padding:4px; font-size:12px; background:#fff; color:#ff4d4f; border:1px solid #ff4d4f; border-radius:15px; cursor:pointer;">
+                                                ➕ 加購
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                         <div v-if="isAdmin" class="bg-warning bg-opacity-10 p-2 rounded border border-warning mb-3">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="cartTestMode" v-model="isCartTestMode">
@@ -1995,7 +2014,31 @@
                 
                 const openHistory = () => { hideModalSafe('ticketModal'); openModalSafe('historyModal'); fetchOrderStatus(getEffectiveUserId()); };
                 const showGuide = () => openModalSafe('guideModal');
-                const openCart = () => openModalSafe('cartModal');
+                
+                // 💡 新增：首頁提示變數
+                const promoConfig = ref({ active: false, title: '', text: '' });
+
+                // 💡 新增：智慧加購邏輯
+                const crossSellItems = ref([]);
+                const generateCrossSell = () => {
+                    if (!products.value || cartItems.value.length === 0) {
+                        crossSellItems.value = [];
+                        return;
+                    }
+                    let vendorsInCart = [...new Set(cartItems.value.map(item => item.vendor))];
+                    let recommendations = products.value.filter(p => 
+                        Number(p.stock) > 0 && !cartItems.value.some(c => String(c.id) === String(p.id))
+                    );
+                    if (vendorsInCart.length > 0) {
+                        let related = recommendations.filter(p => vendorsInCart.includes(p.vendor));
+                        if (related.length > 0) recommendations = related;
+                    }
+                    crossSellItems.value = recommendations.sort(() => 0.5 - Math.random()).slice(0, 3);
+                };
+
+                // 修改 openCart：打開購物車時自動產生加購名單
+                const openCart = () => { generateCrossSell(); openModalSafe('cartModal'); };
+                //const openCart = () => openModalSafe('cartModal');
                 const isAdmin = computed(() => userProfile.value && userProfile.value.userId && ADMIN_IDS.includes(userProfile.value.userId));
                 
                 const openAdminLogin = () => { 
@@ -2335,6 +2378,10 @@
                         if(String(initData.hasCoupons) === 'true') hasActiveCoupons.value = true;
                         enableCoupons.value = (String(initData.hasCoupons) === 'true');
                         settings.value = await fetchWithRetry(`${API_URL}?action=getSettings`);
+                        // 讀取首頁小提示框設定
+                        google.script.run.withSuccessHandler(res => {
+                            if (res) promoConfig.value = res;
+                        }).getPromoConfig();
                         try {
                             const sc = JSON.parse(safeGetStorage('mm_cart_storage', '{}')); const vc = {}; Object.keys(sc).forEach(k=>{ const p=products.value.find(x=>x.id===k); if(p && Number(p.stock)>=Number(sc[k])) vc[k]=Number(sc[k]); }); cart.value = vc;
                         } catch(e) { safeSetStorage('mm_cart_storage', '{}'); }
@@ -2850,7 +2897,12 @@
                         hideModalSafe('successModal');
                         hideModalSafe('unreportedModal'); 
 
-                        setTimeout(() => { fetchOrderStatus(getEffectiveUserId()); }, 2000);
+                        // 🚀 關鍵修復：延遲 1.5 秒後，由前端強制喚醒「背景查帳」，保證發貨！
+                        setTimeout(() => {
+                            fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCheckPayments' }) })
+                                .then(() => { fetchOrderStatus(getEffectiveUserId()); })
+                                .catch(() => {});
+                        }, 1500);
 
                     } catch(e) {
                         console.error(e);
@@ -3214,7 +3266,7 @@
                     hasGiftOnlyItems, hasDriveOnlyItems, canSelectGift, canSelectDrive, 
                     showPaymentForm, openPaymentForm, paymentForm, paymentFormLabel, paymentFormPlaceholder, 
                     submitPayment, isSubmittingPayment, 
-                  
+                  promoConfig, crossSellItems, generateCrossSell,
                     openReportForHistory, getStatusBadge, openReportForPending, 
                     unreportedOrders, pendingSelection, 
                     openCancelModal, confirmCancel, reportingTotalAmount, selectedProduct, showProductDetail, 
