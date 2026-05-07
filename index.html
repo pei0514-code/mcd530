@@ -2377,11 +2377,12 @@
                         if(initData.vendors) vendorInfoMap.value = initData.vendors;
                         if(String(initData.hasCoupons) === 'true') hasActiveCoupons.value = true;
                         enableCoupons.value = (String(initData.hasCoupons) === 'true');
+                        // 👇 關鍵修復：直接從 API 回傳的 initData 讀取，不再使用 google.script.run
+                        if (initData.promoConfig) {
+                            promoConfig.value = initData.promoConfig;
+                        }
+                        
                         settings.value = await fetchWithRetry(`${API_URL}?action=getSettings`);
-                        // 讀取首頁小提示框設定
-                        google.script.run.withSuccessHandler(res => {
-                            if (res) promoConfig.value = res;
-                        }).getPromoConfig();
                         try {
                             const sc = JSON.parse(safeGetStorage('mm_cart_storage', '{}')); const vc = {}; Object.keys(sc).forEach(k=>{ const p=products.value.find(x=>x.id===k); if(p && Number(p.stock)>=Number(sc[k])) vc[k]=Number(sc[k]); }); cart.value = vc;
                         } catch(e) { safeSetStorage('mm_cart_storage', '{}'); }
