@@ -2376,15 +2376,37 @@
                 const initApp = async () => {
                     isLoadingData.value = true; errorMsg.value = '';
                     try {
-                        const initData = await fetchWithRetry(`${API_URL}?action=getInitData`);
+                        // 👇 1. 關鍵修正：在網址後面加上 userId，讓後端去雲端幫您把 TG ID 撈出來
+                        const currentUserId = userProfile.value?.userId || safeGetStorage('mm_user_id') || guestUuid.value;
+                        const initData = await fetchWithRetry(`${API_URL}?action=getInitData&userId=${currentUserId}`);
+                        
                         products.value = initData.products;
                         if(initData.vendors) vendorInfoMap.value = initData.vendors;
                         if(String(initData.hasCoupons) === 'true') hasActiveCoupons.value = true;
                         enableCoupons.value = (String(initData.hasCoupons) === 'true');
-                        // 👇 關鍵修復：直接從 API 回傳的 initData 讀取，不再使用 google.script.run
+                        
                         if (initData.promoConfig) {
                             promoConfig.value = initData.promoConfig;
                         }
+                        
+                        // 👇 2. 關鍵新增：TG 到期通知設定的「拆包裹」與「記憶讀取」邏輯
+                        if (initData.tgConfig && initData.tgConfig.id) {
+                            // 優先使用雲端試算表的紀錄 (換手機、清快取都不怕)
+                            tgConfig.value.id = initData.tgConfig.id;
+                            if (initData.tgConfig.points && initData.tgConfig.points.length > 0) {
+                                tgConfig.value.points = initData.tgConfig.points;
+                            }
+                        } else {
+                            // 如果雲端沒有紀錄，就去挖手機的本地記憶 (備用方案)
+                            const localId = safeGetStorage('mm_tg_id');
+                            if (localId) tgConfig.value.id = localId;
+                            
+                            const localPoints = safeGetStorage('mm_tg_points');
+                            if (localPoints) {
+                                try { tgConfig.value.points = JSON.parse(localPoints); } catch(e) {}
+                            }
+                        }
+                        // 👆 TG 讀取邏輯結束 👆
                         
                         settings.value = await fetchWithRetry(`${API_URL}?action=getSettings`);
                         try {
