@@ -2522,35 +2522,44 @@
                 };
 
                 const testTgMessage = async () => {
-                if (!tgConfig.value.id) return showToast('請先輸入 TG ID');
-                isTestingTg.value = true;
-                try {
-                    const res = await fetch(API_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({ action: 'testTg', tgId: tgConfig.value.id })
-                    });
-                    const data = await res.json();
-                    if (data.status === 'success') {
-                        showToast('✅ 測試訊息已成功發出！請檢查手機');
-                    } else {
-                        // 👇 關鍵修復：先關閉設定視窗，避免 Z-index 衝突
-                        hideModalSafe('tgConfigModal');
-                        
-                        // 等待 0.4 秒（動畫結束）再跳出警告
-                        setTimeout(() => {
-                            showAlert([
-                                '❌ 發送失敗，請確認以下兩點：',
-                                '1. 您的 TG ID 數字是否完全正確。',
-                                '2. 務必先點擊機器人連結，進入對話框並按「開始」，它才有權限密您！'
-                            ]);
-                        }, 400);
-                    }
-                } catch(e) {
-                    showToast('網路連線異常，請稍後再試');
-                } finally {
-                    isTestingTg.value = false;
-                }
-            };
+    if (!tgConfig.value.id) return showToast('請先輸入 TG ID');
+    isTestingTg.value = true;
+    try {
+        const res = await fetch(API_URL, {
+            method: 'POST',
+            // 👇 關鍵修復 1：加上這行標頭，確保 Google 乖乖接收 JSON，不會引發 CORS 阻擋
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8',
+            },
+            // 👇 順手加上 String().trim() 雙重保險，防止手機版輸入時不小心多了空白鍵
+            body: JSON.stringify({ action: 'testTg', tgId: String(tgConfig.value.id).trim() })
+        });
+        
+        const data = await res.json();
+        
+        if (data.status === 'success') {
+            showToast('✅ 測試訊息已成功發出！請檢查手機');
+        } else {
+            hideModalSafe('tgConfigModal');
+            
+            setTimeout(() => {
+                // 👇 關鍵修復 2：把後端真實的「錯誤原因 (data.message)」直接印出來！
+                showAlert([
+                    '❌ 發送失敗，系統回報原因：',
+                    `「${data.message || '未知錯誤'}」`,
+                    '',
+                    '💡 請檢查：',
+                    '1. TG ID 是否為純數字。',
+                    '2. 務必先點擊機器人連結，進入對話並按「開始」。'
+                ]);
+            }, 400);
+        }
+    } catch(e) {
+        showToast('網路連線異常，請稍後再試');
+    } finally {
+        isTestingTg.value = false;
+    }
+};
                 const saveTgConfig = async () => {
                     if(!tgConfig.value.id) return showToast('請輸入 TG ID');
                     
