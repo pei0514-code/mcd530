@@ -2502,10 +2502,21 @@
                     if (Array.isArray(parsed) && parsed.length > 0) initPoints = parsed; 
                 } catch(e) {}
 
-                const tgConfig = ref({ 
-                    id: safeGetStorage('mm_tg_id', ''), 
-                    points: initPoints 
-                });
+             // 👇 升級版：安全解析已儲存的排程與 ID
+let savedPoints = initPoints; // 預設值
+try {
+    const rawPoints = safeGetStorage('mm_tg_points', '');
+    if (rawPoints) {
+        savedPoints = JSON.parse(rawPoints); // 將字串轉回陣列格式
+    }
+} catch (e) {
+    console.warn("讀取 TG 排程失敗，使用預設值", e);
+}
+
+const tgConfig = ref({ 
+    id: safeGetStorage('mm_tg_id', ''), // 讀取手機本地存好的 ID
+    points: savedPoints                 // 讀取手機本地存好的通知時間
+});
                 
                 const isTestingTg = ref(false);
                 const openTgConfig = () => { openModalSafe('tgConfigModal'); };
