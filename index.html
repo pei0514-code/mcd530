@@ -2078,28 +2078,7 @@
                 const totalSavings = computed(() => cartItems.value.reduce((a, b) => { const orig = b.originalPrice && b.originalPrice > b.price ? b.originalPrice : b.price; return a + ((orig - b.price) * b.quantity); }, 0));
                 const categories = computed(() => [...new Set(products.value.map(p => p.category))]);
 
-                const formatDateStr = (str) => {
-                    if (!str) return '';
-                    let s = String(str).trim();
-                    if (/^\d{3,4}$/.test(s)) {
-                        let mmdd = s;
-                        if (mmdd.length === 3) mmdd = '0' + mmdd; 
-                        const currentYear = new Date().getFullYear();
-                        const m = mmdd.substring(0, 2);
-                        const d = mmdd.substring(2, 4);
-                        return `${currentYear}/${m}/${d}`; 
-                    }
-                    if (/^\d{8}$/.test(s)) { return `${s.substring(0, 4)}/${s.substring(4, 6)}/${s.substring(6, 8)}`; }
-                    s = s.replace(/[\-\.\s]/g, '/');
-                    const match = s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/);
-                    if (match) {
-                        const y = match[1];
-                        const m = match[2].padStart(2, '0');
-                        const d = match[3].padStart(2, '0');
-                        return `${y}/${m}/${d}`;
-                    }
-                    return s;
-                };
+                
                 // ==========================================
                 // 💡 票券日期翻譯小工具 (具備跨年智慧判斷)
                 // ==========================================
