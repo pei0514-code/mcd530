@@ -238,7 +238,7 @@
 <body>
 
    <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.10</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.11</div>
         
         <div class="w-100 px-4 mt-3 mb-2" style="max-width: 280px;">
             <div class="progress" style="height: 12px; border-radius: 10px; background-color: #ffebeb; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
@@ -271,7 +271,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.10</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.11</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -1784,7 +1784,7 @@
                 const originalCouponCode = ref('');
                 const products = ref([]);
                 const cart = ref({});
-                const settings = ref({ version: 'v3.10', liffId: '' });
+                const settings = ref({ version: 'v3.11', liffId: '' });
                 const faqList = ref([]);
                 const announcement = ref("🔥 正在載入最新公告...");
                 const currentCat = ref('ALL');
@@ -2079,27 +2079,44 @@
                 const categories = computed(() => [...new Set(products.value.map(p => p.category))]);
 
                 
-                // ==========================================
-                // 💡 票券日期翻譯小工具 (具備跨年智慧判斷)
-                // ==========================================
-                const formatDateStr = (rawStr) => {
-                    if (!rawStr) return '依門市說明';
+                const formatDateStr = (str) => {
+                    if (!str) return '';
+                    let s = String(str).trim();
                     
-                    // 判斷是不是剛好 4 個數字 (例如 0524 或 0118)
-                    if (/^\d{4}$/.test(rawStr)) {
-                        const mm = parseInt(rawStr.substring(0, 2), 10);
-                        const dd = parseInt(rawStr.substring(2, 4), 10);
+                    // 💡 1. 處理 3 碼或 4 碼 (例如 118 或 0118) -> 裝上跨年智慧引擎
+                    if (/^\d{3,4}$/.test(s)) {
+                        let mmdd = s;
+                        if (mmdd.length === 3) mmdd = '0' + mmdd; 
+                        
+                        const mm = parseInt(mmdd.substring(0, 2), 10);
+                        const dd = parseInt(mmdd.substring(2, 4), 10);
+                        
                         const now = new Date();
                         let yyyy = now.getFullYear();
                         
-                        // 跨年判斷：如果票上的日期比現在早 30 天，那就是明年的票！
+                        // 🌟 跨年防護罩：如果票上的日期比現在早 30 天，那就是明年的票！
                         if (now.getTime() - new Date(yyyy, mm - 1, dd).getTime() > 30 * 24 * 60 * 60 * 1000) {
                             yyyy++;
                         }
                         
-                        return `${yyyy}/${String(mm).padStart(2, '0')}/${String(dd).padStart(2, '0')}`;
+                        return `${yyyy}/${String(mm).padStart(2, '0')}/${String(dd).padStart(2, '0')}`; 
                     }
-                    return rawStr; // 如果不是4碼，就直接照原樣顯示
+                    
+                    // 2. 處理 8 碼 (例如 20260118) -> 照舊保留
+                    if (/^\d{8}$/.test(s)) { 
+                        return `${s.substring(0, 4)}/${s.substring(4, 6)}/${s.substring(6, 8)}`; 
+                    }
+                    
+                    // 3. 處理其他特殊符號 -> 照舊保留
+                    s = s.replace(/[\-\.\s]/g, '/');
+                    const match = s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/);
+                    if (match) {
+                        const y = match[1];
+                        const m = match[2].padStart(2, '0');
+                        const d = match[3].padStart(2, '0');
+                        return `${y}/${m}/${d}`;
+                    }
+                    return s;
                 };
               
                 const allTickets = computed(() => {
