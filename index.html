@@ -2100,7 +2100,29 @@
                     }
                     return s;
                 };
-
+                // ==========================================
+                // 💡 票券日期翻譯小工具 (具備跨年智慧判斷)
+                // ==========================================
+                const formatDateStr = (rawStr) => {
+                    if (!rawStr) return '依門市說明';
+                    
+                    // 判斷是不是剛好 4 個數字 (例如 0524 或 0118)
+                    if (/^\d{4}$/.test(rawStr)) {
+                        const mm = parseInt(rawStr.substring(0, 2), 10);
+                        const dd = parseInt(rawStr.substring(2, 4), 10);
+                        const now = new Date();
+                        let yyyy = now.getFullYear();
+                        
+                        // 跨年判斷：如果票上的日期比現在早 30 天，那就是明年的票！
+                        if (now.getTime() - new Date(yyyy, mm - 1, dd).getTime() > 30 * 24 * 60 * 60 * 1000) {
+                            yyyy++;
+                        }
+                        
+                        return `${yyyy}/${String(mm).padStart(2, '0')}/${String(dd).padStart(2, '0')}`;
+                    }
+                    return rawStr; // 如果不是4碼，就直接照原樣顯示
+                };
+              
                 const allTickets = computed(() => {
                     let t = [];
                     const currentYear = new Date().getFullYear();
