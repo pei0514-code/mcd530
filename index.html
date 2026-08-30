@@ -3228,7 +3228,7 @@ const tgConfig = ref({
                 // --- 1. 縮放邏輯與預設值記憶 ---
                 // 👇 修正：配置縮放與預設值記憶邏輯 👇
                 const defaultZoomLevel = ref(Number(safeGetStorage('mm_default_zoom', '2.0')));
-                const currentZoomLevel = ref(2.0); // 初始化畫面縮放
+                const currentZoomLevel = ref(1.0); // 初始化畫面縮放
 
                 const adjustZoom = (delta) => {
                     // 算出新的縮放比例，並限制在 100% 到 400% 之間
