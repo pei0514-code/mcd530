@@ -690,12 +690,17 @@
                                      class="carousel-item h-100" :class="{ active: index === currentCarouselIndex }">
                                     <div class="d-flex align-items-center justify-content-center h-100 px-2 pb-5">
                                         <div class="bg-white rounded-4 shadow-lg mx-auto d-flex flex-column" style="width: 100%; max-height: 80vh; overflow: hidden; position: relative;">
-                                            <div style="flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; background-color: #ffffff; padding: 10px;">
-                                                <img :src="getSafeImageUrl(ticket.url)"
-                                                     :style="{ transform: 'scale(' + currentZoomLevel + ')', transformOrigin: 'center center', transition: 'transform 0.2s' }"
-                                                     class="img-fluid w-100" style="max-width: 100%; object-fit: contain;" alt="票券圖片載入中...">
-                                            </div>
-                                        </div>
+    
+    <!-- 移除了原本的 display: flex 置中，加上了觸控滑動優化 -->
+    <div style="flex: 1; overflow: auto; background-color: #ffffff; padding: 10px; text-align: center; -webkit-overflow-scrolling: touch;">
+        
+        <!-- 將視覺縮放 (scale) 改為實體寬度 (width %)，並解除 max-width 限制 -->
+        <img :src="getSafeImageUrl(ticket.url)"
+             :style="{ width: (currentZoomLevel * 100) + '%', transition: 'width 0.2s ease', maxWidth: 'none' }"
+             style="object-fit: contain;" alt="票券圖片載入中...">
+             
+    </div>
+</div>
                                     </div>
                                 </div>
                             </div>
