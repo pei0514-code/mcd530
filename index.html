@@ -1509,8 +1509,32 @@
         <div class="modal fade" id="productDetailModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden h-100" style="max-height: 85vh;"><div class="btn-close-floating" data-bs-dismiss="modal"></div><div class="modal-body p-0 d-flex flex-column" v-if="selectedProduct"><div class="position-relative bg-white" style="flex: 0 0 auto;"><img :src="selectedProduct.image" class="w-100" style="max-height: 350px; object-fit: contain;"></div><div class="p-4 flex-grow-1 overflow-auto bg-white"><div class="d-flex justify-content-between align-items-start mb-2"><div><span class="badge bg-dark mb-2">{{ selectedProduct.vendor }}</span><h5 class="fw-bold mb-1">{{ selectedProduct.name }}</h5></div><div class="text-end"><h4 class="text-danger fw-bold mb-0">${{ selectedProduct.price }}</h4><small class="text-decoration-line-through text-muted" v-if="selectedProduct.originalPrice > selectedProduct.price">${{ selectedProduct.originalPrice }}</small></div></div><div class="d-flex gap-2 mb-3"><span class="badge bg-light text-dark border"><i class="far fa-clock me-1"></i>效期: {{ selectedProduct.expiryDate }}</span><span class="badge bg-light text-dark border"><i class="fas fa-cubes me-1"></i>庫存: {{ selectedProduct.stock }}</span></div><div class="p-3 bg-light rounded-3 small text-secondary mb-3" style="line-height: 1.6; white-space: pre-wrap;">{{ selectedProduct.description || '暫無商品描述' }}</div></div><div class="p-3 border-top bg-white" style="flex: 0 0 auto;"><div v-if="cart[selectedProduct.id]" class="d-flex justify-content-between align-items-center bg-light rounded-pill p-1 border"><button class="btn btn-light rounded-circle shadow-sm" style="width: 40px; height: 40px;" @click="updateCart(selectedProduct, -1)"><i class="fas fa-minus"></i></button><span class="fw-bold fs-5">{{ cart[selectedProduct.id] }}</span><button class="btn btn-light rounded-circle shadow-sm" style="width: 40px; height: 40px;" @click="updateCart(selectedProduct, 1)" :disabled="cart[selectedProduct.id] >= Number(selectedProduct.stock)"><i class="fas fa-plus"></i></button></div><button v-else class="btn btn-dark w-100 rounded-pill py-3 fw-bold shadow" @click="updateCart(selectedProduct, 1)" :disabled="Number(selectedProduct.stock) <= 0">{{ Number(selectedProduct.stock) <= 0 ? '已售完' : '加入購物車' }}</button></div></div></div></div></div>
        
         
-        <div class="modal fade" id="guestWarningModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;"><div class="modal-content border-0 rounded-4 shadow-lg text-center p-4"><div class="mb-2 text-danger"><i class="fas fa-user-secret fa-3x"></i></div><h5 class="fw-bold mb-2">訪客模式提醒</h5><p class="text-muted small mb-3">您目前未使用 LINE 登入，訂單將無法自動連結至您的帳號。</p><p class="text-muted small mb-4">建議您使用 LINE 開啟本商城，以享有完整服務與訂單查詢功能。</p><a href="https://lin.ee/ejXmXDl" target="_blank" class="btn btn-success w-100 rounded-pill fw-bold mb-2 shadow-sm" style="background-color:#06C755; border:none;"><i class="fab fa-line me-2"></i>點我加入麥麥小舖 LINE@</a><button class="btn btn-outline-success w-100 rounded-pill fw-bold mb-2" onclick="copyLineId()"><i class="far fa-copy me-1"></i>複製商城LINE去LINE加入</button><button class="btn btn-outline-danger w-100 rounded-pill fw-bold" onclick="copyGuestLink()"><i class="fas fa-link me-1"></i>複製商城連結去瀏覽器開啟</button></div></div></div>
+      <div class="modal fade" id="guestWarningModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;">
+      <div class="modal-content border-0 rounded-4 shadow-lg text-center p-4">
+        <div class="mb-2 text-danger"><i class="fas fa-user-secret fa-3x"></i></div>
+        <h5 class="fw-bold mb-2">訪客模式提醒</h5>
+        <p class="text-muted small mb-3">您目前未使用 LINE 登入，訂單將無法自動連結至您的帳號。</p>
+        <p class="text-muted small mb-4">建議您直接登入，或使用 LINE 開啟本商城，以享有完整服務與訂單查詢功能。</p>
         
+        <!-- 👇 新增的「登入 LINE」按鈕 (最顯眼的第一個) 👇 -->
+        <button class="btn text-white w-100 rounded-pill fw-bold mb-2 shadow-sm" style="background-color:#06C755; border:none;" @click="loginWithLine">
+            <i class="fas fa-sign-in-alt me-2"></i>點我登入您的 LINE 帳號
+        </button>
+
+        <!-- 👇 原本的按鈕往下順延 👇 -->
+        <a href="https://lin.ee/ejXmXDl" target="_blank" class="btn btn-outline-success w-100 rounded-pill fw-bold mb-2">
+            <i class="fab fa-line me-2"></i>點我加入麥麥小舖 LINE@
+        </a>
+        <button class="btn btn-outline-success w-100 rounded-pill fw-bold mb-2" onclick="copyLineId()">
+            <i class="far fa-copy me-1"></i>複製商城LINE去LINE加入
+        </button>
+        <button class="btn btn-outline-danger w-100 rounded-pill fw-bold" onclick="copyGuestLink()">
+            <i class="fas fa-link me-1"></i>複製商城連結去瀏覽器開啟
+        </button>
+      </div>
+    </div>
+  </div>  
         <div class="modal fade" id="expiryReminderModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 350px;">
                 <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
@@ -2758,6 +2782,19 @@ const tgConfig = ref({
 
                 // H. 結帳核心
                 const handleCheckout = async () => {
+                    // 👇 === 新增：結帳前攔截登入 === 👇
+                    if (!liff.isLoggedIn()) {
+                        hideModalSafe('cartModal'); // 先把購物車關掉，畫面比較乾淨
+                        showAlert('為了保障您的票券保存權益，結帳前請先登入/綁定 LINE 喔！');
+                        
+                        // 停頓 1.5 秒讓客人看完提示，然後自動跳轉登入畫面
+                        setTimeout(() => {
+                            loginWithLine();
+                        }, 1500);
+                        return; // 終止結帳動作，等他登入回來再買
+                    }
+                    // 👆 === 攔截結束 === 👆
+
                     const errors = [];
                     if (!acceptTerms.value) errors.push("請先勾選「我已閱讀並同意購買需知」");
                     if (totalPrice.value < 50) errors.push("訂單金額需滿 $50 才能出貨");
@@ -2772,6 +2809,7 @@ const tgConfig = ref({
                         } 
                     }
                     
+                    // (底下保留妳原本的邏輯...)
                     const isGuest = !userProfile.value || !userProfile.value.userId;
                     if (isGuest && !userContact.value.phone) { 
                         hideModalSafe('cartModal'); 
@@ -3412,6 +3450,7 @@ const tgConfig = ref({
                     isSubmittingPayment,
                     handleAccountInput,
                 adminExpiringItems,   
+                  loginWithLine,
                 fetchExpiringItems,  
                 fetchAdminDashboard,
                 openWalletFromReminder: openRedeemFromReminder, // 👈 這裡記得要補上一個逗號
