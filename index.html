@@ -2446,16 +2446,7 @@
                                     registerUserToSheet(userProfile.value, currentEmail);
                                     fetchOrderStatus(userProfile.value.userId);
                                 } else {
-                                    // 👇 === 網頁版 LINE 登入自動跳轉邏輯 === 👇
-                                    const ua = navigator.userAgent || '';
-                                    // 防呆：排除 Facebook / IG 內建瀏覽器 (因為它們會惡意阻擋跳轉)
-                                    if (!liff.isInClient() && !ua.includes("FBAN") && !ua.includes("FBAV") && !ua.includes("Instagram")) {
-                                        // 主動將客人導向 LINE 登入頁面，登入後自動跳回當前網址
-                                        liff.login({ redirectUri: window.location.href });
-                                        return; // 停止往下執行，等待畫面跳轉
-                                    }
-                                    // 👆 =================================== 👆
-
+                                    // 恢復原狀：只抓訪客資料、跳出原本的提示，不強制跳轉！
                                     fetchOrderStatus(guestUuid.value);
                                     checkGuestStatus();
                                 }
@@ -2477,6 +2468,19 @@
                 const reloadApp = () => window.location.reload();
                 const getProductImage = (n) => { const p = products.value.find(x => x.name === n); return p ? p.image : 'https://placehold.co/48x48?text=No+Img'; };
                 const checkGuestStatus = () => { const ua = navigator.userAgent; if(!liff.isInClient() || ua.includes("FBAN") || ua.includes("FBAV")) setTimeout(() => openModalSafe('guestWarningModal'), 1000); };
+                // 👇 === 這是要新增的「手動觸發 LINE 登入工具」 === 👇
+                const loginWithLine = () => {
+                    if (!liff.isLoggedIn()) {
+                        const ua = navigator.userAgent || '';
+                        if (!ua.includes("FBAN") && !ua.includes("FBAV") && !ua.includes("Instagram")) {
+                            liff.login({ redirectUri: window.location.href });
+                        } else {
+                            showAlert('請使用一般瀏覽器 (Safari/Chrome) 以進行登入綁定喔！');
+                        }
+                    }
+                };
+                // 👆 ========================================= 👆
+                
                 const hideStaticLoader = () => { 
     if(window.finishLoading) window.finishLoading(); // 觸發進度條 100%
     setTimeout(() => { 
