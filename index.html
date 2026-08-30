@@ -684,15 +684,7 @@
                     <div class="modal-body p-0 d-flex align-items-center justify-content-center">
                         <div id="ticketSwipeCarousel" class="carousel slide w-100 h-100" data-bs-touch="true" data-bs-interval="false">
                             <!-- 👇 請把裡面的 carousel-inner 整個換成這段 👇 -->
-        <div class="carousel-inner h-100 pt-5"> <!-- pt-5 是為了留空間給提示框 -->
-            
-            <!-- 💡 新增：全域溫馨提示框 (固定在最上方) -->
-            <div class="position-absolute w-100 px-3 z-3" style="top: 10px; left: 0;">
-                <div class="alert alert-warning text-center border-0 shadow-sm py-2 mb-0" style="background-color: #fff3cd; color: #856404; border-radius: 12px;">
-                    <i class="fas fa-lightbulb fa-beat text-warning me-1"></i> 
-                    <span class="fw-bold small">為了順利核銷，請將「手機螢幕調至最亮」</span>
-                </div>
-            </div>
+
 
             <!-- 滑動的每一張票券 -->
             <div v-for="(ticket, index) in currentDisplayTickets" :key="index"
