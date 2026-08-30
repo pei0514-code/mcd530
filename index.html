@@ -2446,6 +2446,16 @@
                                     registerUserToSheet(userProfile.value, currentEmail);
                                     fetchOrderStatus(userProfile.value.userId);
                                 } else {
+                                    // 👇 === 網頁版 LINE 登入自動跳轉邏輯 === 👇
+                                    const ua = navigator.userAgent || '';
+                                    // 防呆：排除 Facebook / IG 內建瀏覽器 (因為它們會惡意阻擋跳轉)
+                                    if (!liff.isInClient() && !ua.includes("FBAN") && !ua.includes("FBAV") && !ua.includes("Instagram")) {
+                                        // 主動將客人導向 LINE 登入頁面，登入後自動跳回當前網址
+                                        liff.login({ redirectUri: window.location.href });
+                                        return; // 停止往下執行，等待畫面跳轉
+                                    }
+                                    // 👆 =================================== 👆
+
                                     fetchOrderStatus(guestUuid.value);
                                     checkGuestStatus();
                                 }
