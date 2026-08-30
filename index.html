@@ -683,18 +683,39 @@
 
                     <div class="modal-body p-0 d-flex align-items-center justify-content-center">
                         <div id="ticketSwipeCarousel" class="carousel slide w-100 h-100" data-bs-touch="true" data-bs-interval="false">
-                            <div class="carousel-inner h-100">
-                                <div v-for="(ticket, index) in currentDisplayTickets" :key="index"
-                                     class="carousel-item h-100" :class="{ active: index === currentCarouselIndex }">
-                                    <div class="d-flex align-items-center justify-content-center h-100 px-2">
-                                        <div class="bg-white rounded-4 shadow-lg mx-auto" style="width: 100%; height: 75vh; overflow: auto; display: flex; align-items: center; justify-content: center;">
-                                            <img :src="getSafeImageUrl(ticket.url)"
-                                                 :style="{ transform: 'scale(' + currentZoomLevel + ')', transformOrigin: 'center center', transition: 'transform 0.2s' }"
-                                                 class="img-fluid" alt="票券圖片載入中...">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <!-- 👇 請把裡面的 carousel-inner 整個換成這段 👇 -->
+        <div class="carousel-inner h-100 pt-5"> <!-- pt-5 是為了留空間給提示框 -->
+            
+            <!-- 💡 新增：全域溫馨提示框 (固定在最上方) -->
+            <div class="position-absolute w-100 px-3 z-3" style="top: 10px; left: 0;">
+                <div class="alert alert-warning text-center border-0 shadow-sm py-2 mb-0" style="background-color: #fff3cd; color: #856404; border-radius: 12px;">
+                    <i class="fas fa-lightbulb fa-beat text-warning me-1"></i> 
+                    <span class="fw-bold small">為了順利核銷，請將「手機螢幕調至最亮」</span>
+                </div>
+            </div>
+
+            <!-- 滑動的每一張票券 -->
+            <div v-for="(ticket, index) in currentDisplayTickets" :key="index"
+                 class="carousel-item h-100" :class="{ active: index === currentCarouselIndex }">
+                
+                <div class="d-flex align-items-center justify-content-center h-100 px-2 pb-5"> <!-- pb-5 為了不被底部的縮放按鈕擋住 -->
+                    
+                    <!-- 💡 確保背景純白、100% 滿版顯示 -->
+                    <div class="bg-white rounded-4 shadow-lg mx-auto d-flex flex-column" style="width: 100%; max-height: 80vh; overflow: hidden; position: relative;">
+                        
+                        <div style="flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; background-color: #ffffff; padding: 10px;">
+                            <img :src="getSafeImageUrl(ticket.url)"
+                                 :style="{ transform: 'scale(' + currentZoomLevel + ')', transformOrigin: 'center center', transition: 'transform 0.2s' }"
+                                 class="img-fluid w-100" 
+                                 style="max-width: 100%; object-fit: contain;" 
+                                 alt="票券圖片載入中...">
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+        <!-- 👆 替換結束 👆 -->
 
                             <div class="carousel-control-prev z-3" type="button" data-bs-target="#ticketSwipeCarousel" data-bs-slide="prev" style="width: 15%; pointer-events: none;">
                                 <span class="bg-light-purple-circle shadow" style="pointer-events: auto;">
