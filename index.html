@@ -2471,9 +2471,7 @@
                                 try { tgConfig.value.points = JSON.parse(localPoints); } catch(e) {}
                             }
                         }
-                        // 👆 TG 讀取邏輯結束 👆
-                        
-                        settings.value = await fetchWithRetry(`${API_URL}?action=getSettings`);
+                                               settings.value = await fetchWithRetry(`${API_URL}?action=getSettings`);
                         try {
                             const sc = JSON.parse(safeGetStorage('mm_cart_storage', '{}')); const vc = {}; Object.keys(sc).forEach(k=>{ const p=products.value.find(x=>x.id===k); if(p && Number(p.stock)>=Number(sc[k])) vc[k]=Number(sc[k]); }); cart.value = vc;
                         } catch(e) { safeSetStorage('mm_cart_storage', '{}'); }
@@ -2504,6 +2502,7 @@
                                 checkGuestStatus();
                             }
                         }
+                    } catch (e) { errorMsg.value = e.message; } 
                     finally { 
                         isLoadingData.value = false; hideStaticLoader(); 
                         if (!safeGetStorage('mm_guided_v172', '')) { setTimeout(() => { openModalSafe('guideModal'); safeSetStorage('mm_guided_v172', 'true'); }, 600); } 
