@@ -2401,7 +2401,13 @@
                         console.warn("自動偵測銀行失敗:", e);
                     }
                 });
-                
+                // 逾時保護：任何 promise 超過指定時間就強制視為失敗，不再無限等待
+                const withTimeout = (promise, ms = 8000, label = 'operation') => {
+                    return Promise.race([
+                        promise,
+                        new Promise((_, reject) => setTimeout(() => reject(new Error(`${label} timeout`)), ms))
+                    ]);
+                };
                 // E. API 與 初始化
                 const fetchWithRetry = async (url, retries=3) => { for(let i=0;i<retries;i++){ try{ const r=await fetch(url); if(!r.ok)throw new Error('Net err'); return await r.json(); } catch(e){ if(i===retries-1)throw e; await new Promise(res=>setTimeout(res,1000*Math.pow(2,i))); } } };
                 
@@ -2474,10 +2480,10 @@
                         
                         if (settings.value.liffId) {
                             try {
-                                await liff.init({ liffId: settings.value.liffId });
-
+                                await withTimeout(liff.init({ liffId: settings.value.liffId }), 8000, 'liff.init');
+                        
                                 if (liff.isLoggedIn()) {
-                                    userProfile.value = await liff.getProfile();
+                                    userProfile.value = await withTimeout(liff.getProfile(), 8000, 'liff.getProfile');
                                     const t = liff.getDecodedIDToken();
                                     let currentEmail = '未授權/無'; 
                                     if (t && t.email) {
@@ -2493,11 +2499,11 @@
                                 }
                             } catch (e) {
                                 console.error("LIFF Init Error:", e);
+                                // 逾時或任何失敗都當訪客處理，確保 finally 一定會執行，畫面不會卡住
                                 fetchOrderStatus(guestUuid.value);
                                 checkGuestStatus();
                             }
                         }
-                    } catch (e) { errorMsg.value = e.message; } 
                     finally { 
                         isLoadingData.value = false; hideStaticLoader(); 
                         if (!safeGetStorage('mm_guided_v172', '')) { setTimeout(() => { openModalSafe('guideModal'); safeSetStorage('mm_guided_v172', 'true'); }, 600); } 
