@@ -2442,6 +2442,49 @@
                     throw lastError;
                 };
 
+                // 訂單狀態查詢：此函式必須在 setup() 回傳前宣告，否則 Vue mount 會因 ReferenceError 中止。
+                const fetchOrderStatus = async (uid) => {
+                    const userId = String(uid || '').trim();
+                    if (!userId) return null;
+
+                    try {
+                        const url = `${API_URL}?action=getOrderStatus&userId=${encodeURIComponent(userId)}`;
+                        const data = await fetchWithRetry(url, 2, 6500);
+
+                        if (data && Array.isArray(data.orders)) {
+                            orderHistory.value = data.orders;
+                            safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value));
+
+                            const orderMap = {};
+                            data.orders.forEach(order => {
+                                if (order && order.id) orderMap[String(order.id)] = order;
+                            });
+
+                            const remaining = (Array.isArray(unreportedOrders.value) ? unreportedOrders.value : []).filter(orderId => {
+                                const status = orderMap[String(orderId)];
+                                return !status || !(
+                                    String(status.isShipped) === 'true' ||
+                                    String(status.isPaid) === 'true' ||
+                                    (status.paymentNote && (
+                                        String(status.paymentNote).includes('取消') ||
+                                        String(status.paymentNote).includes('失效')
+                                    ))
+                                );
+                            });
+
+                            unreportedOrders.value = remaining;
+                            safeSetStorage('mm_pending_payment_orders', JSON.stringify(remaining));
+                            return data;
+                        }
+
+                        console.warn('訂單狀態 API 回傳格式不正確：', data);
+                        return null;
+                    } catch (error) {
+                        console.error('抓取訂單狀態失敗：', error);
+                        return null;
+                    }
+                };
+
                 const isClientProductExpired = (expiryText) => {
                     const raw = String(expiryText || '').trim();
                     if (!raw || /無期限|依門市說明|不限|永久|依圖示/i.test(raw)) return false;
