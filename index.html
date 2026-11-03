@@ -3231,25 +3231,29 @@ const tgConfig = ref({
                 
                 const triggerStockSync = async () => { isAdminSyncing.value=true; try{ const response=await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminSyncStock'})}); const result=await response.json(); if(result.status==='OK'||result.status==='success'){ showToast('已同步'); setTimeout(initApp,1500); } else showToast(result.message||'同步失敗'); } catch(e){ showToast('同步失敗，請檢查連線'); } finally{ isAdminSyncing.value=false; } };
                 const saveAdminAutoDeliverySetting = async () => {
-                    const userId = userProfile.value?.userId || '';
+                    const userId = userProfile.value?.userId || safeGetStorage('mm_user_id') || '';
                     if (!ADMIN_IDS.includes(userId)) {
                         adminAutoDeliveryEnabled.value = false;
                         return showAlert('請先以指定 LINE 管理員帳號登入，才能修改自動發券設定。');
                     }
                     const requestedValue = adminAutoDeliveryEnabled.value;
                     try {
-                        const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveAdminAutoDeliverySetting', userId: userId, enabled: requestedValue }) });
-                        const result = await response.json();
+                        // 使用獨立 GET action，避免舊版 doPost 將設定請求誤判為空購物車下單。
+                        const url = `${API_URL}?action=saveAdminAutoDeliverySetting&userId=${encodeURIComponent(userId)}&enabled=${requestedValue ? 'true' : 'false'}&_=${Date.now()}`;
+                        const result = await fetchWithRetry(url, 2, 7000);
                         if (result.status === 'OK') {
-                            adminAutoDeliveryEnabled.value = result.enabled === true;
+                            adminAutoDeliveryEnabled.value = result.enabled === true || String(result.enabled).toLowerCase() === 'true';
+                            settings.value.adminAutoDeliveryEnabled = adminAutoDeliveryEnabled.value;
+                            safeSetStorage('mm_settings_cache_v32', JSON.stringify(settings.value));
                             showToast(adminAutoDeliveryEnabled.value ? '已開啟指定管理員自動發券' : '已關閉指定管理員自動發券');
                         } else {
                             adminAutoDeliveryEnabled.value = !requestedValue;
-                            showAlert(result.message || '設定儲存失敗');
+                            showAlert(result.message || '設定儲存失敗，請確認後端已部署 v3.2 修正版。');
                         }
                     } catch (e) {
                         adminAutoDeliveryEnabled.value = !requestedValue;
-                        showToast('設定儲存失敗，請稍後再試');
+                        console.error('指定管理員自動發券設定儲存失敗：', e);
+                        showAlert('設定儲存失敗：' + (e && e.message ? e.message : 'API 連線逾時或回傳格式錯誤') + '\n請確認 Code.gs 與 index.html 已一併部署。');
                     }
                 };
                 const fetchAdminBuyerRanking = async (item) => {
