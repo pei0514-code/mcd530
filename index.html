@@ -197,6 +197,7 @@
         .modal-header .btn-close { background-color: #f0f0f0; border-radius: 50%; padding: 10px;  background-size: 10px; opacity: 1; transition: 0.2s; }
         .modal-header .btn-close:hover { background-color: #e0e0e0; }
         .btn-close-floating { position: absolute; top: 15px; right: 15px; z-index: 1050; background-color: rgba(0, 0, 0, 0.6);  border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,0.2); transition: 0.2s; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e"); background-size: 16px; background-position: center; background-repeat: no-repeat; opacity: 1; cursor: pointer; }
+        .btn-close-floating { padding: 0 !important; margin: 0 !important; appearance: none; -webkit-appearance: none; touch-action: manipulation; pointer-events: auto; }
         .btn-close-floating:active { transform: scale(0.9); background-color: var(--brand-red); border-color: transparent; }
         .expired-order { opacity: 0.6; filter: grayscale(1); pointer-events: none; }
         .expired-order .status-badge { background: #eee; color: #999; border: 1px solid #ddd; }
@@ -238,7 +239,7 @@
 <body>
 
    <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.11</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.2</div>
         
         <div class="w-100 px-4 mt-3 mb-2" style="max-width: 280px;">
             <div class="progress" style="height: 12px; border-radius: 10px; background-color: #ffebeb; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
@@ -256,8 +257,8 @@
             </div>
             <div class="stock-tip-box">✅ <span class="text-danger">凡是可加入購物車</span><br>均表示有現貨，可放心轉帳！</div>
             <div id="force-load-btn" style="display:none; margin-top:20px; text-align:center;">
-                 <button onclick="localStorage.clear(); sessionStorage.clear(); window.location.reload(true);" class="btn btn-outline-danger btn-sm rounded-pill fw-bold px-4">
-                    <i class="fas fa-trash-alt me-1"></i> 點此修復並重新載入
+                 <button onclick="window.location.reload();" class="btn btn-outline-danger btn-sm rounded-pill fw-bold px-4">
+                    <i class="fas fa-sync-alt me-1"></i> 重新嘗試載入
                  </button>
             </div>
         </div>
@@ -271,7 +272,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.11</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.2</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -330,7 +331,7 @@
                 <div v-for="p in filteredProducts" :key="p.id" :class="gridColClass" class="mb-3 px-1">
                     <div class="product-card">
                         <div class="p-img-box" @click.stop="showProductDetail(p)">
-                            <img :src="p.image || 'https://placehold.co/300X300'" class="p-img" loading="lazy">
+                            <img :src="p.image || 'https://placehold.co/300X300'" class="p-img" loading="lazy" decoding="async" @error="handleProductImageError(p)">
                             <div v-if="Number(p.giftStock) > 0" class="gift-badge">可轉贈</div>
                             <div class="zoom-icon" @click.stop="showProductDetail(p)"><i class="fas fa-search"></i></div>
                         </div>
@@ -997,9 +998,17 @@
                             </div>
 
                             <div class="tab-pane fade" id="tab-tools" role="tabpanel">
+                                <div v-if="isAdmin" class="bg-white border rounded-3 p-3 mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="adminAutoDeliverySwitch" v-model="adminAutoDeliveryEnabled" @change="saveAdminAutoDeliverySetting">
+                                        <label class="form-check-label fw-bold" for="adminAutoDeliverySwitch">指定管理員下單自動發券</label>
+                                    </div>
+                                    <div class="small text-muted mt-1">開啟後，兩位指定 LINE 管理員本人下單會直接使用既有發貨程序，不必再人工發貨；其他會員不受影響。</div>
+                                    <div class="small text-warning mt-1">此功能只適用於兩個指定 LINE ID，請勿用於測試單。</div>
+                                </div>
                                 <div class="row g-2 mb-3">
                                     <div class="col-4"><button class="btn btn-sm btn-outline-dark w-100 h-100 fw-bold shadow-sm py-2" @click="triggerStockSync" :disabled="isAdminSyncing"><i class="fas fa-sync d-block mb-1 fs-5" :class="{'fa-spin': isAdminSyncing}"></i><span style="font-size: 10px;">{{ isAdminSyncing ? '同步中' : '強制同步' }}</span></button></div>
-                                    <div class="col-4"><button class="btn btn-sm btn-outline-secondary w-100 h-100 fw-bold shadow-sm py-2" @click="triggerTimeoutCheck" :disabled="isAdminCleaning"><i class="fas fa-broom d-block mb-1 fs-5" :class="{'fa-spin': isAdminCleaning}"></i><span style="font-size: 10px;">{{ isAdminCleaning ? '清理中' : '清逾時單' }}</span></button></div>
+                                    <div class="col-4"><button class="btn btn-sm btn-outline-secondary w-100 h-100 fw-bold shadow-sm py-2" @click="openExpiredOrderReview" :disabled="isAdminCleaning"><i class="fas fa-clipboard-check d-block mb-1 fs-5" :class="{'fa-spin': isAdminCleaning}"></i><span style="font-size: 10px;">{{ isAdminCleaning ? '讀取中' : '逾時審核' }}</span></button></div>
                                     <div class="col-4"><button class="btn btn-sm btn-outline-primary w-100 h-100 fw-bold shadow-sm py-2" @click="triggerPaymentCheck" :disabled="isAdminChecking"><i class="fas fa-envelope d-block mb-1 fs-5" :class="{'fa-spin': isAdminChecking}"></i><span style="font-size: 10px;">{{ isAdminChecking ? '查帳中' : '信箱查帳' }}</span></button></div>
                                 </div>
                             </div>
@@ -1156,7 +1165,11 @@
             </div>
         </div>
 
-        <div class="modal fade" id="adminBestSellersModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0"><h5 class="fw-bold"><i class="fas fa-fire text-danger me-2"></i>熱銷排行 (Top 15)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><div v-if="adminBestSellers.length > 0" class="list-group list-group-flush small"><div v-for="(item, index) in adminBestSellers" :key="index" class="list-group-item d-flex justify-content-between align-items-center"><div class="d-flex align-items-center" style="max-width: 80%;"><span class="badge bg-secondary rounded-pill me-2" style="font-size: 10px; width: 20px;">{{ index + 1 }}</span><span class="text-truncate">{{ item.name }}</span></div><span class="fw-bold text-dark">{{ item.qty }}</span></div></div><div v-else class="text-center text-muted py-3">暫無數據</div></div></div></div></div>
+        <div class="modal fade" id="adminBestSellersModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0"><h5 class="fw-bold"><i class="fas fa-fire text-danger me-2"></i>熱銷排行 (Top 15)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><div v-if="adminBestSellers.length > 0" class="list-group list-group-flush small"><div v-for="(item, index) in adminBestSellers" :key="index" class="list-group-item d-flex justify-content-between align-items-center"><div class="d-flex align-items-center" style="max-width: 80%;"><span class="badge bg-secondary rounded-pill me-2" style="font-size: 10px; width: 20px;">{{ index + 1 }}</span><button type="button" class="btn btn-link text-start text-decoration-none text-dark fw-bold p-0 text-truncate" style="max-width: 100%;" @click="fetchAdminBuyerRanking(item)">{{ item.name }} <i class="fas fa-users text-primary ms-1 small"></i></button></div><span class="fw-bold text-dark ms-2 text-nowrap">{{ item.qty }} 件</span></div></div><div v-else class="text-center text-muted py-3">暫無數據</div><div class="small text-muted mt-2">點擊商品名稱，可查看會員購買數量排行。</div></div></div></div></div>
+
+        <div class="modal fade" id="adminBuyerRankingModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0"><div><h5 class="fw-bold mb-1"><i class="fas fa-users text-primary me-2"></i>會員購買排行</h5><div class="small text-muted">{{ adminBuyerRankingProduct }}</div></div><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><div v-if="isLoadingBuyerRanking" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>讀取會員資料中...</div><div v-else-if="adminBuyerRanking.length" class="list-group list-group-flush small"><div v-for="(buyer, index) in adminBuyerRanking" :key="buyer.userId || buyer.name" class="list-group-item d-flex justify-content-between align-items-center px-1"><div class="d-flex align-items-center"><span class="badge bg-secondary rounded-pill me-2">{{ index + 1 }}</span><div><div class="fw-bold">{{ buyer.name }}</div><div class="text-muted" style="font-size:10px;" v-if="buyer.userId">{{ buyer.userId }}</div></div></div><div class="text-end"><div class="fw-bold text-danger">{{ buyer.quantity }} 件</div><div class="text-muted" style="font-size:10px;">{{ buyer.orderCount }} 筆訂單</div></div></div></div><div v-else class="text-center text-muted py-4">目前沒有符合統計條件的購買紀錄</div></div></div></div></div>
+
+        <div class="modal fade" id="adminExpiredOrdersModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0 bg-light"><div><h5 class="fw-bold mb-1"><i class="fas fa-hourglass-end text-warning me-2"></i>逾時訂單人工審核</h5><div class="small text-muted">僅列出超過 30 分鐘、尚未付款、未回報且未發貨的訂單</div></div><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><div class="alert alert-warning small"><strong>付款安全提醒：</strong>台新銀行及街口支付可能已實際付款但尚未回報，請先核對銀行／街口交易紀錄。系統不會再自動清理，請勿只依逾時時間判定未付款。</div><div v-if="isAdminCleaning" class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</div><div v-else-if="adminExpiredOrders.length" class="list-group list-group-flush small"><label v-for="order in adminExpiredOrders" :key="order.orderId" class="list-group-item px-1"><div class="d-flex align-items-start gap-2"><input class="form-check-input mt-1 flex-shrink-0" type="checkbox" :checked="selectedExpiredOrderIds.includes(order.orderId)" @change="toggleExpiredOrder(order.orderId, $event.target.checked)"><div class="flex-grow-1"><div class="d-flex justify-content-between gap-2"><strong>{{ order.buyerName }}</strong><span class="text-danger fw-bold text-nowrap">${{ order.totalAmount }}</span></div><div class="text-muted">單號：{{ order.orderId }}</div><div class="text-muted">時間：{{ order.timestamp }}（逾時 {{ order.ageMinutes }} 分）</div><div class="mt-1">{{ formatExpiredOrderItems(order) }}</div></div></div></label></div><div v-else class="text-center text-muted py-4">目前沒有符合人工審核條件的逾時訂單。</div><div class="form-check mt-3 p-3 bg-light rounded-3"><input class="form-check-input" type="checkbox" id="expiredPaymentChecked" v-model="expiredPaymentChecked"><label class="form-check-label small fw-bold" for="expiredPaymentChecked">我已逐筆核對台新、街口及其他付款紀錄，確認勾選訂單確實未付款。</label></div></div><div class="modal-footer border-0"><button type="button" class="btn btn-outline-secondary rounded-pill" @click="loadAdminExpiredOrders">重新整理</button><button type="button" class="btn btn-danger rounded-pill fw-bold" :disabled="!selectedExpiredOrderIds.length || !expiredPaymentChecked || isAdminCleaning" @click="cleanupSelectedExpiredOrders">確認取消並回補庫存（{{ selectedExpiredOrderIds.length }}）</button></div></div></div></div>
         
         <div class="modal fade" id="adminLowStockModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -1523,7 +1536,7 @@
         <div class="modal fade" id="cancelConfirmModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden"><div class="modal-header border-0 bg-secondary text-white py-3"><h5 class="fw-bold fs-5 mb-0"><i class="fas fa-times-circle me-2"></i>取消訂單確認</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body p-4 text-center"><div class="mb-3 text-muted"><i class="far fa-sad-tear fa-4x"></i></div><h5 class="fw-bold mb-2">確定要取消這筆訂單嗎？</h5><p class="text-muted small mb-4">取消後庫存將會自動釋出，<br>若您已匯款請勿取消，請聯繫客服。</p><div v-if="relatedOrdersToCancel.length > 0" class="alert alert-warning text-start small mb-4"><i class="fas fa-exclamation-circle me-1"></i><strong>此為合併訂單</strong> ({{ relatedOrdersToCancel.length + 1 }} 筆)<br>您要一併取消其他相關訂單嗎？</div><div class="d-grid gap-2"><button v-if="relatedOrdersToCancel.length > 0" class="btn btn-danger rounded-pill fw-bold" @click="confirmCancel('all')"><i class="fas fa-trash-alt me-2"></i>全部取消 (推薦)</button><button class="btn rounded-pill fw-bold" :class="relatedOrdersToCancel.length > 0 ? 'btn-outline-danger' : 'btn-danger'" @click="confirmCancel('single')"><i class="fas fa-check me-2"></i>{{ relatedOrdersToCancel.length > 0 ? '僅取消此筆' : '確認取消' }}</button><button class="btn btn-outline-secondary rounded-pill fw-bold" data-bs-dismiss="modal">保留訂單</button></div></div></div></div></div>
         <div class="modal fade" id="alertModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 320px;"><div class="modal-content border-0 rounded-4 shadow-lg text-center overflow-hidden"><div class="modal-body p-4"><div class="mb-3 text-warning"><i class="fas fa-exclamation-circle fa-3x"></i></div><h5 class="fw-bold mb-3">溫馨提醒</h5><div class="text-muted text-start bg-light p-3 rounded-3 small" style="line-height:1.6;"><div v-for="(msg, idx) in alertMessages" :key="idx" class="mb-1"><i class="fas fa-caret-right me-2 text-warning"></i>{{ msg }}</div></div><div class="mt-4"><button type="button" class="btn btn-dark w-100 rounded-pill fw-bold" data-bs-dismiss="modal">我知道了</button></div></div></div></div></div>
         
-        <div class="modal fade" id="productDetailModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden h-100" style="max-height: 85vh;"><div class="btn-close-floating" data-bs-dismiss="modal"></div><div class="modal-body p-0 d-flex flex-column" v-if="selectedProduct"><div class="position-relative bg-white" style="flex: 0 0 auto;"><img :src="selectedProduct.image" class="w-100" style="max-height: 350px; object-fit: contain;"></div><div class="p-4 flex-grow-1 overflow-auto bg-white"><div class="d-flex justify-content-between align-items-start mb-2"><div><span class="badge bg-dark mb-2">{{ selectedProduct.vendor }}</span><h5 class="fw-bold mb-1">{{ selectedProduct.name }}</h5></div><div class="text-end"><h4 class="text-danger fw-bold mb-0">${{ selectedProduct.price }}</h4><small class="text-decoration-line-through text-muted" v-if="selectedProduct.originalPrice > selectedProduct.price">${{ selectedProduct.originalPrice }}</small></div></div><div class="d-flex gap-2 mb-3"><span class="badge bg-light text-dark border"><i class="far fa-clock me-1"></i>效期: {{ selectedProduct.expiryDate }}</span><span class="badge bg-light text-dark border"><i class="fas fa-cubes me-1"></i>庫存: {{ selectedProduct.stock }}</span></div><div class="p-3 bg-light rounded-3 small text-secondary mb-3" style="line-height: 1.6; white-space: pre-wrap;">{{ selectedProduct.description || '暫無商品描述' }}</div></div><div class="p-3 border-top bg-white" style="flex: 0 0 auto;"><div v-if="cart[selectedProduct.id]" class="d-flex justify-content-between align-items-center bg-light rounded-pill p-1 border"><button class="btn btn-light rounded-circle shadow-sm" style="width: 40px; height: 40px;" @click="updateCart(selectedProduct, -1)"><i class="fas fa-minus"></i></button><span class="fw-bold fs-5">{{ cart[selectedProduct.id] }}</span><button class="btn btn-light rounded-circle shadow-sm" style="width: 40px; height: 40px;" @click="updateCart(selectedProduct, 1)" :disabled="cart[selectedProduct.id] >= Number(selectedProduct.stock)"><i class="fas fa-plus"></i></button></div><button v-else class="btn btn-dark w-100 rounded-pill py-3 fw-bold shadow" @click="updateCart(selectedProduct, 1)" :disabled="Number(selectedProduct.stock) <= 0">{{ Number(selectedProduct.stock) <= 0 ? '已售完' : '加入購物車' }}</button></div></div></div></div></div>
+        <div class="modal fade" id="productDetailModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden h-100" style="max-height: 85vh;"><button type="button" class="btn-close-floating" aria-label="關閉商品詳細說明" @click.stop="hideModalSafe('productDetailModal')"></button><div class="modal-body p-0 d-flex flex-column" v-if="selectedProduct"><div class="position-relative bg-white" style="flex: 0 0 auto;"><img :src="selectedProduct.image" class="w-100" loading="eager" decoding="async" @error="handleProductImageError(selectedProduct)" style="max-height: 350px; object-fit: contain;"></div><div class="p-4 flex-grow-1 overflow-auto bg-white"><div class="d-flex justify-content-between align-items-start mb-2"><div><span class="badge bg-dark mb-2">{{ selectedProduct.vendor }}</span><h5 class="fw-bold mb-1">{{ selectedProduct.name }}</h5></div><div class="text-end"><h4 class="text-danger fw-bold mb-0">${{ selectedProduct.price }}</h4><small class="text-decoration-line-through text-muted" v-if="selectedProduct.originalPrice > selectedProduct.price">${{ selectedProduct.originalPrice }}</small></div></div><div class="d-flex gap-2 mb-3"><span class="badge bg-light text-dark border"><i class="far fa-clock me-1"></i>效期: {{ selectedProduct.expiryDate }}</span><span class="badge bg-light text-dark border"><i class="fas fa-cubes me-1"></i>庫存: {{ selectedProduct.stock }}</span><span class="badge bg-success-subtle text-success border"><i class="fas fa-chart-line me-1"></i>已售: {{ Number(selectedProduct.soldCount || 0) }} 件</span></div><div class="p-3 bg-light rounded-3 small text-secondary mb-3" style="line-height: 1.6; white-space: pre-wrap;">{{ selectedProduct.description || '暫無商品描述' }}</div></div><div class="p-3 border-top bg-white" style="flex: 0 0 auto;"><div v-if="cart[selectedProduct.id]" class="d-flex justify-content-between align-items-center bg-light rounded-pill p-1 border"><button class="btn btn-light rounded-circle shadow-sm" style="width: 40px; height: 40px;" @click="updateCart(selectedProduct, -1)"><i class="fas fa-minus"></i></button><span class="fw-bold fs-5">{{ cart[selectedProduct.id] }}</span><button class="btn btn-light rounded-circle shadow-sm" style="width: 40px; height: 40px;" @click="updateCart(selectedProduct, 1)" :disabled="cart[selectedProduct.id] >= Number(selectedProduct.stock)"><i class="fas fa-plus"></i></button></div><button v-else class="btn btn-dark w-100 rounded-pill py-3 fw-bold shadow" @click="updateCart(selectedProduct, 1)" :disabled="Number(selectedProduct.stock) <= 0">{{ Number(selectedProduct.stock) <= 0 ? '已售完' : '加入購物車' }}</button></div></div></div></div></div>
        
         
       <div class="modal fade" id="guestWarningModal" tabindex="-1">
@@ -1825,7 +1838,7 @@
                 const originalCouponCode = ref('');
                 const products = ref([]);
                 const cart = ref({});
-                const settings = ref({ version: 'v3.11', liffId: '' });
+                const settings = ref({ version: 'v3.2', liffId: '2008834603-kWyNnXPm' });
                 const faqList = ref([]);
                 const announcement = ref("🔥 正在載入最新公告...");
                 const currentCat = ref('ALL');
@@ -1903,6 +1916,13 @@
                 const adminLowStockItems = ref([]);
                 const adminExpiringItems = ref([]);
                 const adminBestSellers = ref([]);
+                const adminBuyerRanking = ref([]);
+                const adminBuyerRankingProduct = ref('');
+                const isLoadingBuyerRanking = ref(false);
+                const adminExpiredOrders = ref([]);
+                const selectedExpiredOrderIds = ref([]);
+                const expiredPaymentChecked = ref(false);
+                const adminAutoDeliveryEnabled = ref(false);
                 const adminShipTarget = ref(null);
                 const isAdminShipping = ref(false);
                 const isAdminSyncing = ref(false);
@@ -2402,112 +2422,182 @@
                     }
                 });
                 
-                // E. API 與 初始化
-                const fetchWithRetry = async (url, retries=3) => { for(let i=0;i<retries;i++){ try{ const r=await fetch(url); if(!r.ok)throw new Error('Net err'); return await r.json(); } catch(e){ if(i===retries-1)throw e; await new Promise(res=>setTimeout(res,1000*Math.pow(2,i))); } } };
-                
-                const fetchOrderStatus = async (uid) => {
-                    if (!uid) return;
-                    try { 
-                        const res = await fetch(`${API_URL}?action=getOrderStatus&userId=${uid}`); 
-                        if(res.ok){ 
-                            const d = await res.json(); 
-                            console.log("【API回傳資料】", d); 
-                            
-                            if(d.orders){ 
-                                orderHistory.value = d.orders; 
-                                safeSetStorage('mm_order_history', JSON.stringify(orderHistory.value)); 
-                                
-                                const map = {}; 
-                                d.orders.forEach(o => { if (o && o.id) map[o.id] = o; }); 
-                                const clean = unreportedOrders.value.filter(oid => { 
-                                    const s = map[oid]; 
-                                    return !s || !(String(s.isShipped) == 'true' || String(s.isPaid) == 'true' || (s.paymentNote && (s.paymentNote.includes('取消') || s.paymentNote.includes('失效')))); 
-                                }); 
-                                unreportedOrders.value = clean; 
-                                safeSetStorage('mm_pending_payment_orders', JSON.stringify(clean)); 
-                            } 
-                        } 
-                    } catch(e) {
-                        console.error("抓取訂單狀態失敗", e);
+                // E. API 與初始化（v3.2：快取先顯示、商品與設定平行讀取，LIFF 不阻塞首頁）
+                const fetchWithRetry = async (url, retries = 2, timeoutMs = 6500) => {
+                    let lastError = new Error('網路連線失敗');
+                    for (let attempt = 0; attempt < retries; attempt++) {
+                        const controller = new AbortController();
+                        const timer = setTimeout(() => controller.abort(), timeoutMs);
+                        try {
+                            const response = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+                            if (!response.ok) throw new Error('HTTP ' + response.status);
+                            return await response.json();
+                        } catch (error) {
+                            lastError = error && error.name === 'AbortError' ? new Error('伺服器回應逾時') : error;
+                            if (attempt + 1 < retries) await new Promise(resolve => setTimeout(resolve, 450 * (attempt + 1)));
+                        } finally {
+                            clearTimeout(timer);
+                        }
+                    }
+                    throw lastError;
+                };
+
+                const isClientProductExpired = (expiryText) => {
+                    const raw = String(expiryText || '').trim();
+                    if (!raw || /無期限|依門市說明|不限|永久|依圖示/i.test(raw)) return false;
+                    const match = raw.match(/(\d{3,4})\s*[\/.-年]\s*(\d{1,2})\s*[\/.-月]\s*(\d{1,2})/);
+                    if (!match) return false;
+                    let year = Number(match[1]);
+                    if (year >= 100 && year < 1911) year += 1911;
+                    const expiry = new Date(year, Number(match[2]) - 1, Number(match[3]));
+                    if (isNaN(expiry.getTime())) return false;
+                    const today = new Date(); today.setHours(0, 0, 0, 0); expiry.setHours(0, 0, 0, 0);
+                    return expiry.getTime() < today.getTime();
+                };
+
+                const restoreCartFromProducts = () => {
+                    try {
+                        const savedCart = JSON.parse(safeGetStorage('mm_cart_storage', '{}'));
+                        const validCart = {};
+                        Object.keys(savedCart || {}).forEach(id => {
+                            const product = products.value.find(item => String(item.id) === String(id));
+                            if (product && Number(product.stock) >= Number(savedCart[id]) && Number(savedCart[id]) > 0) validCart[id] = Number(savedCart[id]);
+                        });
+                        cart.value = validCart;
+                    } catch (e) {
+                        console.warn('購物車快取格式異常，保留空購物車', e);
+                    }
+                };
+
+                const applyInitData = (initData) => {
+                    if (!initData || !Array.isArray(initData.products)) throw new Error('商品資料格式不正確');
+                    products.value = initData.products;
+                    safeSetStorage('mm_products_cache_v32', JSON.stringify(initData.products));
+                    if (initData.vendors) vendorInfoMap.value = initData.vendors;
+                    hasActiveCoupons.value = String(initData.hasCoupons) === 'true';
+                    enableCoupons.value = hasActiveCoupons.value;
+                    if (initData.promoConfig) promoConfig.value = initData.promoConfig;
+
+                    if (initData.tgConfig && initData.tgConfig.id) {
+                        tgConfig.value.id = initData.tgConfig.id;
+                        if (Array.isArray(initData.tgConfig.points) && initData.tgConfig.points.length) tgConfig.value.points = initData.tgConfig.points;
+                    } else {
+                        const localId = safeGetStorage('mm_tg_id');
+                        if (localId) tgConfig.value.id = localId;
+                        const localPoints = safeGetStorage('mm_tg_points');
+                        if (localPoints) {
+                            try { tgConfig.value.points = JSON.parse(localPoints); } catch (e) {}
+                        }
+                    }
+                    restoreCartFromProducts();
+                };
+
+                const initLiffInBackground = async (settingsData) => {
+                    if (!settingsData || !settingsData.liffId || typeof liff === 'undefined') return;
+                    try {
+                        await liff.init({ liffId: settingsData.liffId });
+                        if (liff.isLoggedIn()) {
+                            userProfile.value = await liff.getProfile();
+                            const idToken = liff.getDecodedIDToken();
+                            let currentEmail = '未授權/無';
+                            if (idToken && idToken.email) {
+                                userProfile.value.email = idToken.email;
+                                currentEmail = idToken.email;
+                            }
+                            registerUserToSheet(userProfile.value, currentEmail);
+                            fetchOrderStatus(userProfile.value.userId);
+                            // LIFF 登入後再載入會員專屬 TG 設定，不讓首頁商品等待這段流程
+                            try {
+                                const tgData = await fetchWithRetry(`${API_URL}?action=getTgConfig&userId=${encodeURIComponent(userProfile.value.userId)}`, 1, 4500);
+                                if (tgData && tgData.id) {
+                                    tgConfig.value.id = tgData.id;
+                                    if (Array.isArray(tgData.points)) tgConfig.value.points = tgData.points;
+                                }
+                            } catch (e) { console.warn('會員 TG 設定稍後再載入', e); }
+                        } else {
+                            fetchOrderStatus(guestUuid.value);
+                            checkGuestStatus();
+                        }
+                    } catch (error) {
+                        console.warn('LIFF 背景初始化失敗，先以訪客模式使用商城', error);
+                        fetchOrderStatus(guestUuid.value);
                     }
                 };
 
                 const initApp = async () => {
-                    isLoadingData.value = true; errorMsg.value = '';
-                    try {
-                        // 👇 1. 關鍵修正：在網址後面加上 userId，讓後端去雲端幫您把 TG ID 撈出來
-                        const currentUserId = userProfile.value?.userId || safeGetStorage('mm_user_id') || guestUuid.value;
-                        const initData = await fetchWithRetry(`${API_URL}?action=getInitData&userId=${currentUserId}`);
-                        
-                        products.value = initData.products;
-                        if(initData.vendors) vendorInfoMap.value = initData.vendors;
-                        if(String(initData.hasCoupons) === 'true') hasActiveCoupons.value = true;
-                        enableCoupons.value = (String(initData.hasCoupons) === 'true');
-                        
-                        if (initData.promoConfig) {
-                            promoConfig.value = initData.promoConfig;
-                        }
-                        
-                        // 👇 2. 關鍵新增：TG 到期通知設定的「拆包裹」與「記憶讀取」邏輯
-                        if (initData.tgConfig && initData.tgConfig.id) {
-                            // 優先使用雲端試算表的紀錄 (換手機、清快取都不怕)
-                            tgConfig.value.id = initData.tgConfig.id;
-                            if (initData.tgConfig.points && initData.tgConfig.points.length > 0) {
-                                tgConfig.value.points = initData.tgConfig.points;
-                            }
-                        } else {
-                            // 如果雲端沒有紀錄，就去挖手機的本地記憶 (備用方案)
-                            const localId = safeGetStorage('mm_tg_id');
-                            if (localId) tgConfig.value.id = localId;
-                            
-                            const localPoints = safeGetStorage('mm_tg_points');
-                            if (localPoints) {
-                                try { tgConfig.value.points = JSON.parse(localPoints); } catch(e) {}
-                            }
-                        }
-                        // 👆 TG 讀取邏輯結束 👆
-                        
-                        settings.value = await fetchWithRetry(`${API_URL}?action=getSettings`);
-                        try {
-                            const sc = JSON.parse(safeGetStorage('mm_cart_storage', '{}')); const vc = {}; Object.keys(sc).forEach(k=>{ const p=products.value.find(x=>x.id===k); if(p && Number(p.stock)>=Number(sc[k])) vc[k]=Number(sc[k]); }); cart.value = vc;
-                        } catch(e) { safeSetStorage('mm_cart_storage', '{}'); }
-                        
-                        if (settings.value.liffId) {
-                            try {
-                                await liff.init({ liffId: settings.value.liffId });
+                    isLoadingData.value = true;
+                    errorMsg.value = '';
+                    let hasCachedProducts = false;
 
-                                if (liff.isLoggedIn()) {
-                                    userProfile.value = await liff.getProfile();
-                                    const t = liff.getDecodedIDToken();
-                                    let currentEmail = '未授權/無'; 
-                                    if (t && t.email) {
-                                        userProfile.value.email = t.email;
-                                        currentEmail = t.email;
-                                    }
-                                    registerUserToSheet(userProfile.value, currentEmail);
-                                    fetchOrderStatus(userProfile.value.userId);
-                                } else {
-                                    // 恢復原狀：只抓訪客資料、跳出原本的提示，不強制跳轉！
-                                    fetchOrderStatus(guestUuid.value);
-                                    checkGuestStatus();
-                                }
-                            } catch (e) {
-                                console.error("LIFF Init Error:", e);
-                                fetchOrderStatus(guestUuid.value);
-                                checkGuestStatus();
-                            }
+                    // 快取先行：回訪時先顯示商品，不讓 Apps Script 冷啟動或網路延遲卡住首頁
+                    try {
+                        const cachedProducts = JSON.parse(safeGetStorage('mm_products_cache_v32', 'null'));
+                        if (Array.isArray(cachedProducts) && cachedProducts.length) {
+                            products.value = cachedProducts.filter(product => !isClientProductExpired(product.expiryDate));
+                            restoreCartFromProducts();
+                            hasCachedProducts = true;
+                            isLoadingData.value = false;
+                            hideStaticLoader();
                         }
-                    } catch (e) { errorMsg.value = e.message; } 
-                    finally { 
-                        isLoadingData.value = false; hideStaticLoader(); 
-                        if (!safeGetStorage('mm_guided_v172', '')) { setTimeout(() => { openModalSafe('guideModal'); safeSetStorage('mm_guided_v172', 'true'); }, 600); } 
-                        if (validUnreportedOrders.value.length > 0) { pendingSelection.value = [...validUnreportedOrders.value]; setTimeout(() => openModalSafe('unreportedModal'), 1500); } 
+                    } catch (e) { console.warn('商品快取讀取失敗', e); }
+
+                    const currentUserId = userProfile.value?.userId || safeGetStorage('mm_user_id') || guestUuid.value;
+                    const settingsPromise = fetchWithRetry(`${API_URL}?action=getSettings`, 2, 6500)
+                        .then(data => {
+                            settings.value = { ...settings.value, ...data, version: 'v3.2' };
+                            adminAutoDeliveryEnabled.value = String(data.adminAutoDeliveryEnabled).toLowerCase() === 'true';
+                            safeSetStorage('mm_settings_cache_v32', JSON.stringify(settings.value));
+                            return settings.value;
+                        })
+                        .catch(error => {
+                            console.warn('系統設定暫時無法讀取，使用本機設定繼續啟動', error);
+                            try {
+                                const cachedSettings = JSON.parse(safeGetStorage('mm_settings_cache_v32', 'null'));
+                                if (cachedSettings) {
+                                    settings.value = { ...settings.value, ...cachedSettings, version: 'v3.2' };
+                                    adminAutoDeliveryEnabled.value = String(cachedSettings.adminAutoDeliveryEnabled).toLowerCase() === 'true';
+                                }
+                            } catch (e) {}
+                            return settings.value;
+                        });
+                    settingsPromise.then(initLiffInBackground);
+
+                    try {
+                        const initData = await fetchWithRetry(`${API_URL}?action=getInitData&userId=${encodeURIComponent(currentUserId)}`, 2, 8000);
+                        applyInitData(initData);
+                    } catch (error) {
+                        console.error('商品初始化讀取失敗', error);
+                        if (!hasCachedProducts) {
+                            errorMsg.value = '目前無法連線取得最新商品，請稍後重新整理。';
+                        } else {
+                            showToast('目前先顯示上次商品資料，最新庫存更新失敗。');
+                        }
+                    } finally {
+                        isLoadingData.value = false;
+                        hideStaticLoader();
+                        // LIFF 已與商品資料平行啟動，不會阻塞首頁商品顯示
+                        if (!safeGetStorage('mm_guided_v172', '')) {
+                            setTimeout(() => {
+                                if (!document.querySelector('.modal.show')) openModalSafe('guideModal');
+                                safeSetStorage('mm_guided_v172', 'true');
+                            }, 600);
+                        }
+                        if (validUnreportedOrders.value.length > 0) {
+                            pendingSelection.value = [...validUnreportedOrders.value];
+                            setTimeout(() => openModalSafe('unreportedModal'), 1500);
+                        }
                     }
                 };
 
                 // F. UI 互動
                 const reloadApp = () => window.location.reload();
                 const getProductImage = (n) => { const p = products.value.find(x => x.name === n); return p ? p.image : 'https://placehold.co/48x48?text=No+Img'; };
+                const handleProductImageError = (product) => {
+                    if (!product || product._imageErrorHandled) return;
+                    product._imageErrorHandled = true;
+                    if (product.fallbackImage && product.image !== product.fallbackImage) product.image = product.fallbackImage;
+                    else product.image = 'https://placehold.co/300x300?text=No+Image';
+                };
                 const checkGuestStatus = () => { const ua = navigator.userAgent; if(!liff.isInClient() || ua.includes("FBAN") || ua.includes("FBAV")) setTimeout(() => openModalSafe('guestWarningModal'), 1000); };
                 // 👇 === 這是要新增的「手動觸發 LINE 登入工具」 === 👇
                 const loginWithLine = () => {
@@ -3096,9 +3186,91 @@ const tgConfig = ref({
                     }
                 };
                 
-                const triggerStockSync = async () => { isAdminSyncing.value=true; try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminSyncStock'})}); showToast('已同步'); setTimeout(initApp,3000); } catch(e){} finally{ isAdminSyncing.value=false; } };
-                const triggerTimeoutCheck = async () => { isAdminCleaning.value=true; try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminCheckTimeout'})}); showToast('已清理'); } catch(e){} finally{ isAdminCleaning.value=false; } };
-                const triggerPaymentCheck = async () => { isAdminChecking.value=true; try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminCheckPayments'})}); showToast('已查帳'); setTimeout(fetchAdminDashboard,2000); } catch(e){} finally{ isAdminChecking.value=false; } };
+                const triggerStockSync = async () => { isAdminSyncing.value=true; try{ const response=await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminSyncStock'})}); const result=await response.json(); if(result.status==='OK'||result.status==='success'){ showToast('已同步'); setTimeout(initApp,1500); } else showToast(result.message||'同步失敗'); } catch(e){ showToast('同步失敗，請檢查連線'); } finally{ isAdminSyncing.value=false; } };
+                const saveAdminAutoDeliverySetting = async () => {
+                    const userId = userProfile.value?.userId || '';
+                    if (!ADMIN_IDS.includes(userId)) {
+                        adminAutoDeliveryEnabled.value = false;
+                        return showAlert('請先以指定 LINE 管理員帳號登入，才能修改自動發券設定。');
+                    }
+                    const requestedValue = adminAutoDeliveryEnabled.value;
+                    try {
+                        const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'saveAdminAutoDeliverySetting', userId: userId, enabled: requestedValue }) });
+                        const result = await response.json();
+                        if (result.status === 'OK') {
+                            adminAutoDeliveryEnabled.value = result.enabled === true;
+                            showToast(adminAutoDeliveryEnabled.value ? '已開啟指定管理員自動發券' : '已關閉指定管理員自動發券');
+                        } else {
+                            adminAutoDeliveryEnabled.value = !requestedValue;
+                            showAlert(result.message || '設定儲存失敗');
+                        }
+                    } catch (e) {
+                        adminAutoDeliveryEnabled.value = !requestedValue;
+                        showToast('設定儲存失敗，請稍後再試');
+                    }
+                };
+                const fetchAdminBuyerRanking = async (item) => {
+                    if (!item || !item.name) return;
+                    hideModalSafe('adminBestSellersModal');
+                    adminBuyerRankingProduct.value = item.name;
+                    adminBuyerRanking.value = [];
+                    isLoadingBuyerRanking.value = true;
+                    openModalSafe('adminBuyerRankingModal');
+                    try {
+                        const userId = userProfile.value?.userId || '';
+                        const url = `${API_URL}?action=getAdminBuyerRanking&productName=${encodeURIComponent(item.name)}&userId=${encodeURIComponent(userId)}`;
+                        const data = await fetchWithRetry(url, 2, 7000);
+                        if (data.status === 'OK') adminBuyerRanking.value = data.buyers || [];
+                        else showToast(data.message || '會員排行讀取失敗');
+                    } catch (e) {
+                        showToast('會員排行讀取失敗');
+                    } finally { isLoadingBuyerRanking.value = false; }
+                };
+                const loadAdminExpiredOrders = async () => {
+                    adminExpiredOrders.value = [];
+                    selectedExpiredOrderIds.value = [];
+                    expiredPaymentChecked.value = false;
+                    isAdminCleaning.value = true;
+                    try {
+                        const userId = userProfile.value?.userId || '';
+                        const url = `${API_URL}?action=getAdminExpiredOrders&userId=${encodeURIComponent(userId)}`;
+                        const data = await fetchWithRetry(url, 2, 7000);
+                        if (data.status === 'OK') adminExpiredOrders.value = data.orders || [];
+                        else showAlert(data.message || '逾時訂單讀取失敗');
+                    } catch (e) {
+                        showToast('逾時訂單讀取失敗');
+                    } finally { isAdminCleaning.value = false; }
+                };
+                const openExpiredOrderReview = () => {
+                    hideModalSafe('adminPanelModal');
+                    openModalSafe('adminExpiredOrdersModal');
+                    loadAdminExpiredOrders();
+                };
+                const formatExpiredOrderItems = (order) => Array.isArray(order?.items) ? order.items.map(item => `${item.name} x${item.quantity}`).join('、') : '';
+                const toggleExpiredOrder = (orderId, checked) => {
+                    if (checked && !selectedExpiredOrderIds.value.includes(orderId)) selectedExpiredOrderIds.value.push(orderId);
+                    else selectedExpiredOrderIds.value = selectedExpiredOrderIds.value.filter(id => id !== orderId);
+                };
+                const cleanupSelectedExpiredOrders = async () => {
+                    if (!selectedExpiredOrderIds.value.length) return showToast('請先勾選要處理的訂單');
+                    if (!expiredPaymentChecked.value) return showAlert('請先確認已核對台新、街口及其他付款紀錄。');
+                    if (!confirm(`確定取消並回補 ${selectedExpiredOrderIds.value.length} 筆訂單嗎？訂單歷史不會刪除。`)) return;
+                    isAdminCleaning.value = true;
+                    try {
+                        const userId = userProfile.value?.userId || '';
+                        const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCleanupExpiredOrders', userId: userId, orderIds: selectedExpiredOrderIds.value }) });
+                        const result = await response.json();
+                        if (result.status === 'OK') {
+                            showToast(`已人工取消 ${result.cleanedCount || 0} 筆訂單，並完成庫存回補`);
+                            await loadAdminExpiredOrders();
+                            fetchAdminDashboard();
+                        } else showAlert(result.message || '訂單處理失敗');
+                    } catch (e) {
+                        showToast('訂單處理失敗，請重新整理確認狀態');
+                    } finally { isAdminCleaning.value = false; }
+                };
+                const triggerTimeoutCheck = openExpiredOrderReview;
+                const triggerPaymentCheck = async () => { isAdminChecking.value=true; try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminCheckPayments'})}); showToast('已查帳'); setTimeout(fetchAdminDashboard,2000); } catch(e){ showToast('查帳失敗'); } finally{ isAdminChecking.value=false; } };
                 
                 const fetchLowStock = async (rangeType = '0-5') => {
                     isAdminFetchingStock.value = true;
@@ -3424,7 +3596,11 @@ const tgConfig = ref({
                     faqList, announcement, adminPendingOrders, fetchAdminDashboard, 
                     onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, 
                     adminStats, adminLowStockItems,
-                    triggerStockSync, isAdminSyncing, triggerTimeoutCheck, isAdminCleaning, 
+                    triggerStockSync, isAdminSyncing, triggerTimeoutCheck, openExpiredOrderReview, isAdminCleaning,
+                    adminExpiredOrders, selectedExpiredOrderIds, expiredPaymentChecked, toggleExpiredOrder, cleanupSelectedExpiredOrders, loadAdminExpiredOrders, formatExpiredOrderItems,
+                    adminAutoDeliveryEnabled, saveAdminAutoDeliverySetting,
+                    adminBuyerRanking, adminBuyerRankingProduct, isLoadingBuyerRanking, fetchAdminBuyerRanking,
+                    handleProductImageError,
                     triggerPaymentCheck, isAdminChecking, isAdminFetchingStock, fetchLowStock,
                     clearRedeemedHistory, confirmClearHistoryAction,
                     adminExpiringItems, adminBestSellers, openModalSafe,
