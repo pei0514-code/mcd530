@@ -977,7 +977,7 @@
                                 <div class="row g-2 mb-3">
                                     <div class="col-4"><button class="btn btn-sm btn-primary w-100 h-100 fw-bold shadow-sm py-2" @click="openAdminOrderManager"><i class="fas fa-clipboard-list d-block mb-1 fs-5"></i><span style="font-size:11px;">訂單管理</span></button></div>
                                     <div class="col-4"><button class="btn btn-sm btn-warning text-dark w-100 h-100 fw-bold shadow-sm py-2" @click="openModalSafe('marqueeModal')"><i class="fas fa-text-width d-block mb-1 fs-5"></i><span style="font-size:11px;">跑馬燈</span></button></div>
-                                    <div class="col-4"><button class="btn btn-sm w-100 h-100 fw-bold text-white shadow-sm py-2" style="background-color: #0088cc;" data-bs-dismiss="modal" data-bs-target="#adminTgFunctionModal" data-bs-toggle="modal"><i class="fab fa-telegram-plane d-block mb-1 fs-5"></i><span style="font-size:11px;">TG 功能</span></button></div>
+                                    <div class="col-4"><button class="btn btn-sm w-100 h-100 fw-bold text-white shadow-sm py-2" style="background-color: #0088cc;" data-bs-dismiss="modal" data-bs-target="#adminTgFunctionModal" data-bs-toggle="modal" @click="loadAdminTgSettings"><i class="fab fa-telegram-plane d-block mb-1 fs-5"></i><span style="font-size:11px;">TG 功能</span></button></div>
                                 </div>
                             </div>
 
@@ -1165,7 +1165,7 @@
             </div>
         </div>
 
-        <div class="modal fade" id="adminBestSellersModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0"><h5 class="fw-bold"><i class="fas fa-fire text-danger me-2"></i>熱銷排行 (Top 15)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><div v-if="adminBestSellers.length > 0" class="list-group list-group-flush small"><div v-for="(item, index) in adminBestSellers" :key="index" class="list-group-item d-flex justify-content-between align-items-center"><div class="d-flex align-items-center" style="max-width: 80%;"><span class="badge bg-secondary rounded-pill me-2" style="font-size: 10px; width: 20px;">{{ index + 1 }}</span><button type="button" class="btn btn-link text-start text-decoration-none text-dark fw-bold p-0 text-truncate" style="max-width: 100%;" @click="fetchAdminBuyerRanking(item)">{{ item.name }} <i class="fas fa-users text-primary ms-1 small"></i></button></div><span class="fw-bold text-dark ms-2 text-nowrap">{{ item.qty }} 件</span></div></div><div v-else class="text-center text-muted py-3">暫無數據</div><div class="small text-muted mt-2">點擊商品名稱，可查看會員購買數量排行。</div></div></div></div></div>
+        <div class="modal fade" id="adminBestSellersModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0"><h5 class="fw-bold"><i class="fas fa-fire text-danger me-2"></i>熱銷排行（共 {{ adminBestSellers.length }} 項）</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><div v-if="adminBestSellers.length > 0" class="list-group list-group-flush small"><div v-for="(item, index) in visibleAdminBestSellers" :key="item.name || index" class="list-group-item d-flex justify-content-between align-items-center"><div class="d-flex align-items-center" style="max-width: 80%;"><span class="badge bg-secondary rounded-pill me-2" style="font-size: 10px; width: 24px;">{{ index + 1 }}</span><button type="button" class="btn btn-link text-start text-decoration-none text-dark fw-bold p-0 text-truncate" style="max-width: 100%;" @click="fetchAdminBuyerRanking(item)">{{ item.name }} <i class="fas fa-users text-primary ms-1 small"></i></button></div><span class="fw-bold text-dark ms-2 text-nowrap">{{ item.qty }} 件</span></div><div v-if="adminBestSellers.length > 15" class="text-center py-3"><button type="button" class="btn btn-outline-danger btn-sm rounded-pill fw-bold px-4" @click="toggleBestSellersDisplay"><i :class="showAllBestSellers ? 'fas fa-chevron-up me-1' : 'fas fa-chevron-down me-1'"></i>{{ showAllBestSellers ? '收合至前 15 項' : '顯示更多（還有 ' + (adminBestSellers.length - 15) + ' 項）' }}</button></div></div><div v-else class="text-center text-muted py-3">暫無數據</div><div class="small text-muted mt-2">點擊商品名稱，可查看會員購買數量排行。</div></div></div></div></div>
 
         <div class="modal fade" id="adminBuyerRankingModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0"><div><h5 class="fw-bold mb-1"><i class="fas fa-users text-primary me-2"></i>會員購買排行</h5><div class="small text-muted">{{ adminBuyerRankingProduct }}</div></div><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><div v-if="isLoadingBuyerRanking" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>讀取會員資料中...</div><div v-else-if="adminBuyerRanking.length" class="list-group list-group-flush small"><div v-for="(buyer, index) in adminBuyerRanking" :key="buyer.userId || buyer.name" class="list-group-item d-flex justify-content-between align-items-center px-1"><div class="d-flex align-items-center"><span class="badge bg-secondary rounded-pill me-2">{{ index + 1 }}</span><div><div class="fw-bold">{{ buyer.name }}</div><div class="text-muted" style="font-size:10px;" v-if="buyer.userId">{{ buyer.userId }}</div></div></div><div class="text-end"><div class="fw-bold text-danger">{{ buyer.quantity }} 件</div><div class="text-muted" style="font-size:10px;">{{ buyer.orderCount }} 筆訂單</div></div></div></div><div v-else class="text-center text-muted py-4">目前沒有符合統計條件的購買紀錄</div></div></div></div></div>
 
@@ -1792,14 +1792,26 @@
 
                 // --- 新增：管理員 TG 庫存/到期設定 ---
                 const adminTgSet = ref({ lowStock: 5, expiringDays: 7 });
+                const loadAdminTgSettings = async () => {
+                    try {
+                        const uid = userProfile.value && userProfile.value.userId ? userProfile.value.userId : '';
+                        const res = await fetch(`${API_URL}?action=getAdminNotifySettings&userId=${encodeURIComponent(uid)}`);
+                        const data = await res.json();
+                        if (data.status === 'success') adminTgSet.value = { lowStock: data.lowStock, expiringDays: data.expiringDays };
+                        else showToast(data.message || '讀取通知設定失敗');
+                    } catch (e) { showToast('讀取通知設定失敗，請稍後再試'); }
+                };
                 const saveAdminTgSettings = async () => {
                     showToast('儲存中...');
                     try {
-                        await fetch(API_URL, {
+                        const uid = userProfile.value && userProfile.value.userId ? userProfile.value.userId : '';
+                        const res = await fetch(API_URL, {
                             method: 'POST',
-                            body: JSON.stringify({ action: 'saveAdminNotifySettings', lowStock: adminTgSet.value.lowStock, expiringDays: adminTgSet.value.expiringDays })
+                            body: JSON.stringify({ action: 'saveAdminNotifySettings', userId: uid, lowStock: adminTgSet.value.lowStock, expiringDays: adminTgSet.value.expiringDays })
                         });
-                        showToast('✅ 設定已成功儲存！');
+                        const data = await res.json();
+                        if (data.status === 'success') showToast('✅ 設定已成功儲存！');
+                        else showToast('❌ 設定儲存失敗：' + (data.message || '未知錯誤'));
                     } catch(e) {
                         showToast('❌ 儲存失敗，請檢查網路連線');
                     }
@@ -1916,6 +1928,9 @@
                 const adminLowStockItems = ref([]);
                 const adminExpiringItems = ref([]);
                 const adminBestSellers = ref([]);
+                const showAllBestSellers = ref(false);
+                const visibleAdminBestSellers = computed(() => showAllBestSellers.value ? adminBestSellers.value : adminBestSellers.value.slice(0, 15));
+                const toggleBestSellersDisplay = () => { showAllBestSellers.value = !showAllBestSellers.value; };
                 const adminBuyerRanking = ref([]);
                 const adminBuyerRankingProduct = ref('');
                 const isLoadingBuyerRanking = ref(false);
@@ -3085,6 +3100,7 @@ const tgConfig = ref({
                         hideModalSafe('cartModal'); 
                         openModalSafe('successModal'); 
                         setTimeout(() => { fetchOrderStatus(getEffectiveUserId()); }, 1000);
+                        if (ADMIN_IDS.includes(String(getEffectiveUserId()))) { setTimeout(() => fetchAdminDashboard(), 1500); }
                     }).catch(e => { 
                         console.error(e); 
                         isSubmitting.value = false; 
@@ -3650,7 +3666,7 @@ const tgConfig = ref({
                     handleProductImageError,
                     triggerPaymentCheck, isAdminChecking, isAdminFetchingStock, fetchLowStock,
                     clearRedeemedHistory, confirmClearHistoryAction,
-                    adminExpiringItems, adminBestSellers, openModalSafe,
+                    adminExpiringItems, adminBestSellers, showAllBestSellers, visibleAdminBestSellers, toggleBestSellersDisplay, openModalSafe,
                     openAdminProductManager, adminProducts, adminEditProduct, editingProduct, saveProduct, isSavingProduct,
                     openAdminOrderManager, adminAllOrders, openAdminOrderEdit, editingOrder, saveAdminOrder, deleteAdminOrder, isSavingOrder,
                     copyMomoInfo, copyOrderBackup,
@@ -3674,6 +3690,7 @@ const tgConfig = ref({
                   adjustZoom,          // 👈 補上這行
                 sendTgBroadcast,     // 👈 1. 確保有推播功能
                 adminTgSet,          // 👈 2. 確保有設定變數
+                loadAdminTgSettings,
                 saveAdminTgSettings, // 👈 3. 確保有儲存功能
                 sendSalesToMyTg,     // 👈 4. 確保有傳送報表功能
                     saveMarqueeSettings,
