@@ -239,7 +239,7 @@
 <body>
 
    <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.2</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.3</div>
         
         <div class="w-100 px-4 mt-3 mb-2" style="max-width: 280px;">
             <div class="progress" style="height: 12px; border-radius: 10px; background-color: #ffebeb; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
@@ -272,7 +272,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.2</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.3</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -1017,7 +1017,6 @@
                         <h6 class="fw-bold border-bottom pb-2 mb-2 d-flex justify-content-between align-items-center">
                             <span><i class="fas fa-hourglass-half me-1"></i>待處理訂單 ({{ adminPendingOrders.length }})</span>
                         </h6>
-                        <h6 class="fw-bold border-bottom pb-2 mb-2 d-flex justify-content-between align-items-center"><span>待處理訂單 ({{ adminPendingOrders.length }})</span></h6>
                         <div v-if="adminPendingOrders.length === 0" class="text-center py-5 text-muted"><i class="fas fa-check-circle fa-3x mb-3 text-success"></i><br>目前沒有待處理訂單</div>
                         <div v-for="order in adminPendingOrders" :key="order.orderId" class="admin-card">
                             <div class="admin-card-header flex-column align-items-start">
@@ -1028,6 +1027,7 @@
                                 <div class="d-flex gap-1 w-100 overflow-auto no-scrollbar">
                                     <span class="badge bg-info text-dark border" style="font-size:10px;"><i class="fas fa-truck me-1"></i>{{ order.deliveryMethod }}</span>
                                     <span class="badge bg-warning text-dark border" style="font-size:10px;"><i class="fas fa-money-bill-wave me-1"></i>{{ order.paymentNote || '待付款' }}</span>
+                                    <span v-if="order.timestamp" class="badge bg-light text-secondary border" style="font-size:10px;">{{ order.timestamp }} · {{ Math.floor((order.ageMinutes || 0) / 60) }}小時</span>
                                 </div>
                             </div>
                             <div class="admin-card-body d-flex justify-content-between align-items-center">
@@ -1038,6 +1038,7 @@
                                     </div>
                                 </div>
                                 <div class="d-flex align-items-center">
+                                    <button v-if="!order.isPaid" class="btn btn-outline-danger btn-sm rounded-pill fw-bold px-2 me-2" @click="confirmVoidUnpaidOrder(order)"><i class="fas fa-ban me-1"></i>未付清除</button>
                                     <button v-if="order.deliveryMethod && (order.deliveryMethod.includes('momo') || order.deliveryMethod.includes('轉贈'))" class="btn btn-momo btn-sm rounded-pill fw-bold px-3 me-2" @click="copyMomoInfo(order)"><i class="fas fa-copy me-1"></i>轉贈</button>
                                     <button class="btn btn-dark btn-sm rounded-pill fw-bold px-3" @click="onAdminShipClick(order)">發貨 <i class="fas fa-paper-plane ms-1"></i></button>
                                 </div>
@@ -1169,7 +1170,7 @@
 
         <div class="modal fade" id="adminBuyerRankingModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0"><div><h5 class="fw-bold mb-1"><i class="fas fa-users text-primary me-2"></i>會員購買排行</h5><div class="small text-muted">{{ adminBuyerRankingProduct }}</div></div><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><div v-if="isLoadingBuyerRanking" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin me-2"></i>讀取會員資料中...</div><div v-else-if="adminBuyerRanking.length" class="list-group list-group-flush small"><div v-for="(buyer, index) in adminBuyerRanking" :key="buyer.userId || buyer.name" class="list-group-item d-flex justify-content-between align-items-center px-1"><div class="d-flex align-items-center"><span class="badge bg-secondary rounded-pill me-2">{{ index + 1 }}</span><div><div class="fw-bold">{{ buyer.name }}</div><div class="text-muted" style="font-size:10px;" v-if="buyer.userId">{{ buyer.userId }}</div></div></div><div class="text-end"><div class="fw-bold text-danger">{{ buyer.quantity }} 件</div><div class="text-muted" style="font-size:10px;">{{ buyer.orderCount }} 筆訂單</div></div></div></div><div v-else class="text-center text-muted py-4">目前沒有符合統計條件的購買紀錄</div></div></div></div></div>
 
-        <div class="modal fade" id="adminExpiredOrdersModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0 bg-light"><div><h5 class="fw-bold mb-1"><i class="fas fa-hourglass-end text-warning me-2"></i>逾時訂單人工審核</h5><div class="small text-muted">僅列出超過 30 分鐘、尚未付款、未回報且未發貨的訂單</div></div><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><div class="alert alert-warning small"><strong>付款安全提醒：</strong>台新銀行及街口支付可能已實際付款但尚未回報，請先核對銀行／街口交易紀錄。系統不會再自動清理，請勿只依逾時時間判定未付款。</div><div v-if="isAdminCleaning" class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</div><div v-else-if="adminExpiredOrders.length" class="list-group list-group-flush small"><label v-for="order in adminExpiredOrders" :key="order.orderId" class="list-group-item px-1"><div class="d-flex align-items-start gap-2"><input class="form-check-input mt-1 flex-shrink-0" type="checkbox" :checked="selectedExpiredOrderIds.includes(order.orderId)" @change="toggleExpiredOrder(order.orderId, $event.target.checked)"><div class="flex-grow-1"><div class="d-flex justify-content-between gap-2"><strong>{{ order.buyerName }}</strong><span class="text-danger fw-bold text-nowrap">${{ order.totalAmount }}</span></div><div class="text-muted">單號：{{ order.orderId }}</div><div class="text-muted">時間：{{ order.timestamp }}（逾時 {{ order.ageMinutes }} 分）</div><div class="mt-1">{{ formatExpiredOrderItems(order) }}</div></div></div></label></div><div v-else class="text-center text-muted py-4">目前沒有符合人工審核條件的逾時訂單。</div><div class="form-check mt-3 p-3 bg-light rounded-3"><input class="form-check-input" type="checkbox" id="expiredPaymentChecked" v-model="expiredPaymentChecked"><label class="form-check-label small fw-bold" for="expiredPaymentChecked">我已逐筆核對台新、街口及其他付款紀錄，確認勾選訂單確實未付款。</label></div></div><div class="modal-footer border-0"><button type="button" class="btn btn-outline-secondary rounded-pill" @click="loadAdminExpiredOrders">重新整理</button><button type="button" class="btn btn-danger rounded-pill fw-bold" :disabled="!selectedExpiredOrderIds.length || !expiredPaymentChecked || isAdminCleaning" @click="cleanupSelectedExpiredOrders">確認取消並回補庫存（{{ selectedExpiredOrderIds.length }}）</button></div></div></div></div>
+        <div class="modal fade" id="adminExpiredOrdersModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content border-0 rounded-4 shadow-lg"><div class="modal-header border-0 bg-light"><div><h5 class="fw-bold mb-1"><i class="fas fa-hourglass-end text-warning me-2"></i>逾時訂單人工審核</h5><div class="small text-muted">僅列出超過 30 分鐘、已回報但尚未確認付款、且未發貨的訂單；未回報訂單逾時後會自動回補庫存</div></div><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-3"><div class="alert alert-warning small"><strong>付款安全提醒：</strong>台新銀行及街口支付可能已實際付款但尚未回報，請先核對銀行／街口交易紀錄。已回報的逾時訂單會保留人工審核；完全未回報且逾時 30 分鐘的訂單會自動取消並回補庫存。若已實際付款，請務必先完成付款回報，並保留銀行／街口交易紀錄。</div><div v-if="isAdminCleaning" class="text-center text-muted py-3"><i class="fas fa-spinner fa-spin me-2"></i>處理中...</div><div v-else-if="adminExpiredOrders.length" class="list-group list-group-flush small"><label v-for="order in adminExpiredOrders" :key="order.orderId" class="list-group-item px-1"><div class="d-flex align-items-start gap-2"><input class="form-check-input mt-1 flex-shrink-0" type="checkbox" :checked="selectedExpiredOrderIds.includes(order.orderId)" @change="toggleExpiredOrder(order.orderId, $event.target.checked)"><div class="flex-grow-1"><div class="d-flex justify-content-between gap-2"><strong>{{ order.buyerName }}</strong><span class="text-danger fw-bold text-nowrap">${{ order.totalAmount }}</span></div><div class="text-muted">單號：{{ order.orderId }}</div><div class="text-muted">時間：{{ order.timestamp }}（逾時 {{ order.ageMinutes }} 分）</div><div class="mt-1">{{ formatExpiredOrderItems(order) }}</div><div v-if="order.paymentNote" class="mt-1 text-warning-emphasis">付款回報：{{ order.paymentNote }}</div></div></div></label></div><div v-else class="text-center text-muted py-4">目前沒有符合人工審核條件的逾時訂單。</div><div class="form-check mt-3 p-3 bg-light rounded-3"><input class="form-check-input" type="checkbox" id="expiredPaymentChecked" v-model="expiredPaymentChecked"><label class="form-check-label small fw-bold" for="expiredPaymentChecked">我已逐筆核對台新、街口及其他付款紀錄，確認勾選訂單確實未付款。</label></div></div><div class="modal-footer border-0"><button type="button" class="btn btn-outline-secondary rounded-pill" @click="loadAdminExpiredOrders">重新整理</button><button type="button" class="btn btn-danger rounded-pill fw-bold" :disabled="!selectedExpiredOrderIds.length || !expiredPaymentChecked || isAdminCleaning" @click="cleanupSelectedExpiredOrders">確認未付款、取消並回補庫存（{{ selectedExpiredOrderIds.length }}）</button></div></div></div></div>
         
         <div class="modal fade" id="adminLowStockModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -1791,7 +1792,7 @@
                 };
 
                 // --- 新增：管理員 TG 庫存/到期設定 ---
-                const adminTgSet = ref({ lowStock: 5, expiringDays: 7 });
+                const adminTgSet = ref({ lowStock: 10, expiringDays: 3 });
                 const loadAdminTgSettings = async () => {
                     try {
                         const uid = userProfile.value && userProfile.value.userId ? userProfile.value.userId : '';
@@ -1850,7 +1851,7 @@
                 const originalCouponCode = ref('');
                 const products = ref([]);
                 const cart = ref({});
-                const settings = ref({ version: 'v3.2', liffId: '2008834603-kWyNnXPm' });
+                const settings = ref({ version: 'v3.3', liffId: '2008834603-kWyNnXPm' });
                 const faqList = ref([]);
                 const announcement = ref("🔥 正在載入最新公告...");
                 const currentCat = ref('ALL');
@@ -2211,13 +2212,11 @@
                                 const p = products.value.find(x => x.name === n) || products.value.find(x => x.name === cn);
                                 const rawPurchaseDate = o.timestamp ? o.timestamp.split(' ')[0] : '';
                                 
-                                let rawExpiryDate = '';
-                                const match = n.match(/[\[【（\(](\d{3,4})[\]】）\)]/); 
-                                
-                                if (match) {
-                                    rawExpiryDate = match[1]; 
-                                } else {
-                                    rawExpiryDate = (o.tickets && o.tickets[i] && o.tickets[i].expiry) || '';
+                                // 先用後端逐張票券保存的效期；只有舊訂單沒有個別資料時才退回檔名標籤／商品列效期。
+                                let rawExpiryDate = (o.tickets && o.tickets[i] && o.tickets[i].expiry) || '';
+                                if (!rawExpiryDate) {
+                                    const match = n.match(/[\[【（\(](\d{3,4})[\]】）\)]/);
+                                    if (match) rawExpiryDate = match[1];
                                 }
 
                                 t.push({
@@ -2322,7 +2321,7 @@
                     if (!h) return { text: '⏳ 待核對', class: 'status-pending', canReport: true, canCancel: true };
                     if (String(h.isShipped) === 'true') return { text: '✅ 已發貨', class: 'status-shipped', canReport: false, canCancel: false };
                     const note = String(h.paymentNote || "").trim();
-                    if (note.includes('取消') || note.includes('失效')) return { text: '❌ 已失效', class: 'status-invalid', canReport: false, canCancel: false };
+                    if (h.isCancelled === true || note.includes('取消') || note.includes('失效')) return { text: '❌ 已失效', class: 'status-invalid', canReport: false, canCancel: false };
                     if (String(h.isPaid) === 'true') return { text: '💰 已付款', class: 'status-paid', canReport: false, canCancel: false };
                     if (note === "" || note.startsWith("[待]")) return { text: '💰 待付款', class: 'status-pending', canReport: true, canCancel: true };
                     return { text: '⏳ 待核對', class: 'status-pending', canReport: true, canCancel: true };
@@ -2437,7 +2436,7 @@
                     }
                 });
                 
-                // E. API 與初始化（v3.2：快取先顯示、商品與設定平行讀取，LIFF 不阻塞首頁）
+                // E. API 與初始化（v3.3：快取先顯示、商品與設定平行讀取，LIFF 不阻塞首頁）
                 const fetchWithRetry = async (url, retries = 2, timeoutMs = 6500) => {
                     let lastError = new Error('網路連線失敗');
                     for (let attempt = 0; attempt < retries; attempt++) {
@@ -2480,6 +2479,7 @@
                                 return !status || !(
                                     String(status.isShipped) === 'true' ||
                                     String(status.isPaid) === 'true' ||
+                                    status.isCancelled === true ||
                                     (status.paymentNote && (
                                         String(status.paymentNote).includes('取消') ||
                                         String(status.paymentNote).includes('失效')
@@ -2602,7 +2602,7 @@
                     const currentUserId = userProfile.value?.userId || safeGetStorage('mm_user_id') || guestUuid.value;
                     const settingsPromise = fetchWithRetry(`${API_URL}?action=getSettings`, 2, 6500)
                         .then(data => {
-                            settings.value = { ...settings.value, ...data, version: 'v3.2' };
+                            settings.value = { ...settings.value, ...data, version: 'v3.3' };
                             adminAutoDeliveryEnabled.value = String(data.adminAutoDeliveryEnabled).toLowerCase() === 'true';
                             safeSetStorage('mm_settings_cache_v32', JSON.stringify(settings.value));
                             return settings.value;
@@ -2612,7 +2612,7 @@
                             try {
                                 const cachedSettings = JSON.parse(safeGetStorage('mm_settings_cache_v32', 'null'));
                                 if (cachedSettings) {
-                                    settings.value = { ...settings.value, ...cachedSettings, version: 'v3.2' };
+                                    settings.value = { ...settings.value, ...cachedSettings, version: 'v3.3' };
                                     adminAutoDeliveryEnabled.value = String(cachedSettings.adminAutoDeliveryEnabled).toLowerCase() === 'true';
                                 }
                             } catch (e) {}
@@ -3221,6 +3221,29 @@ const tgConfig = ref({
                 // 管理員功能
                 const verifyAdminPassword = async () => { if(!adminPasswordInput.value)return showToast('請輸入'); try{ const r=await fetch(`${API_URL}?action=verifyAdmin&p=${encodeURIComponent(adminPasswordInput.value)}`); const j=await r.json(); if(j.status==='OK'){ safeSetStorage('mm_admin_auth','true'); hideModalSafe('adminLoginModal'); fetchAdminDashboard(); openModalSafe('adminPanelModal'); showToast('成功'); adminPasswordInput.value=''; } else { showToast('錯誤'); } } catch(e){ showToast('失敗'); } };
                 const fetchAdminDashboard = async () => { try{ const r=await fetch(`${API_URL}?action=getAdminDashboardData`); const d=await r.json(); if(d.orders) adminPendingOrders.value=d.orders; if(d.stats) adminStats.value=d.stats; if(d.bestSellers) adminBestSellers.value=d.bestSellers; } catch(e){} };
+
+                const confirmVoidUnpaidOrder = async (order) => {
+                    if (!order || !order.orderId || order.isPaid) return;
+                    const firstConfirm = confirm(`【第一次確認】\n確定要清除這筆尚未付款的訂單嗎？\n\n單號：${order.orderId}\n會員：${order.buyerName || '未知'}\n金額：$${Number(order.totalAmount || 0)}\n\n系統將作廢訂單並回補原商品及贈品庫存。`);
+                    if (!firstConfirm) return;
+                    const phrase = prompt(`【第二次確認】\n請輸入「作廢」兩字才會執行。\n\n若 O 欄曾有匯款回報，請先核對銀行／街口實際入帳紀錄。`);
+                    if (phrase !== '作廢') return showToast('未輸入「作廢」，已取消操作');
+                    isAdminCleaning.value = true;
+                    try {
+                        const userId = userProfile.value?.userId || '';
+                        const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminVoidUnpaidOrder', userId, orderId: order.orderId, confirmPhrase: phrase, confirmUnpaid: true }) });
+                        const result = await response.json();
+                        if (result.status === 'OK') {
+                            showToast(`訂單 ${order.orderId} 已作廢，庫存已回補`);
+                            await fetchAdminDashboard();
+                        } else {
+                            showAlert(result.message || '作廢失敗，訂單未變更');
+                        }
+                    } catch (e) {
+                        showAlert('作廢請求失敗，請重新整理確認訂單狀態');
+                    } finally { isAdminCleaning.value = false; }
+                };
+
                 
                 const fetchExpiringItems = async (months) => {
                     showToast(`正在讀取 ${months} 個月內到期商品...`);
@@ -3264,7 +3287,7 @@ const tgConfig = ref({
                             showToast(adminAutoDeliveryEnabled.value ? '已開啟指定管理員自動發券' : '已關閉指定管理員自動發券');
                         } else {
                             adminAutoDeliveryEnabled.value = !requestedValue;
-                            showAlert(result.message || '設定儲存失敗，請確認後端已部署 v3.2 修正版。');
+                            showAlert(result.message || '設定儲存失敗，請確認後端已部署 v3.3 修正版。');
                         }
                     } catch (e) {
                         adminAutoDeliveryEnabled.value = !requestedValue;
@@ -3321,7 +3344,7 @@ const tgConfig = ref({
                     isAdminCleaning.value = true;
                     try {
                         const userId = userProfile.value?.userId || '';
-                        const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCleanupExpiredOrders', userId: userId, orderIds: selectedExpiredOrderIds.value }) });
+                        const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCleanupExpiredOrders', userId: userId, orderIds: selectedExpiredOrderIds.value, confirmUnpaid: expiredPaymentChecked.value }) });
                         const result = await response.json();
                         if (result.status === 'OK') {
                             showToast(`已人工取消 ${result.cleanedCount || 0} 筆訂單，並完成庫存回補`);
@@ -3656,7 +3679,7 @@ const tgConfig = ref({
                     isBatchMode, batchSelection, toggleBatchMode, toggleTicketSelection, 
                     executeBatchRedeem, confirmBatchRedeemAction, selectAllTickets,
                     isAdmin, openAdminLogin, verifyAdminPassword, adminPasswordInput, 
-                    faqList, announcement, adminPendingOrders, fetchAdminDashboard, 
+                    faqList, announcement, adminPendingOrders, fetchAdminDashboard, confirmVoidUnpaidOrder, 
                     onAdminShipClick, adminShipTarget, executeAdminShip, isAdminShipping, 
                     adminStats, adminLowStockItems,
                     triggerStockSync, isAdminSyncing, triggerTimeoutCheck, openExpiredOrderReview, isAdminCleaning,
