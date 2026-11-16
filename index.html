@@ -239,7 +239,7 @@
 <body>
 
    <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.3</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.5</div>
         
         <div class="w-100 px-4 mt-3 mb-2" style="max-width: 280px;">
             <div class="progress" style="height: 12px; border-radius: 10px; background-color: #ffebeb; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
@@ -272,7 +272,7 @@
                 <div class="d-flex align-items-center gap-2" @click="reloadApp" style="cursor: pointer;">
                     <div class="logo-m">M</div>
                     <div>
-                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.3</span></div>
+                        <div class="fw-bold text-dark" style="font-size: 15px; line-height: 1.2;">麥麥商城 <span class="ver-tag">v3.5</span></div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 600;">{{ userProfile.displayName || guestName || '親愛的客人' }} 👋</div>
                     </div>
                 </div>
@@ -1851,7 +1851,7 @@
                 const originalCouponCode = ref('');
                 const products = ref([]);
                 const cart = ref({});
-                const settings = ref({ version: 'v3.3', liffId: '2008834603-kWyNnXPm' });
+                const settings = ref({ version: 'v3.5', liffId: '2008834603-kWyNnXPm' });
                 const faqList = ref([]);
                 const announcement = ref("🔥 正在載入最新公告...");
                 const currentCat = ref('ALL');
@@ -2436,7 +2436,7 @@
                     }
                 });
                 
-                // E. API 與初始化（v3.3：快取先顯示、商品與設定平行讀取，LIFF 不阻塞首頁）
+                // E. API 與初始化（v3.5：快取先顯示、商品與設定平行讀取，LIFF 不阻塞首頁）
                 const fetchWithRetry = async (url, retries = 2, timeoutMs = 6500) => {
                     let lastError = new Error('網路連線失敗');
                     for (let attempt = 0; attempt < retries; attempt++) {
@@ -2602,7 +2602,7 @@
                     const currentUserId = userProfile.value?.userId || safeGetStorage('mm_user_id') || guestUuid.value;
                     const settingsPromise = fetchWithRetry(`${API_URL}?action=getSettings`, 2, 6500)
                         .then(data => {
-                            settings.value = { ...settings.value, ...data, version: 'v3.3' };
+                            settings.value = { ...settings.value, ...data, version: 'v3.5' };
                             adminAutoDeliveryEnabled.value = String(data.adminAutoDeliveryEnabled).toLowerCase() === 'true';
                             safeSetStorage('mm_settings_cache_v32', JSON.stringify(settings.value));
                             return settings.value;
@@ -2612,7 +2612,7 @@
                             try {
                                 const cachedSettings = JSON.parse(safeGetStorage('mm_settings_cache_v32', 'null'));
                                 if (cachedSettings) {
-                                    settings.value = { ...settings.value, ...cachedSettings, version: 'v3.3' };
+                                    settings.value = { ...settings.value, ...cachedSettings, version: 'v3.5' };
                                     adminAutoDeliveryEnabled.value = String(cachedSettings.adminAutoDeliveryEnabled).toLowerCase() === 'true';
                                 }
                             } catch (e) {}
@@ -3268,7 +3268,7 @@ const tgConfig = ref({
                     }
                 };
                 
-                const triggerStockSync = async () => { isAdminSyncing.value=true; try{ const response=await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminSyncStock'})}); const result=await response.json(); if(result.status==='OK'||result.status==='success'){ showToast('已同步'); setTimeout(initApp,1500); } else showToast(result.message||'同步失敗'); } catch(e){ showToast('同步失敗，請檢查連線'); } finally{ isAdminSyncing.value=false; } };
+                const triggerStockSync = async () => { isAdminSyncing.value=true; try{ const response=await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminSyncStock'})}); const result=await response.json(); if(result.status==='OK'||result.status==='success'){ showToast(result.message||'庫存同步完成'); setTimeout(initApp,1500); } else if(result.status==='Processing'){ showToast(result.message||'庫存同步進行中，系統會自動續跑'); setTimeout(initApp,1500); } else showToast(result.message||'同步失敗'); } catch(e){ showToast('同步失敗，請檢查連線'); } finally{ isAdminSyncing.value=false; } };
                 const saveAdminAutoDeliverySetting = async () => {
                     const userId = userProfile.value?.userId || safeGetStorage('mm_user_id') || '';
                     if (!ADMIN_IDS.includes(userId)) {
@@ -3287,7 +3287,7 @@ const tgConfig = ref({
                             showToast(adminAutoDeliveryEnabled.value ? '已開啟指定管理員自動發券' : '已關閉指定管理員自動發券');
                         } else {
                             adminAutoDeliveryEnabled.value = !requestedValue;
-                            showAlert(result.message || '設定儲存失敗，請確認後端已部署 v3.3 修正版。');
+                            showAlert(result.message || '設定儲存失敗，請確認後端已部署 v3.5 修正版。');
                         }
                     } catch (e) {
                         adminAutoDeliveryEnabled.value = !requestedValue;
