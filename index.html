@@ -1851,7 +1851,7 @@
                 const originalCouponCode = ref('');
                 const products = ref([]);
                 const cart = ref({});
-                const settings = ref({ version: 'v3.7', liffId: '2008834603-kWyNnXPm' });
+                const settings = ref({ version: 'v3.8', liffId: '2008834603-kWyNnXPm' });
                 const faqList = ref([]);
                 const announcement = ref("🔥 正在載入最新公告...");
                 const currentCat = ref('ALL');
@@ -2602,7 +2602,7 @@
                     const currentUserId = userProfile.value?.userId || safeGetStorage('mm_user_id') || guestUuid.value;
                     const settingsPromise = fetchWithRetry(`${API_URL}?action=getSettings`, 2, 6500)
                         .then(data => {
-                            settings.value = { ...settings.value, ...data, version: 'v3.7' };
+                            settings.value = { ...settings.value, ...data, version: 'v3.8' };
                             adminAutoDeliveryEnabled.value = String(data.adminAutoDeliveryEnabled).toLowerCase() === 'true';
                             safeSetStorage('mm_settings_cache_v32', JSON.stringify(settings.value));
                             return settings.value;
@@ -2612,7 +2612,7 @@
                             try {
                                 const cachedSettings = JSON.parse(safeGetStorage('mm_settings_cache_v32', 'null'));
                                 if (cachedSettings) {
-                                    settings.value = { ...settings.value, ...cachedSettings, version: 'v3.7' };
+                                    settings.value = { ...settings.value, ...cachedSettings, version: 'v3.8' };
                                     adminAutoDeliveryEnabled.value = String(cachedSettings.adminAutoDeliveryEnabled).toLowerCase() === 'true';
                                 }
                             } catch (e) {}
@@ -3151,6 +3151,10 @@ const tgConfig = ref({
                     try {
                         const response = await Promise.race([fetchPromise, timeoutPromise]);
                         if (!response.ok) throw new Error('Network error');
+                        const submitResult = await response.json();
+                        if (!submitResult || submitResult.status !== 'OK') {
+                            throw new Error((submitResult && submitResult.message) || '付款回報未成功保存');
+                        }
                         
                         if (liff.isInClient()) {
                             try {
@@ -3175,17 +3179,14 @@ const tgConfig = ref({
                         
                         pendingSelection.value = [];
 
-                        showToast('回報成功！我們會盡快對帳'); 
+                        showToast(submitResult.message || '回報成功！系統約 10 秒後自動對帳'); 
                         showPaymentForm.value = false; 
                         hideModalSafe('successModal');
                         hideModalSafe('unreportedModal'); 
 
-                        // 🚀 關鍵修復：延遲 1.5 秒後，由前端強制喚醒「背景查帳」，保證發貨！
-                        setTimeout(() => {
-                            fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCheckPayments' }) })
-                                .then(() => { fetchOrderStatus(getEffectiveUserId()); })
-                                .catch(() => {});
-                        }, 1500);
+                        // Gmail 查帳由後端在付款回報保存後約 10 秒觸發；前端不再於 1.5 秒重複強制查帳。
+                        // 約 12 秒後刷新訂單狀態，讓會員看到已完成的核帳／發貨結果。
+                        setTimeout(() => { fetchOrderStatus(getEffectiveUserId()); }, 12000);
 
                     } catch(e) {
                         console.error(e);
@@ -3356,7 +3357,29 @@ const tgConfig = ref({
                     } finally { isAdminCleaning.value = false; }
                 };
                 const triggerTimeoutCheck = openExpiredOrderReview;
-                const triggerPaymentCheck = async () => { isAdminChecking.value=true; try{ await fetch(API_URL,{method:'POST',body:JSON.stringify({action:'adminCheckPayments'})}); showToast('已查帳'); setTimeout(fetchAdminDashboard,2000); } catch(e){ showToast('查帳失敗'); } finally{ isAdminChecking.value=false; } };
+                const triggerPaymentCheck = async () => {
+                    isAdminChecking.value = true;
+                    try {
+                        const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCheckPayments' }) });
+                        if (!response.ok) throw new Error('HTTP ' + response.status);
+                        const result = await response.json();
+                        if (result.status === 'OK') {
+                            showToast(result.message || `查帳完成，成功核帳 ${Number(result.matched || 0)} 筆`);
+                            await fetchAdminDashboard();
+                        } else if (result.status === 'BUSY') {
+                            showToast(result.message || '目前已有查帳工作執行中，請稍後再試');
+                        } else if (result.status === 'QUOTA_PAUSED') {
+                            showToast(result.message || 'Gmail 配額保護中，請稍後再試');
+                        } else {
+                            showToast('查帳失敗：' + (result.message || result.status || '未知錯誤'));
+                        }
+                    } catch (e) {
+                        console.error('管理員信箱查帳失敗：', e);
+                        showToast('查帳失敗，請稍後重試或查看 Apps Script 執行紀錄');
+                    } finally {
+                        isAdminChecking.value = false;
+                    }
+                };
                 
                 const fetchLowStock = async (rangeType = '0-5') => {
                     isAdminFetchingStock.value = true;
