@@ -239,7 +239,7 @@
 <body>
 
    <div id="static-loader">
-        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.7</div>
+        <div class="fw-bold text-danger" style="font-size: 24px; letter-spacing: 1px;">MCD Mall v3.9</div>
         
         <div class="w-100 px-4 mt-3 mb-2" style="max-width: 280px;">
             <div class="progress" style="height: 12px; border-radius: 10px; background-color: #ffebeb; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
@@ -1851,7 +1851,7 @@
                 const originalCouponCode = ref('');
                 const products = ref([]);
                 const cart = ref({});
-                const settings = ref({ version: 'v3.8', liffId: '2008834603-kWyNnXPm' });
+                const settings = ref({ version: 'v3.9', liffId: '2008834603-kWyNnXPm' });
                 const faqList = ref([]);
                 const announcement = ref("🔥 正在載入最新公告...");
                 const currentCat = ref('ALL');
@@ -2602,7 +2602,7 @@
                     const currentUserId = userProfile.value?.userId || safeGetStorage('mm_user_id') || guestUuid.value;
                     const settingsPromise = fetchWithRetry(`${API_URL}?action=getSettings`, 2, 6500)
                         .then(data => {
-                            settings.value = { ...settings.value, ...data, version: 'v3.8' };
+                            settings.value = { ...settings.value, ...data, version: 'v3.9' };
                             adminAutoDeliveryEnabled.value = String(data.adminAutoDeliveryEnabled).toLowerCase() === 'true';
                             safeSetStorage('mm_settings_cache_v32', JSON.stringify(settings.value));
                             return settings.value;
@@ -2612,7 +2612,7 @@
                             try {
                                 const cachedSettings = JSON.parse(safeGetStorage('mm_settings_cache_v32', 'null'));
                                 if (cachedSettings) {
-                                    settings.value = { ...settings.value, ...cachedSettings, version: 'v3.8' };
+                                    settings.value = { ...settings.value, ...cachedSettings, version: 'v3.9' };
                                     adminAutoDeliveryEnabled.value = String(cachedSettings.adminAutoDeliveryEnabled).toLowerCase() === 'true';
                                 }
                             } catch (e) {}
@@ -3364,7 +3364,7 @@ const tgConfig = ref({
                         if (!response.ok) throw new Error('HTTP ' + response.status);
                         const result = await response.json();
                         if (result.status === 'OK') {
-                            showToast(result.message || `查帳完成，成功核帳 ${Number(result.matched || 0)} 筆`);
+                            showAlert([result.message || `查帳完成，成功核帳 ${Number(result.matched || 0)} 筆`, ...(result.diagnostics || [])]);
                             await fetchAdminDashboard();
                         } else if (result.status === 'BUSY') {
                             showToast(result.message || '目前已有查帳工作執行中，請稍後再試');
